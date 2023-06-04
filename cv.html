@@ -1,0 +1,128 @@
+<!-- Este es un código HTML para crear un CV con CSS que se vea elegante para una empresa de tecnología -->
+<html>
+<head>
+  <style>
+    /* Aquí se definen los estilos CSS para el CV */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+    }
+    .foto {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin-right: 20px;
+    }
+    .nombre {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .contacto {
+      font-size: 14px;
+      color: gray;
+    }
+    .seccion {
+      margin-top: 20px;
+    }
+    .titulo {
+      font-size: 18px;
+      font-weight: bold;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 10px;
+    }
+    .subtitulo {
+      font-size: 16px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .texto {
+      font-size: 14px;
+      margin-left: 20px;
+    }
+    .lista {
+      list-style-type: none;
+      margin-left: 20px;
+    }
+    .item {
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="foto.jpg" alt="Foto" class="foto">
+      <div class="datos">
+        <div class="nombre">Juan Pérez</div>
+        <div class="contacto">juan.perez@gmail.com | +34 123456789 | Madrid, España</div>
+      </div>
+    </div>
+    <div class="seccion">
+      <div class="titulo">Perfil profesional</div>
+      <div class="texto">Soy un programador experto con más de cinco años de experiencia en el desarrollo web. Me apasiona crear soluciones innovadoras y elegantes para las necesidades de los clientes. Tengo conocimientos avanzados de HTML, CSS, JavaScript, PHP y otros lenguajes y frameworks. Me considero una persona proactiva, creativa y con capacidad de trabajo en equipo.</div>
+    </div>
+    <div class="seccion">
+      <div class="titulo">Experiencia laboral</div>
+      <div class="subtitulo">Desarrollador web senior en Tecnosoft</div>
+      <div class="texto">Enero 2020 - Actualidad</div>
+      <ul class="lista">
+        <li class="item">Desarrollé y mantuve varios proyectos web para clientes de diferentes sectores, utilizando HTML, CSS, JavaScript, PHP y Laravel.</li>
+        <li class="item">Lideré el equipo de desarrollo web, coordinando las tareas, revisando el código y asegurando la calidad del producto final.</li>
+        <li class="item">Implementé las mejores prácticas de diseño web responsive, accesibilidad, SEO y seguridad.</li>
+        <li class="item">Colaboré con el departamento de diseño gráfico para crear interfaces de usuario atractivas y funcionales.</li>
+        <li class="item">Utilicé herramientas como Git, GitHub, Visual Studio Code y Chrome DevTools para optimizar el flujo de trabajo.</li>
+      </ul>
+      <div class="subtitulo">Desarrollador web junior en Webmaster</div>
+      <div class="texto">Junio 2018 - Diciembre 2019</div>
+      <ul class="lista">
+        <li class="item">Participé en el desarrollo de varios sitios web estáticos y dinámicos, utilizando HTML, CSS, Bootstrap, jQuery y WordPress.</li>
+        <li class="item">Realicé pruebas de funcionalidad, usabilidad y rendimiento de los proyectos web.</li>
+        <li class="item">Corregí errores y solucioné problemas técnicos de los clientes.</li>
+        <li class="item">Aprendí nuevas tecnologías y herramientas para mejorar mis habilidades como desarrollador web.</li>
+      </ul>
+    </div>
+    <div class="seccion">
+      <div class="titulo">Formación académica</div>
+      <div class="subtitulo">Grado en Ingeniería Informática</div>
+      <div class="texto">Universidad Complutense de Madrid | Septiembre 2014 - Junio 2018</div>
+      <ul class="lista">
+        <li class="item">Obtuve el título de ingeniero informático con una nota media de 8,5.</li>
+        <li class="item">Realicé varios proyectos académicos relacionados con el desarrollo web, la programación, las bases de datos, la inteligencia artificial y la seguridad informática.</li>
+        <li class="item">Participé en varios concursos y eventos de programación, obteniendo buenos resultados y reconocimientos.</li>
+      </ul>
+    </div>
+    <div class="seccion">
+      <div class="titulo">Habilidades y competencias</div>
+      <ul class="lista">
+        <li class="item">HTML: nivel experto</li>
+        <li class="item">CSS: nivel experto</li>
+        <li class="item">JavaScript: nivel avanzado</li>
+        <li class="item">PHP: nivel avanzado</li>
+        <li class="item">Laravel: nivel intermedio</li>
+        <li class="item">Bootstrap: nivel intermedio</li>
+        <li class="item">jQuery: nivel intermedio</li>
+        <li class="item">WordPress: nivel intermedio</li>
+        <li class="item">Git: nivel intermedio</li>
+        <li class="item">Inglés: nivel B2</li>
+      </ul>
+    </div>
+  </div>
+  <script>
+	fetch('./cv.json').then(res => res.json()).then(data => {
+		console.log(data)
+	})
+	.catch(err => console.log(err))
+  </script>
+</body>
+</html>
