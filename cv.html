@@ -115,18 +115,6 @@
 			</ul>
 		</div>
 		<div class="seccion">
-			<div class="titulo">Formación académica</div>
-			<div class="subtitulo">Grado en Ingeniería Informática</div>
-			<div class="texto">Universidad Complutense de Madrid | Septiembre 2014 - Junio 2018</div>
-			<ul class="lista">
-				<li class="item">Obtuve el título de ingeniero informático con una nota media de 8,5.</li>
-				<li class="item">Realicé varios proyectos académicos relacionados con el desarrollo web, la
-					programación, las bases de datos, la inteligencia artificial y la seguridad informática.</li>
-				<li class="item">Participé en varios concursos y eventos de programación, obteniendo buenos resultados y
-					reconocimientos.</li>
-			</ul>
-		</div>
-		<div class="seccion">
 			<div class="titulo">Habilidades y competencias</div>
 			<ul class="lista">
 				<li class="item">HTML: nivel experto</li>
@@ -141,9 +129,21 @@
 				<li class="item">Inglés: nivel B2</li>
 			</ul>
 		</div>
+		<div class="seccion">
+			<div class="titulo">Formación académica</div>
+			<div class="subtitulo">Grado en Ingeniería Informática</div>
+			<div class="texto">Universidad Complutense de Madrid | Septiembre 2014 - Junio 2018</div>
+			<ul class="lista">
+				<li class="item">Obtuve el título de ingeniero informático con una nota media de 8,5.</li>
+				<li class="item">Realicé varios proyectos académicos relacionados con el desarrollo web, la
+					programación, las bases de datos, la inteligencia artificial y la seguridad informática.</li>
+				<li class="item">Participé en varios concursos y eventos de programación, obteniendo buenos resultados y
+					reconocimientos.</li>
+			</ul>
+		</div>
 	</div>
 	<script>
-		fetch('./cv.json').then(res => res.json()).then(data => {
+		fetch('./api/cv').then(res => res.json()).then(data => {
 			console.log(data)
 		})
 			.catch(err => console.log(err))
