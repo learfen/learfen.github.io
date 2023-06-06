@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
+<body>
+	<div id="app">
+		<section v-for="(section, index) in sections" :key="index" class="section">
+			<div>
+				<h3>{{ section.title }}</h3>
+					<ul>
+						<li v-for="(item, index2) in section.data" :key="index2">
+							<a :href="item.url">{{ item.title }}</a>
+							<button v-if="item.select" @click="item.selectOpen = !item.selectOpen"> + </button>
+							<div v-show="item.selectOpen" v-for="(item2, index3) in item.select" :key="index3">
+								<a :href="item2.url">{{ item2.title }}</a>
+							</div>
+						</li>
+					</ul>
+			</div>
+		</section>
+	</div>
+	
+	<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+	<script>
+	let data = [
+				{
+					title:'IA educación',
+					data:[
+						{
+							url:"https://curriculum.code.org/es-es/hoc/plugged/1/",
+							title:"Fuente programacion, code org"
+						},
+						{
+							url:"https://code.org/oceans",
+							title:"Entiende la IA, Oceans"
+						},
+						{
+							url:"https://www.promptstacks.com/",
+							title:"Propms"
+						},
+						{
+							url:"https://machinelearningforkids.co.uk/#!/worksheets",
+							title:"Proyectos de inteligencia artificial"
+						},
+					],
+				},
+				{
+					title:'Recursos codigo dev',
+					data:[
+						{
+							url:"https://www.codingnepalweb.com/",
+							title:"Multiples proyectos",
+							select:[
+								{
+									url:"https://www.codingnepalweb.com/create-chatgpt-clone-html-css-javascript/",
+									title:"Create ChatGPT Clone"
+								},
+								{
+									url:"https://www.codingnepalweb.com/build-image-editor-html-javascript/",
+									title:"Build Image Editor, pequeño editor de imagenes"
+								},
+								{
+									url:"https://www.codingnepalweb.com/quiz-app-with-timer-javascript/",
+									title:"Quiz App with Timer"
+								},
+								{
+									url:"https://www.codingnepalweb.com/qr-code-generator-html-css-javascript/",
+									title:"QR Code Generator"
+								}
+							]
+						}
+					]
+				}
+			]
+
+	new Vue({
+		el: '#app',
+		data: {
+			sections:[]
+		},
+		created() {
+			this.normalize( data )
+		},
+		methods: {
+			normalize( data ) {
+				this.sections = data.map( item => {
+					item.data = item.data.map( link => {
+						link.selectOpen = false
+						return link
+					})
+					return item
+				} )
+			}
+		}
+	})
+	</script>
+</body>
+</html>
