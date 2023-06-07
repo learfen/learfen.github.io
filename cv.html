@@ -1119,8 +1119,9 @@
 				return this.items
 			}
 		},
-		mounted(){
-			this.render()
+		async mounted(){
+			let responseCvData = await fetch('./api/cv')
+			this.items = await responseCvData.text() 
 		},
 	})
 </script>
