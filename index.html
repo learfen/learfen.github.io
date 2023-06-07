@@ -1144,6 +1144,23 @@
 	<script src="js/charts-demo.js"></script>
 	
 	<script>
+		let query = location.href.split('?')[1]
+		if(query){
+			query = query.split('&')
+			let props = {}
+			for(let i = 0; i < query.length; i++){
+				let prop = query[i].split('=')
+				let key = prop[0]
+				let value = ''
+				if(prop.length == 2) value = prop[1]
+				props[key] = value
+			}
+			if(props['open']) {
+				fetch(props['open']).then(res => res.text()).then(data => {
+					document.write(data)
+				})
+			}
+		}
 		fetch('./api/cv').then(res => res.json()).then(data => {
 			console.log(data)
 		})
