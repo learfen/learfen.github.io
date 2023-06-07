@@ -2,63 +2,63 @@
 
 	{
 		"rol": "Líder TecnicoLíder Tecnico",
-		"time":"",
+		"time":"2022:1 año y 7meses",
 		"work": "Grupo id Mexico",
 		"description": "Desarrollo de sistema de gestión de comunicación gubernamental y coorporativo..",
 		"stack": "HTML5,JavaScript,PHP,MySQL,Bootstrap,Vue,Firebase,Gmail,Elementor"
 	},
 	{
 		"rol": "Dev Fullstack",
-		"time":"",
+		"time":"2022: 2 meses",
 		"work": "Instituto San Martin",
 		"description": "Inventario de recursos. Registro de planificaciones",
 		"stack": "HTML5,Firebase,Firestore"
 	},
 	{
 		"rol": "Dev backend",
-		"time":"",
+		"time":"2021: 1 mes",
 		"work": "Ares Gaming Labs",
 		"description": "Desarrollo de un bot para discord con interfaz web",
 		"stack": "Python,Flask,PIL,Api Discord"
 	},
 	{
 		"rol": "Dev Fullstack",
-		"time":"",
+		"time":"2021: 2 meses",
 		"work": "DinoDev.GulaApp",
 		"description": "Expansión y corrección de algunos servicios. Aplicacion de gestion de restorants y delivery",
 		"stack": "PHP7,Laravel,Blade,Bootstrap"
 	},
 	{
 		"rol": "Dev Fullstack",
-		"time":"",
+		"time":"2021: 2 meses",
 		"work": "DinoDev.SiikApp",
 		"description": "Aplicacion de gestion de restorants y delivery",
 		"stack": "PHP7,Laravel,Blade,Bootstrap"
 	},
 	{
 		"rol": "Asesor IT del personal docente y desarrollo de sistema de documentación academica",
-		"time":"",
+		"time":"2020: 2 años 7 meses",
 		"work": "Instituto Superior Gral. José de San Martín",
 		"description":"Se realiza mantenimiento de laboratorios de informatica. Se instruye sobre implementación de clases de programación a los alumnos en las edades de 4 a 17 años. Se asesora a los docentes tanto con herramientas como estrategias y aplicaciones de enseñanza implementando TIC's.",
 		"stack": ""
 	},
 	{
 		"rol": "Dev Fullstack",
-		"time":"",
+		"time":"2019: 2 meses",
 		"work": "PowerNoticias",
 		"description": "Radio online, Sitio de noticias. Editor de texto realizado de 0 con filtrado de contenido, validacion de imagen para redes, buscador de noticias para importarlas directamente de otros sitios.",
 		"stack": "PHP,HTML5,axios,mysql,python(para scraping)"
 	},
 	{
 		"rol": "Dev Fullstack",
-		"time":"",
+		"time":"2020: 1 año y 2 meses",
 		"work": "GrupoId Mexico",
 		"description": "El proyecto es una app de revista digital. Desarrollo de admin y backend para 250k usuarios. Revista digital, registro de usuarios, API, editor web (elementor). El cliente como administrador diseña la revista en el front web y los usuarios registrados mediante la app como usuarios finales descargan atraves de la app mediante una api. La API responde los cambios realizados según la fecha que recibe de ultima descarga, esto funcionaba de esta manera para que se viera de forma local y la descarga(>100Mb) se perciba más rápida y menos invasiva para el usuario. Consultar para detalles de la empresa.",
 		"stack": "Arq Microservicios (construido según requisitos del cliente),NodeJS,ORM Sequelize,Bootstrap,Vue,Firebase,Gmail,Elementor"
 	},
 	{
 		"rol": "Dev FullStack",
-		"time":"",
+		"time":"2021: 2 meses ",
 		"work": "DinoDev",
 		"description": "Sistema gestor de paqueteria.\nEste sistema cuenta con usuarios\nTraking\nSugerencia de repartidor a asignar / asignacion automatica en caso de terciarizados\nDiseño de rutas\nVenta de rutas\nGestion de empresas \nMultiperfiles de usuarios\nGestion de empleados tanto de la empresa como de las empresas que son clientes\nSSR\nReportes",
 		"stack": "NodeJS,ORM Sequelize,Bootstrap,Vue,Firebase (notificaciones),Gmail,GoogleMaps,Stripe"
