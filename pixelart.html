@@ -354,10 +354,11 @@
 				}, 500)
 			},
 			render(){
-				if(this.items.length < this.length){
-					for(let i=this.items.length;i<this.length;i++){
+				const lengthActual = this.items.length
+				if(lengthActual < this.length){
+					for(let i=lengthActual;i<this.length;i++){
 						let row = [];
-						for(let j=this.items.length;j<this.length;j++){
+						for(let j=lengthActual;j<this.length;j++){
 							row.push(0)
 						}
 						this.items.push(row);
