@@ -322,7 +322,7 @@
 		},
 		computed:{
 			rowItems(){
-				return this.items
+				return [...this.items].splice(0 , this.length)
 			}
 		},
 		mounted(){
