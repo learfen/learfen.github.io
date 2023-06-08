@@ -56,7 +56,6 @@
 	new Vue({
 		el: '#app',
 		data: {
-			message: 'Hello Vue!',
 			length:8,
 			viewNumbers:true,
 			viewTable:true,
@@ -355,14 +354,15 @@
 				}, 500)
 			},
 			render(){
-				this.items = []
+				let items = [...this.items]
 				for(let i=0;i<this.length;i++){
 					let row = [];
 					for(let j=0;j<this.length;j++){
 						row.push(0)
 					}
-					this.items.push(row);
+					items.push(row);
 				}
+				this.items = items
 			},
 			update( event , i , j ){
 				if(event.target.classList.contains('color-box')){
