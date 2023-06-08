@@ -56,7 +56,6 @@
 	new Vue({
 		el: '#app',
 		data: {
-			message: 'Hello Vue!',
 			length:8,
 			viewNumbers:true,
 			viewTable:true,
@@ -323,7 +322,7 @@
 		},
 		computed:{
 			rowItems(){
-				return this.items
+				return [...this.items].splice(0 , this.length)
 			}
 		},
 		mounted(){
@@ -355,13 +354,15 @@
 				}, 500)
 			},
 			render(){
-				this.items = []
-				for(let i=0;i<this.length;i++){
-					let row = [];
-					for(let j=0;j<this.length;j++){
-						row.push(0)
+				const lengthActual = this.items.length
+				if(lengthActual < this.length){
+					for(let i=lengthActual;i<this.length;i++){
+						let row = [];
+						for(let j=lengthActual;j<this.length;j++){
+							row.push(0)
+						}
+						this.items.push(row);
 					}
-					this.items.push(row);
 				}
 			},
 			update( event , i , j ){
