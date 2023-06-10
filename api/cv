@@ -25,7 +25,7 @@
 		"rol": "Dev Fullstack",
 		"time":"2021: 2 meses",
 		"work": "DinoDev.GulaApp",
-		"description": "Expansión y corrección de algunos servicios. Aplicacion de gestion de restorants y delivery",
+		"description": "Expansión y corrección de algunos servicios, como calculo de logistica con geolocalizacion. Aplicacion de gestion de restorants y delivery",
 		"stack": "PHP7,Laravel,Blade,Bootstrap"
 	},
 	{
