@@ -154,6 +154,7 @@
 				let responseCvData = await fetch('./api/cv')
 				let cv = await responseCvData.text()
 				this.works = cv.works
+				console.log(this.works)
 			} catch (error) {
 				alert('Ocurrio un error al obtener informacion del cv')
 			} 
