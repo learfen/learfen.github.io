@@ -152,7 +152,7 @@
 		async mounted(){
 			try {
 				let responseCvData = await fetch('./api/cv')
-				let cv = await responseCvData.text()
+				let cv = await responseCvData.json()
 				this.works = cv.works
 				console.log(this.works)
 			} catch (error) {
