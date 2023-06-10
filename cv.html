@@ -145,14 +145,15 @@
 	new Vue({
 		el: '#app',
 		data: {
-			cv:{}
+			works:[]
 		},
 		computed:{
 		},
 		async mounted(){
 			try {
 				let responseCvData = await fetch('./api/cv')
-				this.cv = await responseCvData.text()
+				let cv = await responseCvData.text()
+				this.works = cv.works
 			} catch (error) {
 				alert('Ocurrio un error al obtener informacion del cv')
 			} 
