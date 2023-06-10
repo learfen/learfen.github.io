@@ -72,7 +72,7 @@
 </head>
 
 <body>
-	<div class="container">
+	<div id="app" class="container">
 		<div class="header">
 			<img src="foto.jpg" alt="Foto" class="foto">
 			<div class="datos">
@@ -91,7 +91,7 @@
 		<div class="seccion">
 			<div class="titulo">Experiencia laboral</div>
 			<div v-for="work of works">
-				<div class="subtitulo">Desarrollador web senior en Tecnosoft</div>
+				<div class="subtitulo">{{work.rol}}</div>
 				<div class="texto">Enero 2020 - Actualidad</div>
 				<ul class="lista">
 					<li class="item">Desarrollé y mantuve varios proyectos web para clientes de diferentes sectores,
