@@ -94,16 +94,9 @@
 				<div class="subtitulo">{{work.rol}}</div>
 				<div class="texto">{{work.time}}</div>
 				<ul class="lista">
-					<li class="item">Desarrollé y mantuve varios proyectos web para clientes de diferentes sectores,
-						utilizando HTML, CSS, JavaScript, PHP y Laravel.</li>
-					<li class="item">Lideré el equipo de desarrollo web, coordinando las tareas, revisando el código y
-						asegurando la calidad del producto final.</li>
-					<li class="item">Implementé las mejores prácticas de diseño web responsive, accesibilidad, SEO y
-						seguridad.</li>
-					<li class="item">Colaboré con el departamento de diseño gráfico para crear interfaces de usuario
-						atractivas y funcionales.</li>
-					<li class="item">Utilicé herramientas como Git, GitHub, Visual Studio Code y Chrome DevTools para
-						optimizar el flujo de trabajo.</li>
+					<li class="item" v-for="item in description">
+						{{ item }}
+					</li>
 				</ul>
 			</div>
 		</div>
@@ -153,8 +146,10 @@
 			try {
 				let responseCvData = await fetch('./api/cv')
 				let cv = await responseCvData.json()
-				this.works = cv.works
-				console.log(this.works)
+				this.works = cv.works.map( work => {
+					work.description = work.description.split('\n')
+					return work 
+				})
 			} catch (error) {
 				alert('Ocurrio un error al obtener informacion del cv')
 			} 
