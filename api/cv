@@ -64,5 +64,16 @@
 			"description": "Sistema gestor de paqueteria.\nEste sistema cuenta con usuarios\nTraking\nSugerencia de repartidor a asignar / asignacion automatica en caso de terciarizados\nDiseño de rutas\nVenta de rutas\nGestion de empresas \nMultiperfiles de usuarios\nGestion de empleados tanto de la empresa como de las empresas que son clientes\nSSR\nReportes",
 			"stack": "NodeJS,ORM Sequelize,Bootstrap,Vue,Firebase (notificaciones),Gmail,GoogleMaps,Stripe"
 		}
+	],
+	"knowledge": [
+		{"description":"HTML: nivel experto"},
+		{"description":"CSS: nivel experto"},
+		{"description":"JavaScript: nivel avanzado"},
+		{"description":"PHP: nivel avanzado"},
+		{"description":"Laravel: nivel intermedio"},
+		{"description":"Bootstrap: nivel intermedio"},
+		{"description":"jQuery: nivel intermedio"},
+		{"description":"WordPress: nivel intermedio"},
+		{"description":"Git: nivel intermedio"}
 	]
 }

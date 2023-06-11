@@ -131,16 +131,7 @@
 		<div class="cv-section">
 			<div class="cv-title">Habilidades y competencias</div>
 			<ul class="cv-list cv-list-cols">
-				<li class="cv-list-item">HTML: nivel experto</li>
-				<li class="cv-list-item">CSS: nivel experto</li>
-				<li class="cv-list-item">JavaScript: nivel avanzado</li>
-				<li class="cv-list-item">PHP: nivel avanzado</li>
-				<li class="cv-list-item">Laravel: nivel intermedio</li>
-				<li class="cv-list-item">Bootstrap: nivel intermedio</li>
-				<li class="cv-list-item">jQuery: nivel intermedio</li>
-				<li class="cv-list-item">WordPress: nivel intermedio</li>
-				<li class="cv-list-item">Git: nivel intermedio</li>
-				<li class="cv-list-item">Inglés: nivel B2</li>
+				<li class="cv-list-item" v-for="knowledge in knowledges">{{knowledge.description}}</li>
 			</ul>
 		</div>
 		<div class="cv-section">
@@ -162,7 +153,8 @@
 	new Vue({
 		el: '#app',
 		data: {
-			works: []
+			works: [],
+			knowledge:[]
 		},
 		computed: {
 		},
@@ -174,6 +166,7 @@
 					work.description = work.description.split('\n')
 					return work
 				})
+				this.knowledges = cv.knowledges
 				console.log(this.works)
 			} catch (error) {
 				alert('Ocurrio un error al obtener informacion del cv')
