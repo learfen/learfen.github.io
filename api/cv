@@ -2,6 +2,13 @@
 	"works":[
 
 		{
+			"rol": "Dev Fullstack",
+			"time":"2023: 1 meses",
+			"work": "Instituto San Martin",
+			"description": "Generación de planificaciones de clase con ChatGPT",
+			"stack": "Pupperter,Express,Vue,Sequelize,Git"
+		},
+		{
 			"rol": "Líder TecnicoLíder Tecnico",
 			"time":"2022:1 año y 7meses",
 			"work": "Grupo id Mexico",
