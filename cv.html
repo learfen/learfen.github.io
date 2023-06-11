@@ -72,9 +72,10 @@
 			display: block;
 			background-color: #eee;
 		}
-		.item {
+		.cv-list-item {
 			font-size: 14px;
 			margin-bottom: 5px;
+			padding:.5rem;
 		}
 	</style>
 </head>
@@ -102,7 +103,7 @@
 				<div class="cv-subtitle">{{work.rol}}</div>
 				<div class="cv-text">{{work.time}}</div>
 				<ul class="cv-list">
-					<li class="item" v-for="item in work.description">
+					<li class="cv-list-item" v-for="item in work.description">
 						{{ item }}
 					</li>
 				</ul>
