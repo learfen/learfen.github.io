@@ -60,21 +60,23 @@
 		}
 
 		.cv-list {
-			all:unset;
+			all: unset;
 			list-style-type: disc;
 			margin-left: 50px;
 			display: block;
 		}
-		.cv-stack{
+
+		.cv-stack {
 			font-size: 14px;
 			padding: 1rem;
 			display: block;
 			background-color: #eee;
 		}
+
 		.cv-list-item {
 			font-size: 14px;
 			margin-bottom: 5px;
-			padding:.5rem;
+			padding: .5rem;
 		}
 	</style>
 </head>
@@ -109,36 +111,36 @@
 				<div class="cv-stack"><b>Stack: </b>{{work.stack.split(',').join(', ')}}</div>
 			</div>
 
-	</li>
-	</ul>
-	</div>
-	<div class="cv-section">
-		<div class="cv-title">Habilidades y competencias</div>
-		<ul class="cv-list">
-			<li class="item">HTML: nivel experto</li>
-			<li class="item">CSS: nivel experto</li>
-			<li class="item">JavaScript: nivel avanzado</li>
-			<li class="item">PHP: nivel avanzado</li>
-			<li class="item">Laravel: nivel intermedio</li>
-			<li class="item">Bootstrap: nivel intermedio</li>
-			<li class="item">jQuery: nivel intermedio</li>
-			<li class="item">WordPress: nivel intermedio</li>
-			<li class="item">Git: nivel intermedio</li>
-			<li class="item">Inglés: nivel B2</li>
-		</ul>
-	</div>
-	<div class="cv-section">
-		<div class="cv-title">Formación académica</div>
-		<div class="cv-subtitle">Grado en Ingeniería Informática</div>
-		<div class="cv-text">Universidad Complutense de Madrid | Septiembre 2014 - Junio 2018</div>
-		<ul class="cv-list">
-			<li class="item">Obtuve el título de ingeniero informático con una nota media de 8,5.</li>
-			<li class="item">Realicé varios proyectos académicos relacionados con el desarrollo web, la
-				programación, las bases de datos, la inteligencia artificial y la seguridad informática.</li>
-			<li class="item">Participé en varios concursos y eventos de programación, obteniendo buenos resultados y
-				reconocimientos.</li>
-		</ul>
-	</div>
+			</li>
+			</ul>
+		</div>
+		<div class="cv-section">
+			<div class="cv-title">Habilidades y competencias</div>
+			<ul class="cv-list cv-list-cols">
+				<li class="cv-list-item">HTML: nivel experto</li>
+				<li class="cv-list-item">CSS: nivel experto</li>
+				<li class="cv-list-item">JavaScript: nivel avanzado</li>
+				<li class="cv-list-item">PHP: nivel avanzado</li>
+				<li class="cv-list-item">Laravel: nivel intermedio</li>
+				<li class="cv-list-item">Bootstrap: nivel intermedio</li>
+				<li class="cv-list-item">jQuery: nivel intermedio</li>
+				<li class="cv-list-item">WordPress: nivel intermedio</li>
+				<li class="cv-list-item">Git: nivel intermedio</li>
+				<li class="cv-list-item">Inglés: nivel B2</li>
+			</ul>
+		</div>
+		<div class="cv-section">
+			<div class="cv-title">Formación académica</div>
+			<div class="cv-subtitle">Grado en Ingeniería Informática</div>
+			<div class="cv-text">Universidad Complutense de Madrid | Septiembre 2014 - Junio 2018</div>
+			<ul class="cv-list">
+				<li class="cv-list-item">Obtuve el título de ingeniero informático con una nota media de 8,5.</li>
+				<li class="cv-list-item">Realicé varios proyectos académicos relacionados con el desarrollo web, la
+					programación, las bases de datos, la inteligencia artificial y la seguridad informática.</li>
+				<li class="cv-list-item">Participé en varios concursos y eventos de programación, obteniendo buenos resultados y
+					reconocimientos.</li>
+			</ul>
+		</div>
 	</div>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
@@ -146,23 +148,24 @@
 	new Vue({
 		el: '#app',
 		data: {
-			works:[]
+			works: []
 		},
-		computed:{
+		computed: {
 		},
-		async mounted(){
+		async mounted() {
 			try {
 				let responseCvData = await fetch('./api/cv')
 				let cv = await responseCvData.json()
-				this.works = cv.works.map( work => {
+				this.works = cv.works.map(work => {
 					work.description = work.description.split('\n')
-					return work 
+					return work
 				})
 				console.log(this.works)
 			} catch (error) {
 				alert('Ocurrio un error al obtener informacion del cv')
-			} 
+			}
 		},
 	})
 </script>
+
 </html>
