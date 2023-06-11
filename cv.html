@@ -233,6 +233,8 @@
 						if (inView) {
 							el.classList.add(binding.value)
 							window.removeEventListener('scroll', f)
+						}else{
+							el.classList.remove(binding.value)
 						}
 					}
 					window.addEventListener('scroll', f)
