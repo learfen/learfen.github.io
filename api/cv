@@ -70,6 +70,8 @@
 		{"description":"TensorFlow(js-python)", "level":1},
 		{"description":"NEXT(react)", "level":2},
 		{"description":"NUXT(vue)", "level":2},
+		{"description":"express", "level":2},
+		{"description":"sequelize", "level":2},
 		{"description":"Qwik", "level":1},
 		{"description":"TypeScript", "level":3},
 		{"description":"JavaScript", "level":4},
