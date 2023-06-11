@@ -66,17 +66,17 @@
 		}
 	],
 	"knowledges": [
-		{"description":"ChatGPT(api)", "level":"intermedio"},
+		{"description":"ChatGPT(api)", "level":2},
 		{"description":"TensorFlow", "level":1},
 		{"description":"NEXT(react)", "level":"avanzado"},
 		{"description":"NUXT(vue)", "level":"avanzado"},
 		{"description":"Qwik(ts)", "level":1},
 		{"description":"JavaScript", "level":"experto"},
-		{"description":"PHP", "level":"intermedio"},
-		{"description":"Python", "level":"intermedio"},
-		{"description":"Laravel", "level":"intermedio"},
+		{"description":"PHP", "level":2},
+		{"description":"Python", "level":2},
+		{"description":"Laravel", "level":2},
 		{"description":"Bootstrap", "level":"experto"},
-		{"description":"jQuery", "level":"intermedio"},
-		{"description":"Git", "level":"intermedio"}
+		{"description":"jQuery", "level":2},
+		{"description":"Git", "level":2}
 	]
 }
