@@ -66,8 +66,10 @@
 		}
 	],
 	"knowledges": [
-		{"description":"NUXT(vue)", "level":"avanzado"},
+		{"description":"ChatGPT(api)", "level":"intermedio"},
 		{"description":"NEXT(react)", "level":"avanzado"},
+		{"description":"NUXT(vue)", "level":"avanzado"},
+		{"description":"Qwik(ts)", "level":"principiante"},
 		{"description":"JavaScript", "level":"experto"},
 		{"description":"PHP", "level":"intermedio"},
 		{"description":"Python", "level":"intermedio"},
