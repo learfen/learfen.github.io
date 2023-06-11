@@ -67,9 +67,10 @@
 	],
 	"knowledges": [
 		{"description":"ChatGPT(api)", "level":"intermedio"},
+		{"description":"TensorFlow", "level":1},
 		{"description":"NEXT(react)", "level":"avanzado"},
 		{"description":"NUXT(vue)", "level":"avanzado"},
-		{"description":"Qwik(ts)", "level":"principiante"},
+		{"description":"Qwik(ts)", "level":1},
 		{"description":"JavaScript", "level":"experto"},
 		{"description":"PHP", "level":"intermedio"},
 		{"description":"Python", "level":"intermedio"},
