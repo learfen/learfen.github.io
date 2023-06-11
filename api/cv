@@ -67,7 +67,7 @@
 	],
 	"knowledges": [
 		{"description":"ChatGPT(api)", "level":2},
-		{"description":"TensorFlow", "level":1},
+		{"description":"TensorFlow(js-python)", "level":1},
 		{"description":"NEXT(react)", "level":2},
 		{"description":"NUXT(vue)", "level":2},
 		{"description":"Qwik", "level":1},
