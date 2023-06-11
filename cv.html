@@ -131,7 +131,7 @@
 		<div class="cv-section">
 			<div class="cv-title">Habilidades y competencias</div>
 			<ul class="cv-list cv-list-cols">
-				<li class="cv-list-item" v-for="knowledge in knowledges">{{knowledge.description}}</li>
+				<li class="cv-list-item" v-for="knowledge in knowledges" :style="'border-left: green solid calc(25% * ${knowledge.level})'">{{knowledge.description}}</li>
 			</ul>
 		</div>
 		<div class="cv-section">
