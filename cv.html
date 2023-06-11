@@ -152,9 +152,9 @@
 				considero una
 				persona proactiva, creativa y con capacidad de trabajo en equipo.</div>
 		</div>
-		<div class="cv-section hidden" v-infocus="'showElement'">
+		<div class="cv-section">
 			<div class="cv-title">Experiencia laboral</div>
-			<div v-for="work of works">
+			<div v-for="work of works"  class="hidden" v-infocus="'showElement'">
 				<div class="cv-subtitle">{{work.rol}}</div>
 				<div class="cv-text">{{work.time}}</div>
 				<ul class="cv-list">
@@ -171,7 +171,7 @@
 		<div class="cv-section">
 			<div class="cv-title">Habilidades y competencias</div>
 			<ul class="cv-list cv-list-cols">
-				<li class="cv-list-item" v-for="knowledge in knowledges">
+				<li class="cv-list-item hidden" v-infocus="'showElement'" v-for="knowledge in knowledges">
 					<span class="position-relative" style="z-index:2;padding:.25rem">{{knowledge.description}}</span>
 					<div class="d-block bg-success position-relative"
 						:style="'z-index:1;min-height:.25rem;width:'+knowledge.level*25+'%'"></div>
