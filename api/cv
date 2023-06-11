@@ -12,7 +12,7 @@
 			"rol": "Dev Fullstack",
 			"time":"",
 			"work": "Instituto San Martin",
-			"description": "Inventario de recursos. Registro de planificaciones",
+			"description": "Inventario de recursos.\nRegistro de planificaciones",
 			"stack": "HTML5,Firebase,Firestore"
 		},
 		{
@@ -26,7 +26,7 @@
 			"rol": "Dev Fullstack",
 			"time":"",
 			"work": "DinoDev.GulaApp",
-			"description": "Expansión y corrección de algunos servicios. Aplicacion de gestion de restorants y delivery",
+			"description": "Expansión y corrección de algunos servicios.\n Aplicacion de gestion de restorants y delivery",
 			"stack": "PHP7,Laravel,Blade,Bootstrap"
 		},
 		{
@@ -40,21 +40,21 @@
 			"rol": "Asesor IT del personal docente y desarrollo de sistema de documentación academica",
 			"time":"",
 			"work": "Instituto Superior Gral. José de San Martín",
-			"description":"Se realiza mantenimiento de laboratorios de informatica. Se instruye sobre implementación de clases de programación a los alumnos en las edades de 4 a 17 años. Se asesora a los docentes tanto con herramientas como estrategias y aplicaciones de enseñanza implementando TIC's.",
+			"description":"Se realiza mantenimiento de laboratorios de informatica. Se instruye sobre implementación de clases de programación a los alumnos en las edades de 4 a 17 años.\nSe asesora a los docentes tanto con herramientas como estrategias y aplicaciones de enseñanza implementando TIC's.",
 			"stack": ""
 		},
 		{
 			"rol": "Dev Fullstack",
 			"time":"",
 			"work": "PowerNoticias",
-			"description": "Radio online, Sitio de noticias. Editor de texto realizado de 0 con filtrado de contenido, validacion de imagen para redes, buscador de noticias para importarlas directamente de otros sitios.",
+			"description": "Radio online, Sitio de noticias.\nEditor de texto realizado de 0 con filtrado de contenido, validacion de imagen para redes, buscador de noticias para importarlas directamente de otros sitios.",
 			"stack": "PHP,HTML5,axios,mysql,python(para scraping)"
 		},
 		{
 			"rol": "Dev Fullstack",
 			"time":"",
 			"work": "GrupoId Mexico",
-			"description": "El proyecto es una app de revista digital. Desarrollo de admin y backend para 250k usuarios. Revista digital, registro de usuarios, API, editor web (elementor). El cliente como administrador diseña la revista en el front web y los usuarios registrados mediante la app como usuarios finales descargan atraves de la app mediante una api. La API responde los cambios realizados según la fecha que recibe de ultima descarga, esto funcionaba de esta manera para que se viera de forma local y la descarga(>100Mb) se perciba más rápida y menos invasiva para el usuario. Consultar para detalles de la empresa.",
+			"description": "El proyecto es una app de revista digital.\n Desarrollo de admin y backend para 250k usuarios.\nRevista digital, registro de usuarios, API, editor web (elementor).\nEl cliente como administrador diseña la revista en el front web y los usuarios registrados mediante la app como usuarios finales descargan atraves de la app mediante una api.\nLa API responde los cambios realizados según la fecha que recibe de ultima descarga, esto funcionaba de esta manera para que se viera de forma local y la descarga(>100Mb) se perciba más rápida y menos invasiva para el usuario.\nConsultar para detalles de la empresa.",
 			"stack": "Arq Microservicios (construido según requisitos del cliente),NodeJS,ORM Sequelize,Bootstrap,Vue,Firebase,Gmail,Elementor"
 		},
 		{
