@@ -65,7 +65,7 @@
 			"stack": "NodeJS,ORM Sequelize,Bootstrap,Vue,Firebase (notificaciones),Gmail,GoogleMaps,Stripe"
 		}
 	],
-	"knowledge": [
+	"knowledges": [
 		{"description":"HTML: nivel experto"},
 		{"description":"CSS: nivel experto"},
 		{"description":"JavaScript: nivel avanzado"},
