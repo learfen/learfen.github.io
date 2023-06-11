@@ -66,14 +66,14 @@
 		}
 	],
 	"knowledges": [
-		{"description":"NUXT: nivel avanzado"},
-		{"description":"NEXT: nivel avanzado"},
-		{"description":"JavaScript: nivel avanzado"},
-		{"description":"PHP: nivel avanzado"},
+		{"description":"NUXT(vue): nivel avanzado"},
+		{"description":"NEXT(react): nivel avanzado"},
+		{"description":"JavaScript: nivel experto"},
+		{"description":"PHP: nivel intermedio"},
+		{"description":"Python: nivel intermedio"},
 		{"description":"Laravel: nivel intermedio"},
-		{"description":"Bootstrap: nivel intermedio"},
+		{"description":"Bootstrap: nivel experto"},
 		{"description":"jQuery: nivel intermedio"},
-		{"description":"WordPress: nivel intermedio"},
 		{"description":"Git: nivel intermedio"}
 	]
 }
