@@ -59,7 +59,8 @@
 			margin-left: 20px;
 		}
 
-		.cv-list {
+		.cv-list ,
+		.cv-list-cols{
 			all: unset;
 			list-style-type: disc;
 			margin-left: 50px;
@@ -71,6 +72,15 @@
 			padding: 1rem;
 			display: block;
 			background-color: #eee;
+		}
+
+		.cv-list-cols {
+			display: flex;
+			flex-wrap: wrap;
+		}
+		.cv-list-cols .cv-stack {
+			padding-left:.5rem;
+			margin-left:.5rem
 		}
 
 		.cv-list-item {
