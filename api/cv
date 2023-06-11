@@ -66,8 +66,8 @@
 		}
 	],
 	"knowledges": [
-		{"description":"HTML: nivel experto"},
-		{"description":"CSS: nivel experto"},
+		{"description":"NUXT: nivel avanzado"},
+		{"description":"NEXT: nivel avanzado"},
 		{"description":"JavaScript: nivel avanzado"},
 		{"description":"PHP: nivel avanzado"},
 		{"description":"Laravel: nivel intermedio"},
