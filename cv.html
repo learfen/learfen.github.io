@@ -3,9 +3,10 @@
 <head>
 	<style>
 		/* Aquí se definen los estilos CSS para el CV */
-		*{
+		* {
 			box-sizing: border-box;
 		}
+
 		body {
 			font-family: Arial, sans-serif;
 			background-color: #f0f0f0;
@@ -62,8 +63,8 @@
 			margin-left: 20px;
 		}
 
-		.cv-list ,
-		.cv-list-cols{
+		.cv-list,
+		.cv-list-cols {
 			all: unset;
 			list-style-type: disc;
 			margin-left: 50px;
@@ -88,22 +89,48 @@
 			flex-wrap: wrap;
 			justify-content: space-between;
 		}
+
 		.cv-list-cols .cv-list-item {
 			padding-left: .5rem;
 			margin-left: 1rem;
-			min-width:calc(40% - 1.5rem)
+			min-width: calc(40% - 1.5rem)
 		}
-		.bg-success{
+
+		.bg-success {
 			background-color: rgb(60, 193, 60);
 		}
-		.bg-danger{
+
+		.bg-danger {
 			background-color: rgb(193, 80, 60);
 		}
-		.position-absolute{
+
+		.position-absolute {
 			position: absolute;
 		}
-		.position-relative{
+
+		.position-relative {
 			position: relative;
+		}
+
+		/* the classes */
+		.hidden {
+			opacity: 0;
+		}
+
+		.hidden-right {
+			transform: translate(50px, 0);
+		}
+
+		.hidden-left {
+			transform: translate(-50px, 0);
+		}
+
+		.showElement {
+			opacity: 1;
+			transform: translate(0, 0);
+			-webkit-transition: all 0.5s ease-out;
+			-moz-transition: all 0.5s ease-out;
+			transition: all 0.5s ease-out;
 		}
 	</style>
 </head>
@@ -146,7 +173,8 @@
 			<ul class="cv-list cv-list-cols">
 				<li class="cv-list-item" v-for="knowledge in knowledges">
 					<span class="position-relative" style="z-index:2;padding:.25rem">{{knowledge.description}}</span>
-					<div class="d-block bg-success position-relative" :style="'z-index:1;min-height:.25rem;width:'+knowledge.level*25+'%'"></div>
+					<div class="d-block bg-success position-relative"
+						:style="'z-index:1;min-height:.25rem;width:'+knowledge.level*25+'%'"></div>
 				</li>
 			</ul>
 		</div>
@@ -158,7 +186,8 @@
 				<li class="cv-list-item">Obtuve el título de ingeniero informático con una nota media de 8,5.</li>
 				<li class="cv-list-item">Realicé varios proyectos académicos relacionados con el desarrollo web, la
 					programación, las bases de datos, la inteligencia artificial y la seguridad informática.</li>
-				<li class="cv-list-item">Participé en varios concursos y eventos de programación, obteniendo buenos resultados y
+				<li class="cv-list-item">Participé en varios concursos y eventos de programación, obteniendo buenos
+					resultados y
 					reconocimientos.</li>
 			</ul>
 		</div>
@@ -170,8 +199,8 @@
 		el: '#app',
 		data: {
 			works: [],
-			knowledges:[],
-			level:['','principiante','intermedio','avanzado','experto']
+			knowledges: [],
+			level: ['', 'principiante', 'intermedio', 'avanzado', 'experto']
 		},
 		computed: {
 		},
@@ -189,8 +218,29 @@
 				alert('Ocurrio un error al obtener informacion del cv')
 			}
 		},
+		directives: {
+			infocus: {
+				isLiteral: true,
+				inserted: (el, binding, vnode) => {
+					let f = () => {
+						let rect = el.getBoundingClientRect()
+						let inView = (
+							rect.width > 0 &&
+							rect.height > 0 &&
+							rect.top >= 0 &&
+							rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
+						)
+						if (inView) {
+							el.classList.add(binding.value)
+							window.removeEventListener('scroll', f)
+						}
+					}
+					window.addEventListener('scroll', f)
+					f()
+				}
+			}
+		}
 	})
-	const position = element.getBoundingClientRect();
 
 </script>
 
