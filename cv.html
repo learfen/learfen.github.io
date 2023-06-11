@@ -144,8 +144,8 @@
 			<div class="cv-title">Habilidades y competencias</div>
 			<ul class="cv-list cv-list-cols">
 				<li class="cv-list-item" v-for="knowledge in knowledges">
-					<div class="d-block bg-success position-relative" :style="'min-height:1.5rem;width:'+knowledge.level*25+'%'"></div>
-					{{knowledge.description}}
+					<span class="position-absolute">{{knowledge.description}}</span>
+					<div class="d-block bg-success position-relative" :style="'float:left;min-height:1.5rem;width:'+knowledge.level*25+'%'"></div>
 				</li>
 			</ul>
 		</div>
