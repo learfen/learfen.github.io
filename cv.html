@@ -232,9 +232,9 @@
 						)
 						if (inView) {
 							el.classList.add(binding.value)
-							window.removeEventListener('scroll', f)
+							//window.removeEventListener('scroll', f)
 						}else{
-							el.classList.remove(binding.value)
+							el.classList.remove('showElement')
 						}
 					}
 					window.addEventListener('scroll', f)
