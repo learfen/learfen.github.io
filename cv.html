@@ -3,6 +3,9 @@
 <head>
 	<style>
 		/* Aquí se definen los estilos CSS para el CV */
+		*{
+			box-sizing: border-box;
+		}
 		body {
 			font-family: Arial, sans-serif;
 			background-color: #f0f0f0;
@@ -87,7 +90,7 @@
 		.cv-list-cols .cv-list-item {
 			padding-left: .5rem;
 			margin-left: 1rem;
-			width:50%
+			min-width:calc(50% - 1.5rem)
 		}
 	</style>
 </head>
