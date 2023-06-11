@@ -68,14 +68,14 @@
 	"knowledges": [
 		{"description":"ChatGPT(api)", "level":2},
 		{"description":"TensorFlow", "level":1},
-		{"description":"NEXT(react)", "level":"avanzado"},
-		{"description":"NUXT(vue)", "level":"avanzado"},
+		{"description":"NEXT(react)", "level":2},
+		{"description":"NUXT(vue)", "level":2},
 		{"description":"Qwik(ts)", "level":1},
-		{"description":"JavaScript", "level":"experto"},
+		{"description":"JavaScript", "level":4},
 		{"description":"PHP", "level":2},
 		{"description":"Python", "level":2},
 		{"description":"Laravel", "level":2},
-		{"description":"Bootstrap", "level":"experto"},
+		{"description":"Bootstrap", "level":4},
 		{"description":"jQuery", "level":2},
 		{"description":"Git", "level":2}
 	]
