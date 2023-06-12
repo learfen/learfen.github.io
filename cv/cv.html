@@ -41,7 +41,7 @@
 			<div class="cv-title">Habilidades y competencias</div>
 			<ul class="cv-list cv-list-cols">
 				<li class="cv-list-item"  v-for="knowledge in knowledges">
-					<span class="position-relative" style="z-index:2;padding:.25rem">{{knowledge.description}} <img :src="knowledge.icon" width="20px" height="20px" alt="Knowledge Icon"></span>
+					<span class="position-relative" style="z-index:2;padding:.25rem">{{knowledge.description}} <img :src="knowledge.icon" style="filter: grayscale();" width="20px" height="20px" alt="Knowledge Icon"></span>
 					<div class="d-block bg-success position-relative"
 						:style="'z-index:1;min-height:.25rem;width:'+knowledge.level*25+'%'"></div>
 				</li>
