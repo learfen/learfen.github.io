@@ -16,7 +16,27 @@
 			background-color: white;
 			padding: 20px;
 		}
-
+		.d-flex{
+			display:flex
+		}
+		.d-flex .align-items-center{
+			align-items:center
+		}
+		.btn {
+			display: inline-block;
+			padding: 10px 20px;
+			background-color: #2056ec;
+			color: white;
+			text-decoration: none;
+			border-radius: 5px;
+			margin-top: 10px;
+			margin-right: 10px;
+			cursor: pointer;
+			box-shadow: 1px 1px 4px #444;
+		}
+		.btn:hover {
+			background-color: #204dc9;
+		}
 		.cv-header {
 			display: flex;
 			align-items: center;
