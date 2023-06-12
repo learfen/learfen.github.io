@@ -125,7 +125,9 @@
 		.hidden {
 			opacity: 0;
 		}
-
+		.p-1{
+			padding:.5rem
+		}
 		.hidden-right {
 			transform: translate(50px, 0);
 		}
