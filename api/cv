@@ -85,6 +85,7 @@
 		{"icon":"https://www.svgrepo.com/show/342317/typescript.svg","description":"TypeScript", "level":3},
 		{"icon":"https://www.svgrepo.com/show/355081/js.svg","description":"JavaScript", "level":4},
 		{"icon":"https://www.svgrepo.com/show/508915/flask.svg","description":"Flask", "level":2},
+		{"icon":"https://www.svgrepo.com/show/506463/discord.svg","description":"Discord(api)", "level":2},
 		{"icon":"https://www.svgrepo.com/show/503402/language-python.svg","description":"Python", "level":3},
 		{"icon":"https://www.svgrepo.com/show/473693/laravel.svg","description":"Laravel", "level":2},
 		{"icon":"https://www.svgrepo.com/show/508931/php01.svg","description":"PHP", "level":2},
