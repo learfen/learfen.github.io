@@ -23,7 +23,7 @@
 		</div>
 		<div class="cv-section">
 			<div class="cv-title">Experiencia laboral</div>
-			<div v-for="work of works">
+			<div v-for="work of works" class=" hidden" v-infocus="'showElement'">
 				<div class="cv-subtitle">{{work.rol}}</div>
 				<div class="cv-text">{{work.time}}</div>
 				<ul class="cv-list">
