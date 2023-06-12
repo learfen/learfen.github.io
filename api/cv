@@ -74,6 +74,7 @@
 	"knowledges": [
 		{"description":"ChatGPT(api)", "level":2},
 		{"description":"TensorFlow(js-python)", "level":1},
+		{"description":"Rust", "level":2},
 		{"description":"NEXT(react)", "level":2},
 		{"description":"NUXT(vue)", "level":2},
 		{"description":"ExpressJs", "level":2},
