@@ -78,17 +78,16 @@
 		{"img":"https://www.svgrepo.com/show/369528/rust.svg","description":"Rust", "level":2},
 		{"img":"https://www.svgrepo.com/show/354112/nextjs.svg","description":"NEXT(react)", "level":2},
 		{"img":"https://www.svgrepo.com/show/306491/nuxt-dot-js.svg","description":"NUXT(vue)", "level":2},
-		{"img":"https://www.svgrepo.com/show/369528/rust.svg","description":"ExpressJs", "level":2},
-		{"img":"https://www.svgrepo.com/show/369528/rust.svg","description":"Sequelize", "level":2},
-		{"img":"https://www.svgrepo.com/show/369528/rust.svg","description":"Qwik", "level":1},
-		{"img":"https://www.svgrepo.com/show/369528/rust.svg","description":"TypeScript", "level":3},
+		{"img":"https://www.svgrepo.com/show/376367/express.svg","description":"ExpressJs", "level":2},
+		{"img":"https://www.svgrepo.com/show/374071/sequelize.svg","description":"Sequelize", "level":2},
+		{"img":"https://seeklogo.com/images/Q/qwik-icon-logo-48EC4793C2-seeklogo.com.png","description":"Qwik", "level":1},
+		{"img":"https://www.svgrepo.com/show/342317/typescript.svg","description":"TypeScript", "level":3},
 		{"img":"https://www.svgrepo.com/show/355081/js.svg","description":"JavaScript", "level":4},
-		{"img":"https://www.svgrepo.com/show/369528/rust.svg","description":"Flask", "level":2},
-		{"img":"https://www.svgrepo.com/show/369528/rust.svg","description":"Python", "level":3},
-		{"img":"https://www.svgrepo.com/show/369528/rust.svg","description":"Laravel", "level":2},
-		{"img":"https://www.svgrepo.com/show/369528/rust.svg","description":"PHP", "level":2},
-		{"img":"https://www.svgrepo.com/show/369528/rust.svg","description":"Bootstrap", "level":4},
-		{"img":"https://www.svgrepo.com/show/369528/rust.svg","description":"jQuery", "level":2},
-		{"img":"https://www.svgrepo.com/show/369528/rust.svg","description":"Git", "level":2}
+		{"img":"https://www.svgrepo.com/show/508915/flask.svg","description":"Flask", "level":2},
+		{"img":"https://www.svgrepo.com/show/503402/language-python.svg","description":"Python", "level":3},
+		{"img":"https://www.svgrepo.com/show/473693/laravel.svg","description":"Laravel", "level":2},
+		{"img":"https://www.svgrepo.com/show/508931/php01.svg","description":"PHP", "level":2},
+		{"img":"https://www.svgrepo.com/show/378490/bootstrap-fill.svg","description":"Bootstrap", "level":4},
+		{"img":"https://www.svgrepo.com/show/509966/git.svg","description":"Git", "level":2}
 	]
 }
