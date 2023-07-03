@@ -74,8 +74,9 @@
 	"knowledges": [
 		{"icon":"https://www.svgrepo.com/show/306500/openai.svg","description":"ChatGPT(api)", "level":2},
 		{"icon":"https://www.svgrepo.com/show/473805/tensorflow.svg","description":"TensorFlow(js-python)", "level":1},
-		{"icon":"https://www.svgrepo.com/show/373446/astro.svg","description":"Astro", "level":1},
+		{"icon":"https://www.svgrepo.com/show/373446/astro.svg","description":"Astro", "level":2},
 		{"icon":"https://www.svgrepo.com/show/394136/electronjs.svg","description":"ElectronJs", "level":2},
+		{"icon":"https://avatars.githubusercontent.com/u/118319153?s=200&v=4","description":"Leptos", "level":2},
 		{"icon":"https://www.svgrepo.com/show/369528/rust.svg","description":"Rust", "level":2},
 		{"icon":"https://www.svgrepo.com/show/354112/nextjs.svg","description":"NEXT(react)", "level":2},
 		{"icon":"https://www.svgrepo.com/show/306491/nuxt-dot-js.svg","description":"NUXT(vue)", "level":2},
