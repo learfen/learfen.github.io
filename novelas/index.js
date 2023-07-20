@@ -5,16 +5,17 @@ const dialogs = document.getElementById('dialogs')
 dialogs.className = 'h-100'
 
 
-let link = document.createElement('style')
+let styleFonts = document.createElement('style')
+styleFonts.id = 'styleFonts'
 for(let font of fuentes()){
-	link.innerHTML += `
+	styleFonts.innerHTML += `
 	@font-face {
 		font-family: ${font.split('.')[0]};
 		src: url(/fonts/${font});
 	}
 	`
 }
-document.head.appendChild(link)
+document.head.appendChild(styleFonts)
 
 if (!String.prototype.trim) {
     (function() {
@@ -61,6 +62,16 @@ function crearPersona( name ){
 		}
 	}
 	return persona
+}
+
+function fuenteDialogos( name ){
+	let styleFonts = document.createElement('style')
+	styleFonts.innerHTML += `
+	.bubble {
+		font-family: ${name};
+	}
+	`
+	document.body.appendChild(styleFonts)
 }
 
 async function crearDialogo( emit , recept , text , config ){
@@ -114,7 +125,7 @@ async function crearDialogo( emit , recept , text , config ){
 	await writeDialog()
 	let answerTarget = null	
 	dialog.querySelector('.answers').innerHTML = ''
-	let count = 0
+	let count = 1
 	for(let optionText of answers.split('\n')){
 		optionText = optionText.trim()
 		if(optionText){

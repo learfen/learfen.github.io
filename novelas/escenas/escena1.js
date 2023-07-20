@@ -1,12 +1,14 @@
+
 async function escena1() {
+	fuenteDialogos('VT323-Regular')
 	// fondo('calle.webp')
-	let transition = crearTransicion('Aqui comienza esta historia'  , {
+	let transicion = crearTransicion('Aqui comienza esta historia'  , {
 		fondo:'fondo-transicion.jpg',
 		texto:'animate__rubberBand text-weight-bold fs-1',
 		textoCss:'font-family: VT323-Regular, sans-serif',
 	})
 	fondo('fondo1.mp4')
-	await transition
+	await transicion
 	const daniel = crearPersona('daniel')
 	const laura = crearPersona('laura')
 	let dialogo = await crearDialogo(
