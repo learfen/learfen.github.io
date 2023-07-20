@@ -12,10 +12,13 @@
 	/>
 	<link rel="stylesheet" href="index.css?v=1.1">
 </head>
-<body>
-	<div id="background"></div>
-	<div id="screen" class="px-4">
-		<div id="dialogs"></div>
+<body class="d-flex justify-content-center">
+	<div id="app">
+		<div id="boxBar" class="position-fixed top-0 left-0 vw-100"></div>
+		<div id="background"></div>
+		<div id="screen" class="px-4">
+			<div id="dialogs"></div>
+		</div>
 	</div>
 </body>
 <script src="./escenas/escena1.js?v=1.1"></script>
@@ -26,6 +29,7 @@
 	function fuentes(){
 		return ['VT323-Regular.ttf']
 	}
+	// voces disponibles 'Helena','Laura','Pablo','Alvaro','Elvira'
 </script>
 <script src="./index.js?v=1.1"></script>
 </html>

@@ -1,5 +1,4 @@
 async function escena2() {
-	dialogs.innerHTML = ''
 	await crearTransicion('Ya en la escuela' , { 
 		duracion:2500 ,
 		text:'animate__rubberBand text-weight-bold',

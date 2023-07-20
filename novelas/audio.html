@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+		integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA=="
+		crossorigin="anonymous" />
+	<style>
+		body {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			height: 100vh;
+			margin: 0;
+		}
+
+		#audio-container {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			margin-top: 20px;
+		}
+
+		#h1 {
+			justify-content: center;
+			font-size: 20px;
+			color: #737373;
+		}
+
+		#audio-icon {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 28px;
+			cursor: pointer;
+			color: #737373;
+		}
+
+		#play-pause-text {
+			margin-left: 10px;
+		}
+	</style>
+</head>
+
+<body>
+	<div>
+		<select name="voice" id="voiceSelect"></select>
+		<button id="start">Start</button>
+	</div>
+	<script>
+		const voiceSelect = document.getElementById("voiceSelect")
+		const start = document.getElementById("start")
+
+		let voices = []
+		function populateVoiceList() {
+			if (typeof speechSynthesis === "undefined") {
+				return;
+			}
+			voices = speechSynthesis.getVoices();
+
+			for (let i = 0; i < voices.length; i++) {
+				if(voices[i].lang != 'es-ES') continue
+				const option = document.createElement("option");
+				option.textContent = `${voices[i].name} (${voices[i].lang})`;
+
+				if (voices[i].default) {
+					option.textContent += " — DEFAULT";
+				}
+				option.value = i
+				option.setAttribute("data-lang", voices[i].lang);
+				option.setAttribute("data-name", voices[i].name);
+				voiceSelect.appendChild(option);
+			}
+		}
+
+		populateVoiceList();
+		if (
+			typeof speechSynthesis !== "undefined" &&
+			speechSynthesis.onvoiceschanged !== undefined
+		) {
+			speechSynthesis.onvoiceschanged = populateVoiceList;
+		}
+
+		const speak = (p) => {
+			console.log(voiceSelect.value)
+			const ssu = new SpeechSynthesisUtterance(p);
+			ssu.lang = 'zh-CN';
+			ssu.voice = voices[voiceSelect.value];
+			speechSynthesis.speak(ssu);
+			console.log(ssu);
+		};
+		start.onclick = () => speak('hola como estas?')
+	</script>
+</body>
+
+</html>
