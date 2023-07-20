@@ -123,9 +123,11 @@ function fondo( src , config ){
 			let video = document.createElement('video')
 			video.src = `./videos/${ src }`
 			video.style = 'width:100%'
-			document.querySelector('.transition button').addEventListener('click', () => {
-				video.play()
-			})
+			if( document.querySelector('.transition button') ){
+				document.querySelector('.transition button').addEventListener('click', () => {
+					video.play()
+				})
+			}
 			if(config){
 				if(config['repeat']) {
 					video.loop = true
@@ -149,7 +151,9 @@ function crearPersona( name , config ){
 	}
 	for(let estado of estadosPersonas()){
 		person[estado] = () => {
-			document.querySelector('[name='	+ name + ']').src = './images/' + name + '-' + estado
+			if(estado == 'normal')
+				return document.querySelector('img[name='	+ name + ']').src = './images/' + name + '.png'
+			document.querySelector('img[name='	+ name + ']').src = './images/' + name + '-' + estado + '.png'
 		}
 	}
 	if(config){
@@ -208,14 +212,19 @@ async function crearDialogo( emit , recept , text , config ){
 			<div class="d-flex between">
 				<div class="d-flex align-items-start h-50 w-50"  name="${emit.nombre}">
 					<div class="dialog__image">
-						<img class="w-75" name="${emit.nombre}" src="${emit.image()}" alt="">
+						<img 
+							class="w-75" 
+							name="${emit.nombre}" 
+							src="${emit.image()}.png" 
+							alt=""
+						>
 					</div>
 					<div name="dialog" class="position-absolute bubble bubble-bottom-left">
 					</div>
 				</div>
 				<div class="d-flex w-50"  name="${recept.nombre}">
 					<div class="dialog__image d-flex justify-content-end">
-						<img class="recept w-75"  name="${recept.nombre}" src="${recept.image()}" alt="">
+						<img class="recept w-75"  name="${recept.nombre}" src="${recept.image()}.png" alt="">
 					</div>
 				</div>
 			</div>
@@ -224,7 +233,7 @@ async function crearDialogo( emit , recept , text , config ){
 		`
 		dialogs.appendChild(dialog)
 	}
-	
+
 	if(emit['speak']) emit['speak'](dialogText)
 	
 	const writeDialog = () => {
@@ -343,6 +352,7 @@ const findEscenes = (n) => {
 					findEscenes(++n)
 				}else {
 					escena1()
+					inicio()
 				}
 			})
 	} catch (error) {

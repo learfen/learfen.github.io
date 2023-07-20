@@ -1,10 +1,8 @@
 async function escena1() {
-	fuenteDialogos('VT323-Regular')
 	// fondo('calle.webp')
 	let transicion = crearTransicion('Aqui comienza esta historia')
-	fondo('fondo1.mp4')
 	await transicion
-	const daniel = crearPersona('daniel', {voz:'Pablo'})
+	const daniel = crearPersona('daniel' /**, {voz:'Pablo'} */)
 	const laura = crearPersona('laura')
 	usarBarra('animo',daniel)
 	usarBarra('animo',laura)
@@ -21,6 +19,8 @@ async function escena1() {
 			hoy tengo tenis
 			me siento mal, *se desmaya*
 	`)
+	laura.saludando()
+	daniel.saludando()
 
 	if( await dialogo.respuesta() == 'mal' ) {
 		daniel.triste()
@@ -35,6 +35,8 @@ async function escena1() {
 	}
 
 	if( await dialogo.respuesta() == 'bien vos?' ) {
+		laura.normal()
+		daniel.normal()
 		let dialogo = await crearDialogo(
 			daniel , laura , `
 				Bien
@@ -54,14 +56,4 @@ async function escena1() {
 	if(await dialogo.respuesta() == 'me siento mal, *se desmaya*'){
 		actualizarBarra('salud', daniel , -90)
 	}
-}
-
-window.configDialogo = {
-	opcionEfectoEntrada:'animate__backInRight'
-}
-
-window.configTransicion = {
-	fondo:'fondo-transicion.jpg',
-	texto:'animate__rubberBand text-weight-bold fs-1',
-	textoCss:'font-family: VT323-Regular, sans-serif',
 }

@@ -121,7 +121,9 @@ body {
 	left: 32px;
 	bottom: -24px;
 }
-
+.answers{
+	min-height: 200px;
+}
 
 
 .transparent{
