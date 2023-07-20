@@ -11,7 +11,7 @@ for(let font of fuentes()){
 	styleFonts.innerHTML += `
 	@font-face {
 		font-family: ${font.split('.')[0]};
-		src: url(/fonts/${font});
+		src: url(./fonts/${font});
 	}
 	`
 }
