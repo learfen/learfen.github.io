@@ -347,12 +347,14 @@ const findEscenes = (n) => {
 			.then(text => {
 				if(text.search('DOCTYPE') == -1) {
 					eval('window.escena'+n+' = ' + text.replace('{',`{ 
+						localStorage.setItem('escena',${n})
 						dialogs.innerHTML = '' 
 						`))
 					findEscenes(++n)
 				}else {
-					escena1()
-					inicio()
+					if(!localStorage.getItem('escena')) escena1()
+					else window['escena'+localStorage.getItem('escena')]()
+					inicio( localStorage.getItem('escena') || 1 )
 				}
 			})
 	} catch (error) {

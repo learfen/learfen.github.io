@@ -8,7 +8,7 @@ window.configTransicion = {
 	textoCss:'font-family: VT323-Regular, sans-serif',
 }
 
-function inicio(){
+function inicio( escena ){
 	fuenteDialogos('VT323-Regular')
-	fondo('fondo1.mp4')
+	if(escena == 1) fondo('fondo1.mp4')
 }
