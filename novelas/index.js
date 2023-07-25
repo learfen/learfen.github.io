@@ -342,23 +342,24 @@ function crearTransicion( text , config ){
 
 const findEscenes = (n) => {
 	try {
-		fetch('/escenas/escena'+n+'.js')
+		fetch('./escenas/escena'+n+'.js')
 			.then(res => res.text())
 			.then(text => {
-				if(text.search('DOCTYPE') == -1) {
-					eval('window.escena'+n+' = ' + text.replace('{',`{ 
-						localStorage.setItem('escena',${n})
-						dialogs.innerHTML = '' 
-						`))
-					findEscenes(++n)
-				}else {
-					if(!localStorage.getItem('escena')) escena1()
-					else window['escena'+localStorage.getItem('escena')]()
-					inicio( localStorage.getItem('escena') || 1 )
-				}
+				eval('window.escena'+n+' = ' + text.replace('{',`{ 
+					localStorage.setItem('escena',${n})
+					dialogs.innerHTML = '' 
+					`))
+				findEscenes(++n)
+			})
+			.catch( error => {
+				if(!localStorage.getItem('escena')) escena1()
+				else window['escena'+localStorage.getItem('escena')]()
+				inicio( localStorage.getItem('escena') || 1 )
 			})
 	} catch (error) {
-		
+		if(!localStorage.getItem('escena')) escena1()
+		else window['escena'+localStorage.getItem('escena')]()
+		inicio( localStorage.getItem('escena') || 1 )
 	}
 }
 findEscenes( 1 )
