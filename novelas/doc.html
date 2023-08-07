@@ -1,0 +1,182 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2023-6to</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><p>Programación</p>
+<h1 id="objetivo">Objetivo</h1>
+<p>Diseñar una historia y sus variantes en un diagrama de estado<br>
+Programar en javascript<br>
+Utilizar el motor para juegos</p>
+<h1 id="temas">Temas</h1>
+<ul>
+<li>Sistemas</li>
+<li>Variables</li>
+<li>Tipado</li>
+<li>Funciones</li>
+<li>¿Por qué son importantes los algoritmos?</li>
+<li>Autómatas</li>
+<li>Buscando el algoritmo de nuestra historia</li>
+</ul>
+<h2 id="introducción">Introducción</h2>
+<p>Sabemos que para calcular un área de un triangulo la formula es (b*a) / 2, también sabemos formula o receta para conseguir hacer pan, agua + sal + harina + amasar + 180° de calor durante 40 min. Estos tipos de problemas son en una dirección pasos hacia el resultado, pero ¿Y si fuera al revés? Si nos dieran por ejemplo el pan y nuestra tarea fuera encontrar la manera de crear ese pan. Es decir, que recursos y pasos seguir para conseguir el resultado.</p>
+<h2 id="algoritmos">Algoritmos</h2>
+<p><strong>Un algoritmo es un conjunto detallado y lógico de pasos para alcanzar un objetivo o resolver un problema</strong></p>
+<p><strong>Características</strong></p>
+<ul>
+<li><strong>Precisos</strong>. Objetivos, sin ambigüedad.</li>
+<li><strong>Ordenados</strong>. Presentan una secuencia clara y precisa para poder llegar a la solución.</li>
+<li><strong>Finitos</strong>. Contienen un número determinado de pasos.</li>
+<li><strong>Concretos</strong>. Ofrecen una solución determinada para la situación o problema planteados.</li>
+<li><strong>Definidos</strong>. El mismo algoritmo debe dar el mismo resultado al recibir la misma entrada.</li>
+</ul>
+<p><strong>Actividad</strong><br>
+Crea el algoritmo del cuento caperucita roja</p>
+<blockquote>
+<p>Imaginemos que recibimos un algoritmo como una receta de cocina para hacer un rico budín. Para lograr hacer el budín necesitamos los ingredientes. Dicho esto obtenemos los 3 elementos básicos de un sistema. Entrada-&gt;Proceso-&gt;Salida</p>
+</blockquote>
+<p><strong>Sistemas</strong><br>
+Las elementos de un sistema son entrada-&gt;proceso-&gt;salida</p>
+<p>Una aplicación de los algoritmos se tiene con los autómatas.</p>
+<p>Actividad:<br>
+Etiqueta los siguientes elementos y agrega el paso que falta</p>
+
+<table>
+<thead>
+<tr>
+<th>ETIQUETAS</th>
+<th>ELEMENTOS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td>. . . . . . . . . . . . . . . ,  Agregar calor durante 10 min</td>
+</tr>
+<tr>
+<td></td>
+<td>arroz cocinado</td>
+</tr>
+<tr>
+<td></td>
+<td>arroz, agua, sal, olla</td>
+</tr>
+</tbody>
+</table><h2 id="autómata">Autómata</h2>
+<p>Un autómata es un <strong>modelo matemático para una  máquina de estado finito</strong>. Es una máquina que, dada una entrada de símbolos, “salta” a través de una serie de estados de acuerdo a una función de transición (que puede ser expresada como una tabla).</p>
+<ul>
+<li>Las flechas son transiciones que nos permiten ir de un estado al otro<br>
+o volver al mismo.</li>
+<li>Para iniciar una transición recibimos un input.</li>
+<li>El inicio y el final deben ser un estado valido.</li>
+</ul>
+<p><img src="./images/componentesDiagramaEstado.png" alt="enter image description here"></p>
+
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Entradas</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Descripción del estado</td>
+<td>valor de entrada</td>
+</tr>
+</tbody>
+</table><p><strong>Actividad</strong></p>
+<p><img src="./images/actividadEstados.png" alt="enter image description here"></p>
+<p>¿Como guardamos las entradas? Es decir, necesitamos un espacio. Pero, ¿Y si tenemos varios espacios como los podríamos diferenciar unos de otros? Podríamos darle un nombre.  Esas son las 2 características de una variable.</p>
+<h2 id="variable">Variable</h2>
+<p>En programación, una variable está formada por un espacio en el sistema de almacenamiento y un nombre simbólico que está asociado a dicho espacio.<br>
+Si una variable es un espacio ¿Que pasaría si lo que queremos guardar no entra en ese espacio o sobra? Pues de este problema es que surgen los tipos de datos y el tipado de un lenguaje.<br>
+Utilizaremos javascript, es un lenguaje de tipado débil, donde crearemos espacios para guardar información utilizando la palabra “let”, es decir variables.<br>
+<strong>Actividad</strong><br>
+En el ejemplo veremos,<br>
+let<br>
+nombre<br>
+el dato que queremos guardar en la pc</p>
+<p>El nombre de la variable sera mensaje<br>
+El valor será un tipo cadena de caracteres(string) se declaran entre comillas “rojo”</p>
+<p>Crea un archivo index.html en tu pc y ábrelo con vscode<br>
+Agrega el siguiente código.</p>
+<pre><code>&lt;script&gt;
+    let mensaje="Hola mundo"
+&lt;/script&gt;
+</code></pre>
+<p>Haz creado tu primer documento web. Ahora puedes abrir este archivo en el navegador.<br>
+¿No se ve ningún cambio verdad? Pues ahora haremos que el valor que guardamos pueda verse. Pero ¿Donde se vería exactamente? El cuerpo(body) es donde estara lo que se vemos en pantalla, reemplaza el código anterior por este:</p>
+<pre><code>	&lt;body&gt;
+	&lt;/body&gt;
+	&lt;script&gt;
+		let mensaje="Hola mundo"
+		// dentro del documento [document]
+		// dentro de &lt;body&gt;
+		// propiedad [innerText]
+		document.body.innerText = mensaje
+	&lt;/script&gt;
+</code></pre>
+<p>Quizás te preguntes que son los atributos o propiedades, hay estructuras de datos, es decir, formas de organizar los datos para que sea más fácil trabajar con ellos, por ejemplo, una lista o un objeto.</p>
+<pre><code>// asi representamos una lista
+let estoEsUnaListaDeNumeros = [1,4,10,12,95]
+// asi podemos representar un objeto
+let estoEsUnObjeto ={nombre:"daniel",apellido:"garcia"}
+</code></pre>
+<p>¿Pero como accedemos a la información de estas estructuras? Utilizando corchetes, por ejemplo, obtener el primer elemento de la lista</p>
+<pre><code>&lt;body&gt;
+&lt;/body&gt;
+&lt;script&gt;
+	let lista = [1,4,10,12,95]
+	document.body.innerText = lista[0] 
+&lt;/script&gt;
+</code></pre>
+<p>Para acceder al nombre de persona tambien lo haremos con corchetes o un punto</p>
+<pre><code>	&lt;body&gt;
+	&lt;/body&gt;
+	&lt;script&gt;
+		let persona={nombre:"dani",apellido:"gar"}
+		document.body.innerText = persona["nombre"] 
+		// alternativa
+		// document.body.innerText = persona.nombre
+	&lt;/script&gt;
+</code></pre>
+<p>¿Podemos tener otros elementos aparte del body? Para organizar la información existen otras etiquetas(&lt; tag &gt;), si te interesa saber más del lenguaje html y todas sus etiquetas puedes investigar, nosotros solo abarcaremos javascript.</p>
+<h1 id="funciones">Funciones</h1>
+<p>Organizaremos los pequeños algoritmos que tengamos dentro de bloques de código, utilizando la palabra <strong>function</strong> indicamos que tipo de espacio necesitamos y al igual que las funciones le asignaremos un nombre acompañado de <strong>paréntesis()</strong>. El bloque de la función se limitara con <strong>llaves {}</strong>. Tomaremos el ejemplo anterior para crear la función escribir nombre, y luego la invocaremos utilizando el nombre y paréntesis.</p>
+<p><img src="./images/function.png" alt="enter image description here"></p>
+<pre><code>	&lt;body&gt;
+	&lt;/body&gt;
+	&lt;script&gt;
+		function miPrimerFuncion(){
+			let persona={nombre:"dani",apellido:"gar"}
+			document.body.innerText = persona["nombre"] 
+			// alternativa
+			// document.body.innerText = persona.nombre
+		}
+		miPrimerFuncion()
+	&lt;/script&gt;
+</code></pre>
+<p>Como vemos obtenemos la misma salida que antes. Nosotros utilizaremos bloques de código que ya están listos para avanzar mas rápido.</p>
+<p>Pero si tuviéramos la función suma, y nos interesa obtener el resultado del procedimiento en lugar de imprimirlo ¿Como lo haríamos? Para ello existe la palabra reservada para la sintaxis, “return”. En el ejemplo guardaremos el resultado de la función suma en una variable para utilizarlo mas adelante.</p>
+<pre><code>function suma(a , b){
+    return a + b
+}
+let resultadoDeSumar = suma( 12 , 5 )
+console.log(resultadoDeSumar)
+</code></pre>
+<h2 id="bibliografía">Bibliografía</h2>
+<p><a href="https://www.uaeh.edu.mx/scige/boletin/prepa4/n10/e1.html">Algoritmos (uaeh.edu.mx)</a></p>
+<p>Educación imaginativa: Herramientas cognitivas para el aula</p>
+<p><a href="https://ifdcsanluis-slu.infd.edu.ar/aula/archivos/repositorio/500/517/Introd_orgraf.pdf">Microsoft Word - Doc.1 - Introd. a los organizadores gráficos.doc (infd.edu.ar)</a></p>
+<p><a href="http://www.scielo.org.pe/scielo.php?script=sci_arttext&amp;pid=S1019-94032020000200163">Tipología de procesos cognitivos. Una herramienta para el análisis de situaciones de enseñanza (scielo.org.pe)</a></p>
+</div>
+</body>
+
+</html>
