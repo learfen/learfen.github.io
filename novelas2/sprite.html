@@ -14,8 +14,16 @@
 			<div id="reports"></div>
 		</div>
 	</div>
-	<button id="left"><-</button>
-	<button id="right">-></button>
+
+	<div class="arrows">
+		<div id="left" class="arrow left"></div>
+		<div class="arrows-container">
+			<div id="top" class="arrow top"></div>
+			<div id="bottom" class="arrow bottom"></div>
+		</div>
+		<div id="right" class="arrow"></div>
+	</div>
+
 </body>
 <script>
 
@@ -185,13 +193,11 @@ function createArrowControl( button , key){
 	const emitEvent = {
 		down( event ) {
 			clearInterval(buttonAction)
-			event.target.style = 'background:green'
 			buttonAction = setInterval( () =>{
 				document.dispatchEvent( new KeyboardEvent("keydown", {bubbles : true, cancelable : true, key, char : key, shiftKey : true}))
 			}, 100)
 		}
 		, up( event ) {
-			event.target.style = 'background:gray'
 			document.dispatchEvent(new KeyboardEvent("keyup", {bubbles : true, cancelable : true, key , char : key, shiftKey : true}))
 			clearInterval(buttonAction)
 		}
@@ -204,6 +210,9 @@ function createArrowControl( button , key){
 
 createArrowControl(document.querySelector('#left') , "ArrowLeft")
 createArrowControl(document.querySelector('#right') , "ArrowRight")
+
+
+
 
 </script>
 

@@ -109,3 +109,43 @@
 		width:100%
 	}
 }
+
+.arrows{
+	position:fixed;
+	bottom:10px;
+	left:10px;
+	border-radius:50%;
+	background-color: #eee;
+	box-shadow:3px 3px 3px #555;
+	display: flex;
+	align-items: center;
+	width: 150px;
+	height: 150px;
+	& .arrows-container{
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		height: 100%;
+	}
+	& .arrow{
+		background: url(https://img.icons8.com/arcade/64/arrow.png);
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: 120%;
+		min-width:50px;
+		min-height:50px;
+		width:50px;
+		height:50px;
+		background-color: #888;
+		border-radius: 50%;
+	}
+	& .left{
+		transform: scaleX(-1)
+	}
+	& .top{
+		transform:rotate(-90deg)
+	}
+	& .bottom{
+		transform:rotate(90deg)
+	}
+}
