@@ -96,18 +96,18 @@
 	width:240px;
 	margin:.25rem;
 	padding:.25rem;
-	& .title{
-		background-color: #aaa;
-		color:#333;
-		display: block;
-		margin:0;
-		font-size: 1rem;
-		padding:.25rem;
-	}
-	& .prop{
-		display: block;
-		width:100%
-	}
+}
+.report .title{
+	background-color: #aaa;
+	color:#333;
+	display: block;
+	margin:0;
+	font-size: 1rem;
+	padding:.25rem;
+}
+.report .prop{
+	display: block;
+	width:100%
 }
 
 .arrows{
@@ -121,31 +121,31 @@
 	align-items: center;
 	width: 150px;
 	height: 150px;
-	& .arrows-container{
-		display: flex;
-		flex-direction: column;
-		justify-content: space-between;
-		height: 100%;
-	}
-	& .arrow{
-		background: url(https://img.icons8.com/arcade/64/arrow.png);
-		background-repeat: no-repeat;
-		background-position: center;
-		background-size: 120%;
-		min-width:50px;
-		min-height:50px;
-		width:50px;
-		height:50px;
-		background-color: #888;
-		border-radius: 50%;
-	}
-	& .left{
-		transform: scaleX(-1)
-	}
-	& .top{
-		transform:rotate(-90deg)
-	}
-	& .bottom{
-		transform:rotate(90deg)
-	}
+}
+.arrows .arrows-container{
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	height: 100%;
+}
+.arrows .arrow{
+	background: url(https://img.icons8.com/arcade/64/arrow.png);
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 120%;
+	min-width:50px;
+	min-height:50px;
+	width:50px;
+	height:50px;
+	background-color: #888;
+	border-radius: 50%;
+}
+.arrows .left{
+	transform: scaleX(-1)
+}
+.arrows .top{
+	transform:rotate(-90deg)
+}
+.arrows .bottom{
+	transform:rotate(90deg)
 }
