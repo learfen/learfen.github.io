@@ -85,7 +85,7 @@
 	flex-wrap: wrap;
 	width: 100%;
 }
-#reportes.hidden{
+#reports.hidden{
 	display: none;
 }
 .report{
