@@ -85,6 +85,9 @@
 	flex-wrap: wrap;
 	width: 100%;
 }
+#reportes.hidden{
+	display: none;
+}
 .report{
 	border: 1px #333 solid;
 	border-radius: 5px;
