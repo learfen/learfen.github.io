@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
+<body>
+	<div id="app">
+		<div id="image" src="sprite-coin.jpg" class="sprite" style="height:75px;width:75px;background-position:0px 0px"></div>
+		<div id="image2" src="sprite1.png" class="sprite" style="height:100px;width:60px;background-position:0px 0px"></div>
+		<div id="reports">
+
+		</div>
+	</div>
+	<button id="left"><-</button>
+	<button id="right">-></button>
+</body>
+<script>
+
+function report( sprite ) {
+	let reports = document.querySelector('#reports')
+	let div = document.createElement('div')
+	div.className = 'report'
+	reports.appendChild(div)
+	return () => { 
+		if( sprite.node ){
+			let data = `
+				<h6 class="title">${sprite.node.id}</h6>
+				<small class="prop">${sprite.node.getAttribute('src')}</small>
+				<small class="prop">background-position:${sprite.node.style.backgroundPosition}</small>
+			`
+			for(let key of Object.keys(sprite)){
+				if(typeof sprite[key] == 'string' || Number.isInteger(sprite[key]))
+					data += `<small class="prop">${key}= ${sprite[key]}</small>`
+			}
+			div.innerHTML = data
+		}
+	}
+}
+
+function reportData( title ) {
+	let reports = document.querySelector('#reports')
+	let div = document.createElement('div')
+	div.className = 'report'
+	reports.appendChild(div)
+	return data => { 
+		let text = `<h6 class="title">${title}</h6>`
+		for(let key of Object.keys(data)){
+			if(typeof data[key] != 'object')
+				text += `<small class="prop">${key}= ${data[key]}</small>`
+		}
+		div.innerHTML = text
+	}
+}
+
+	
+class GameSprite {
+	constructor(id,countFrame,countRows, config) {
+		this.config={
+			time:50,
+			lines:[],
+			marginTop:0,
+			marginLeft:0,
+			totalFrame:0,
+			flip:false,
+			activateKey:null
+		}
+		if(config) this.setConfig( config )
+		this.countFrame=countFrame
+		this.countRows=countRows		
+		this.interval=null
+		this.position=0
+		this.section=0
+		this.row=0
+		if(this.config.totalFrame === 0) this.config.totalFrame = this.countFrame * this.countRows
+		if(this.config?.box?.width) this.section = this.config.box.width
+		if(this.config?.box?.height) this.line = this.config.box.height
+		const find = () => {
+			if( document.querySelector('#'+id) ){		
+				this.node = document.querySelector('#'+id)
+				this.src=this.node.getAttribute('src')
+				this.report = report(this)
+				this.mounted()
+			}else setTimeout(() => find (), 100)
+		}
+		find()
+
+		this.reportData = reportData('Data')
+		if(this.config.activateKey){
+			let time = 0
+			setInterval( () => { time = time + 1 }, 50)
+			let startTime = 0
+			document.addEventListener('keydown', (e) => {
+				if(e.key == this.config.activateKey ){
+					if( time > startTime + 1 ) {
+						this.setConfig( config )
+						this.animateScript( true )
+						startTime = time
+						this.reportData({ time })
+					}
+				}
+			})
+			document.addEventListener('keyup' , (e) => {
+				if(e.key == this.config.activateKey){
+					this.reset()
+				}
+			})
+		}
+	}
+	setConfig( config ){
+		for(let key in this.config){
+			if(config[key]) this.config[key]=config[key]
+		}
+	}
+	renderBackground(){
+		let line = (((100 * this.countRows) / this.countRows) * this.row ) + (this.config.marginTop * this.row)
+		if(this.config.lines.length) {
+			if( this.config.lines[this.row] == undefined ) this.row = 0
+			line = this.config.lines[this.row]
+		}
+		this.node.style.backgroundPosition=`-${this.position * this.section}px ${ line }%`
+		this.report()
+	}
+	reset(){
+		this.position = 0
+		this.row = 0
+		this.renderBackground()
+	}
+	mounted() {
+		this.node.style.background = 'url(./recursos/image/'+this.src+')'
+		this.node.style.backgroundSize = `${(this.countFrame * 100) - 1}% ${(this.countRows * 100) }%`
+		setTimeout(()=> this.animateScript( !!this.config.activateKey  ) , 300)
+	}
+	stopAnimate() {
+		clearInterval(this.interval)
+	}
+	animateScript( repeat=true ) {
+		const countRows = this.countRows || 1
+		const width = this.node.style.width.replace('px','')
+		if(this.section === 0) this.section = width;
+
+		if(this.config['flip']) this.node.style.transform = 'scaleX(-1)'
+		else this.node.style.transform = 'scaleX(1)'
+
+		const nextFrame = () => {
+			this.position++
+			if(( (this.row * this.countFrame) + this.position ) > this.config.totalFrame){
+				this.row = 0
+				this.position = 0
+			}else{
+				if ( this.position >= this.countFrame ) {
+					this.row++
+					if(this.row >= countRows) this.row = 0
+					this.position = 0 
+				}
+			}
+			this.renderBackground()
+		}
+		if(repeat) return nextFrame()
+		this.interval = setInterval( () => nextFrame() , this.config.time )
+	} 
+}
+new GameSprite('image',5,2,{
+	time:150,
+	lines:[0 , 105]
+})
+let left = new GameSprite('image2',5,2,{
+	time:150,
+	totalFrame:8,
+	flip:false,
+	lines:[0 , 100],
+	activateKey:'ArrowLeft'
+})
+let right = new GameSprite('image2',5,2,{
+	time:150,
+	totalFrame:8,
+	flip:true,
+	lines:[0 , 100],
+	activateKey:'ArrowRight'
+})
+let buttonAction
+function createArrowControl( button , key){
+	const emitEvent = {
+		down( event ) {
+			clearInterval(buttonAction)
+			event.target.style = 'background:green'
+			buttonAction = setInterval( () =>{
+				document.dispatchEvent( new KeyboardEvent("keydown", {bubbles : true, cancelable : true, key, char : key, shiftKey : true}))
+			}, 100)
+		}
+		, up( event ) {
+			event.target.style = 'background:gray'
+			document.dispatchEvent(new KeyboardEvent("keyup", {bubbles : true, cancelable : true, key , char : key, shiftKey : true}))
+			clearInterval(buttonAction)
+		}
+	}
+	button.addEventListener('touchstart', emitEvent.down )
+	button.addEventListener('touchend', emitEvent.up )
+	button.addEventListener('mousedown', emitEvent.down )
+	button.addEventListener('mouseup', emitEvent.up )
+}
+
+createArrowControl(document.querySelector('#left') , "ArrowLeft")
+createArrowControl(document.querySelector('#right') , "ArrowRight")
+
+</script>
+
+<link rel="stylesheet" href="./build/css/index.css">
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
+<body>
+	
+	<div id="app" class="text-center">
+		
+		<error-view></error-view>
+
+		<v-modal class="m-1" text-button="Menu">
+			<game-menu />
+		</v-modal>
+
+		<div v-if="false">
+			<game-dialog 
+			:visible="dialog1"
+			:x="300"
+			:y="100"
+			arrow="left"
+		>
+			<div>
+				Lorem ipsum dolor sit amet consectetur adipisicing elit. Minima rem commodi et enim! Id
+			</div>
+		</game-dialog>
+
+		<game-dialog 
+			:visible="true"
+			:x="500"
+			:y="100"
+			arrow="right"
+		>
+			<div>
+				Lorem ipsum dolor sit amet consectetur adipisicing elit. Minima rem commodi et enim! Id, nostrum, repellendus tempore ratione ipsum aut fuga molestiae, quaerat dicta delectus magni minus sit vitae doloribus?
+			</div>
+		</game-dialog>
+		</div>
+		<button @click="handleDialog1">Abrir</button>
+		<game-sprite count-frame="5" count-rows="2" src="sprite-coin.jpg"></game-sprite>
+	</div>
+</body>
+<link rel="stylesheet" href="./build/css/bootstrap.min.css">
+<link rel="stylesheet" href="./build/css/animate.min.css">
+<link rel="stylesheet" href="./build/css/index.css">
+<script src="./build/js/bootstrap.bundle.min.js"></script>
+<script src="./build/js/vue.js"></script>
+
+<script src="./build/js/index.js"></script>
+
+<script src="./components/v-modal.js"></script>
+<script src="./components/error-view.js"></script>
+<script src="./components/game-menu.js"></script>
+<script src="./components/game-dialog.js"></script>
+<script src="./components/game-sprite.js"></script>
+<script>
+	window.app = new Vue({
+	el: '#app',
+	data:{
+		dialog1:true,
+		title:'Escuela de musica',
+		email:'danielgarcia.clases@gmail.com',
+		password:'12345asdafq'
+	},
+	methods:{
+		handleDialog1(){
+			this.dialog1 = !this.dialog1
+		}
+	}
+	})
+</script>
+</html>

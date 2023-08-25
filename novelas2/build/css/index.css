@@ -1,0 +1,108 @@
+.btn-close:hover{
+	box-shadow: 1px 1px 3px #000;
+	cursor: pointer;
+}
+
+
+.dialog {
+	display:flex;
+	background-color:#ccc;
+	padding:20px;
+	border-radius:30px;
+	min-width:40px;
+	max-width:220px;
+	min-height:40px;
+	position:relative;
+	align-items:center;
+	justify-content:center;
+	text-align:center;
+	box-shadow: 0px 0px 35px #ccc;
+}
+.dialog:before,
+.dialog:after {
+	content:"";
+	background-color:#ccc;
+	border-radius:50%;
+	display:block;
+	position:absolute;
+	z-index:-1;
+}
+.dialog:before {
+	width:44px;
+	height:44px;
+	top:-12px;
+	left:28px;
+	box-shadow:-50px 30px 0 -12px #ccc;
+}
+.dialog:after {
+	bottom:-10px;
+	right:26px;
+	width:30px;
+	height:30px;
+	box-shadow:40px -34px 0 0 #ccc,
+			-28px -6px 0 -2px #ccc,
+			20px 20px 0 -6px #ccc,
+			40px 30px 0 -10px #ccc;
+	
+}
+
+/**/
+
+.dialog.left:before,
+.dialog.left:after {
+	content:"";
+	background-color:#ccc;
+	border-radius:50%;
+	display:block;
+	position:absolute;
+	z-index:-1;
+}
+.dialog.left:before {
+	width:44px;
+	height:44px;
+	top:-12px;
+	left:28px;
+	box-shadow:-50px 30px 0 -12px #ccc;
+}
+.dialog.left:after {
+	bottom:-10px;
+	left:26px;
+	width:30px;
+	height:30px;
+	box-shadow:40px -34px 0 0 #ccc,
+			-28px -6px 0 -2px #ccc,
+			-34px 17px 0 -6px #ccc,
+			-55px 25px 0 -10px #ccc;
+	
+}
+
+/**/
+.sprite{
+	background-repeat: no-repeat round;
+}
+#reports{
+	display: flex;
+	flex-wrap: wrap;
+	width: 100%;
+}
+.report{
+	border: 1px #333 solid;
+	border-radius: 5px;
+	display: flex;
+	flex-direction: column;
+	width:240px;
+	margin:.25rem;
+	padding:.25rem;
+	& .title{
+		background-color: #aaa;
+		color:#333;
+		display: block;
+		margin:0;
+		font-size: 1rem;
+		padding:.25rem;
+	}
+	& .prop{
+		display: block;
+		width:100%
+	}
+}
