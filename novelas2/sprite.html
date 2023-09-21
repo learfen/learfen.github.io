@@ -18,8 +18,8 @@
 	<div class="arrows">
 		<div id="left" class="arrow left"></div>
 		<div class="arrows-container">
-			<div id="top" class="arrow top"></div>
-			<div id="bottom" class="arrow bottom"></div>
+			<div id="up" class="arrow up"></div>
+			<div id="down" class="arrow down"></div>
 		</div>
 		<div id="right" class="arrow"></div>
 	</div>
@@ -27,12 +27,14 @@
 </body>
 <script>
 
+const horizont = 400
 function report( sprite ) {
 	let reports = document.querySelector('#reports')
 	let div = document.createElement('div')
 	div.className = 'report'
 	reports.appendChild(div)
 	return () => { 
+		return 0 
 		if( sprite.node ){
 			let data = `
 				<h6 class="title">${sprite.node.id}</h6>
@@ -54,6 +56,7 @@ function reportData( title ) {
 	div.className = 'report'
 	reports.appendChild(div)
 	return data => { 
+		return 0 
 		let text = `<h6 class="title">${title}</h6>`
 		for(let key of Object.keys(data)){
 			if(typeof data[key] != 'object')
@@ -63,6 +66,16 @@ function reportData( title ) {
 	}
 }
 
+class Game {
+	constructor() {
+		this.target = null 
+		this.targetId = null 
+		this.widthUnit = window.outerWidth * .01
+		this.widthTotal = window.outerWidth
+	}
+}
+
+const game = new Game()
 	
 class GameSprite {
 	constructor(id,countFrame,countRows, config) {
@@ -82,13 +95,15 @@ class GameSprite {
 		this.position=0
 		this.section=0
 		this.row=0
+		this.id = id
 		if(this.config.totalFrame === 0) this.config.totalFrame = this.countFrame * this.countRows
 		if(this.config?.box?.width) this.section = this.config.box.width
 		if(this.config?.box?.height) this.line = this.config.box.height
 		const find = () => {
-			if( document.querySelector('#'+id) ){		
+			if( document.querySelector('#'+id) ){
 				this.node = document.querySelector('#'+id)
 				this.src=this.node.getAttribute('src')
+				this.node.width = widthTotal
 				this.report = report(this)
 				this.mounted()
 			}else setTimeout(() => find (), 100)
@@ -101,16 +116,19 @@ class GameSprite {
 			setInterval( () => { time = time + 1 }, 50)
 			let startTime = 0
 			document.addEventListener('keydown', (e) => {
-				if(e.key == this.config.activateKey ){
+				if(this.id != game.targetId ) return 0
+				if(e.key == this.config.activateKey || e.key == 'ArrowUp' || e.key == 'ArrowDown'){
 					if( time > startTime + 1 ) {
 						this.setConfig( config )
 						this.animateScript( true )
 						startTime = time
 						this.reportData({ time })
+						moves.move( e.key )
 					}
 				}
 			})
 			document.addEventListener('keyup' , (e) => {
+				if(this.id != game.targetId ) return 0
 				if(e.key == this.config.activateKey){
 					this.reset()
 				}
@@ -167,9 +185,55 @@ class GameSprite {
 			this.renderBackground()
 		}
 		if(repeat) return nextFrame()
-		this.interval = setInterval( () => nextFrame() , this.config.time )
+		setInterval( () => nextFrame() , this.config.time )
 	} 
 }
+
+
+class MoveSprint{
+	constructor( ids ){
+		this.velocity = 1.5
+		for(let id of ids){
+			const node = document.querySelector('#'+id)
+			node.classList.add('move-sprint')
+			node.style.top = (horizont - node.style.height.replace('px','')) + 'px'
+			node.style.left = '5%'
+			node.addEventListener('click', event => {
+				document.querySelector('.target')?.classList.remove('target')
+				node.classList.add('target')
+				game.target = node
+				game.targetId = id
+			} )
+		}
+	}
+	move( key ){
+		const self = this
+		const moves = {
+			ArrowLeft(){
+				const position = (+game.target.style.left.replace('%','') - self.velocity)
+				if(position < 0) return
+				game.target.style.left = position + '%'
+			},
+			ArrowRight(){
+				const position = (+game.target.style.left.replace('%','') + self.velocity)
+				if(game.widthUnit * (position + 5) > game.widthTotal) return
+				game.target.style.left = position + '%'
+			},
+			ArrowUp(){
+				const position = (+game.target.style.top.replace('px','') - 10)
+				if( position < 10) return
+				game.target.style.top = position + 'px'
+			},
+			ArrowDown(){
+				const position = (+game.target.style.top.replace('px','') + 10)
+				if( position > horizont - game.target.style.height.replace('px','')) return
+				game.target.style.top = position + 'px'
+			}
+		}
+		moves[key]()
+	}
+}
+
 new GameSprite('image',5,2,{
 	time:150,
 	lines:[0 , 105]
@@ -188,28 +252,46 @@ let right = new GameSprite('image2',5,2,{
 	lines:[0 , 100],
 	activateKey:'ArrowRight'
 })
-let buttonAction
+const moveSprintByButton = ['image','image2']
+
+
+const moves = new MoveSprint(moveSprintByButton)
+
+
+
+
 function createArrowControl( button , key){
+	let buttonAction 
 	const emitEvent = {
 		down( event ) {
 			clearInterval(buttonAction)
 			buttonAction = setInterval( () =>{
 				document.dispatchEvent( new KeyboardEvent("keydown", {bubbles : true, cancelable : true, key, char : key, shiftKey : true}))
-			}, 100)
+			}, 50)
 		}
 		, up( event ) {
 			document.dispatchEvent(new KeyboardEvent("keyup", {bubbles : true, cancelable : true, key , char : key, shiftKey : true}))
 			clearInterval(buttonAction)
 		}
 	}
-	button.addEventListener('touchstart', emitEvent.down )
-	button.addEventListener('touchend', emitEvent.up )
-	button.addEventListener('mousedown', emitEvent.down )
-	button.addEventListener('mouseup', emitEvent.up )
+	button.addEventListener('touchstart', event => {
+		emitEvent.down(event)
+	} )
+	button.addEventListener('touchend', event => {
+		emitEvent.up(event)
+	} )
+	button.addEventListener('mousedown', event => {
+		emitEvent.down(event)
+	} )
+	button.addEventListener('mouseup', event => {
+		emitEvent.up(event)
+	} )
 }
 
 createArrowControl(document.querySelector('#left') , "ArrowLeft")
 createArrowControl(document.querySelector('#right') , "ArrowRight")
+createArrowControl(document.querySelector('#up') , "ArrowUp")
+createArrowControl(document.querySelector('#down') , "ArrowDown")
 
 
 

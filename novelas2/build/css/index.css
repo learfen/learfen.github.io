@@ -143,9 +143,16 @@
 .arrows .left{
 	transform: scaleX(-1)
 }
-.arrows .top{
+.arrows .up{
 	transform:rotate(-90deg)
 }
-.arrows .bottom{
+.arrows .down{
 	transform:rotate(90deg)
+}
+
+.target{
+	border:1px red solid
+}
+.move-sprint{
+	position:absolute;
 }
