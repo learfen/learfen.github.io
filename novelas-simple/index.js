@@ -147,7 +147,7 @@ function iniciarJuego(){
 }
 
 function main(){
-	let mode = 'creando'
+	let mode = ''
 	if(mode=='creando'){
 		document.addEventListener('mousemove' , event => {
 			coordenadas.innerHTML = `x: ${event.clientX} y: ${event.clientY}`
