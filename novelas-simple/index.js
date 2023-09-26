@@ -161,4 +161,4 @@ function main(){
 	})
 }
 
-setTimeout(()=> main(), 1000)
+setTimeout(()=> main(), 2000)
