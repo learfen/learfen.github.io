@@ -1,3 +1,13 @@
+html,body{
+	margin:0;
+	padding:0;
+	max-width: 100vw !important;
+	height: 100vh;
+	min-height: 100vh;
+}
+.body>*{
+	max-width: 99vw;
+}
 .oculto{
 	display: none !important;
 }
@@ -8,21 +18,28 @@
     -o-transition: 1s ease-in-out;
     transition: 1s ease-in-out;
 }
-
+#info{
+	z-index: 2;
+}
+#menu{
+	z-index:1000
+}
 #mochila{
-	background-color: #bab4b4;
-	padding: 2rem;
+	background-color: rgba(255,255,255,.78);
 	position: fixed;
-	top: 2vw;
-	left: 2vw;
-	width: 96vw;
-	height: 96vw;
+	top: 1vw;
+	left: 1vw;
+	width: 97vw;
+	max-width: 97vw;
+	height: 97vw;
 	z-index: 10;
 }
 .en-mochila{
 	display: none;
 	width: 100px;
-	height: 100px;
+	max-width: 20vw;
+	height: auto;
+	max-height: 120px;
 	z-index: 12;
 	transition: opacity .5s;
 }
@@ -30,4 +47,12 @@
 	display:block;
 	opacity:1;
 	z-index:12;
+    padding: 5px;
+	filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.7))
+}
+.pregunta-caja{
+	background-color: rgba(0,0,0,.7);
+}
+.pregunta{
+	
 }
