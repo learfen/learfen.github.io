@@ -8,3 +8,26 @@
     -o-transition: 1s ease-in-out;
     transition: 1s ease-in-out;
 }
+
+#mochila{
+	background-color: #bab4b4;
+	padding: 2rem;
+	position: fixed;
+	top: 2vw;
+	left: 2vw;
+	width: 96vw;
+	height: 96vw;
+	z-index: 10;
+}
+.en-mochila{
+	display: none;
+	width: 100px;
+	height: 100px;
+	z-index: 12;
+	transition: opacity .5s;
+}
+.en-mochila.en-mochila-abierta{	
+	display:block;
+	opacity:1;
+	z-index:12;
+}
