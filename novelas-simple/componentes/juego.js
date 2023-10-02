@@ -1,3 +1,5 @@
+let sesion = {}
+
 function ejemploRecoleccion(){
 	function tazaEncontrada( event ){
 		mochila.guardar( event.target )
@@ -23,12 +25,59 @@ function ejemploRecoleccion(){
 function ejemploEligeElCamino(){
 	
 	const objetos = [
-		{id:'bosque', url:'./images/bosque.jpg', ancho:80, x:10 , y:0},
-		{id:'mar', url:'./images/mar.jpg', ancho:80, x:10 , y:45},
+		{id:'bosque', url:'./images/bosque.jpg', alto:35 , ancho:35, x:10 , y:0,option:true},
+		{id:'mar', url:'./images/mar.jpg', alto:35 , ancho:35, x:55 , y:0,option:true},
 	]
 	for(let objeto of objetos){
 		Juego.insertar( objeto )	
 	}
+	function activarOpcion( abrir , cerrar ){
+		cerrar.remove()
+		abrir.classList.add('background-active')
+		abrir.classList.remove('item-option')
+		abrir.style.transform = 'translate(0px,0px)'
+		abrir.style.width = gameScreen().width + 'px'
+		abrir.style.height = gameScreen().height + 'px'
+		let relSofia = 15 / 20 
+		Juego.insertar( {id:'sofia' , url:'./images/sofia.png',alto:40 , ancho:relSofia * 40, x:45 , y:40 } )
+		setTimeout(()=>{
+			Juego.insertar( {id:'dialogo' , url:'./images/mensaje.webp',alto:30 , ancho:85, x:5 , y:55 , customClass:'d-flex justify-content-center align-items-center text-center  px-md-5 px-sm-3'} )
+			let mensaje
+			let conversacion = new Conversacion(
+				dialogo
+				, [
+					'Hola soy Sofia' 
+					, '¿Quien eres tu?'
+					, () => {
+						conversacion.nombre = prompt('Tu nombre')
+						return 'Hola '+conversacion.nombre
+					}
+					, 'Lanzaré una moneda si sale cara inicias con 1 moneda de oro, si sale seca inicias con 1 moneda de plata'
+					, () => {
+						let resultado = Conversacion.lanzarMoneda()
+						setTimeout(()=>{
+							if( resultado == 'cara'){
+								mensaje = 'Empiezas con una moneda de oro'
+								Juego.insertar( {id:'monedaOro' , url:'./images/coin-oro.svg',alto:10 , ancho:10, x:45 , y:40 } )
+								monedaOro.onclick = () => mochila.guardar( monedaOro )
+							}else{
+								mensaje = 'Empiezas con una moneda de plata'
+								Juego.insertar( {id:'monedaPlata' , url:'./images/coin-plate.svg',alto:10 , ancho:10, x:45 , y:40 } )
+								monedaOro.onclick = () => mochila.guardar( monedaOro )
+							}
+						}, 3000)
+						return 'Lanzaré'
+					}, () => mensaje 
+					,'Ahora te haré de guia por el bosque de los novatos'
+				])
+			conversacion.hablar()
+		})
+	}
+	setTimeout(()=> {
+		bosque.onclick = () => activarOpcion( bosque , mar )
+		mar.onclick = () => activarOpcion( mar , bosque )
+	}, 2000)
+	setTimeout(()=> bosque.click() , 2500 )
 }
 
 function ejemploPregunta(){

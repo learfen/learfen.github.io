@@ -1,3 +1,20 @@
+
+
+window.gameScreen = () => {
+	let screen = {}
+	let width = window.innerWidth
+	let height = window.innerHeight
+	if(width > height ){
+		screen.width = height 
+		screen.height = height - 64
+	}else {
+		screen.width = width - 12
+		screen.height = width
+	}
+	return screen
+}
+
+
 class Movimiento {
 	static activar( etiqueta , nombreMovimiento ){
 		if(etiqueta.style.transform != ''){
@@ -54,7 +71,6 @@ class Componente extends Movimiento{
 		etiqueta.classList.remove('oculto')
 	}
 	static ocultar( etiqueta ){
-		console.log( etiqueta )
 		etiqueta.classList.add('oculto')
 	}
 	static mostrarOcultar( etiqueta ){
@@ -82,22 +98,29 @@ class Info{
 }
 class Juego{
 	static insertar( data ){
-		let imagen = document.createElement('img')
-		imagen.src = data.url
+		let imagen = document.createElement('div')
 		imagen.id = data.id
-		imagen.className = 'position-absolute'
+		imagen.className = 'position-absolute ' 
+		if(data['customClass'])
+			imagen.className += data['customClass']
+		if(data['option']){
+			imagen.classList.add('item-option') 
+		}
 		imagen.style.left = '0px'
 		imagen.style.top = '0px'
-		let cell = window.innerWidth / 100
-		console.log(cell)
+		imagen.style.background = `url(${data.url})`
+		let cell = gameScreen().width / 100
 		data.y = data.y * cell
 		data.x = data.x * cell
+		imagen.style.backgroundSize = 'cover'
+		imagen.style.backgroundRepeat = 'no-repeat'
+		imagen.style.transition = 'all 1s ease'
 		imagen.style.width = (cell * data.ancho) + 'px'
+		imagen.style.height = (cell * data.alto) + 'px'
 		imagen.style.transform = `translate(${data.x}px,${data.y + 10}px)`
 		game.appendChild(imagen)
 	}
 	static iniciar(){
-		console.log('start game')
 		componenteIntro.ocultar()
 		componenteInfo = new ComponenteEtiqueta
 		componenteInfo.instalar( 'info' )
@@ -121,7 +144,7 @@ class Mochila {
 		this.items = [];
 		Movimiento.crear('mochila-guardar', {
 			x: '5px', 
-			y: (window.innerHeight-100)+'px',
+			y: ( gameScreen().height-100)+'px',
 			escala:.2
 		})
 		this.mochila = document.createElement('div')
@@ -169,7 +192,7 @@ class Mochila {
 		this.mochila.classList.remove('animate__fadeOut')
 		this.mochila.classList.add('animate__fadeIn')
 		if(!this.items.length)	return 0
-		let itemWidth = window.innerWidth / 5
+		let itemWidth = gameScreen().width / 5
 		let space = itemWidth / 5
 		let row = 0
 		let count = 0
@@ -177,7 +200,7 @@ class Mochila {
 		const renderItem = ( index ) => {
 			if(this.items.length == index ) return 0
 
-			if( window.innerWidth < +(100 * count)+100+10 ) {
+			if( gameScreen().width < +(100 * count)+100+10 ) {
 				row += 1
 				count = 0
 			}
@@ -203,7 +226,6 @@ var componenteTransicion
 var mochila = new Mochila
 
 function main(){
-	console.log('main exe ')
 	let mode = 'creando'
 	if(mode=='creando'){
 		document.addEventListener('mousemove' , event => {
@@ -218,7 +240,6 @@ function main(){
 
 let x = setInterval(()=>{
 	if( Intro ){
-		console.log('exe')
 		main()
 		clearInterval( x )
 	}
