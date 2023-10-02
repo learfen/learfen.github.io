@@ -2,10 +2,10 @@ class Mensaje extends Componente{
 	constructor(texto){
 		super()
 		this.etiqueta = document.createElement('div')
-		this.etiqueta.className = 'position-fixed mensaje-caja animate__animated animate__fadeIn'
+		this.etiqueta.className = 'position-fixed mensaje-caja animate__animated'
 		this.etiqueta.texto = texto
-		this.ocultar()
 		game.appendChild(this.etiqueta)
+		this.ocultar()
 	}
 }
 class Pregunta extends Componente{
