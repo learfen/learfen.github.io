@@ -1,11 +1,32 @@
 class Mensaje extends Componente{
 	constructor(texto){
 		super()
+		if(this.etiqueta) this.etiqueta.remove()
 		this.etiqueta = document.createElement('div')
-		this.etiqueta.className = 'position-fixed mensaje-caja animate__animated animate__fadeIn'
-		this.etiqueta.texto = texto
+		this.etiqueta.className = 'position-fixed mensaje-caja animate__animated animate__fadeIn p-2'
+		this.etiqueta.style.zIndex = '100'
+		this.etiqueta.innerHTML = texto
 		this.ocultar()
 		game.appendChild(this.etiqueta)
+	}
+	static insertar( text , position ){
+		let mensaje = new Mensaje( text )
+		if(position.x != undefined && position['y'] != undefined) mensaje.moverA(position)
+		juego['mensaje'] = mensaje
+		return mensaje
+	}
+	texto( texto ){
+		this.ocultar()
+		this.etiqueta.innerHTML = texto
+		setTimeout(()=> this.mostrar(), 1000)
+	}
+	evento( name , fn ){
+		if(this.etiqueta){
+			this.etiqueta['on'+name] = event => {
+				fn( this , event )
+			} 
+		}
+		return this
 	}
 }
 class Pregunta extends Componente{
