@@ -3,7 +3,7 @@ iniciarJuego = () => {
     mochila.evento('guardar' , (objeto , mochila) => {
         let count = 0
         for( let item of mochila.items){
-            if(item.url == './images/caja-tecnologica.png'){
+            if(juego[item.id].url == './images/caja-tecnologica.png'){
                 count++
             }
         }

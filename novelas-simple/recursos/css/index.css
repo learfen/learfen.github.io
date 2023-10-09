@@ -22,6 +22,12 @@ body {
 	-o-transition: 1s ease-in-out;
 	transition: 1s ease-in-out;
 }
+.animar-trayectoria {
+	-webkit-transition: .5s ease-in-out;
+	-moz-transition: .5s ease-in-out;
+	-o-transition: .5s ease-in-out;
+	transition: .5s ease-in-out;
+}
 #info {
 	z-index: 2;
 }
@@ -249,4 +255,8 @@ body {
 	margin-top:400px; 
 	width: 100px;
 	height: auto;
+}
+
+[draggable]{
+	cursor: pointer;
 }

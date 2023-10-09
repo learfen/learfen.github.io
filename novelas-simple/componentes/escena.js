@@ -1,5 +1,5 @@
 class Mensaje extends Componente{
-	constructor(texto){
+	constructor(texto , estilos ){
 		super()
 		if(this.etiqueta) this.etiqueta.remove()
 		this.etiqueta = document.createElement('div')
@@ -8,10 +8,12 @@ class Mensaje extends Componente{
 		this.etiqueta.innerHTML = texto
 		this.ocultar()
 		game.appendChild(this.etiqueta)
+		if(estilos['clases']) this.etiqueta.className += estilos.clases
+		if(estilos['estilos']) this.etiqueta.className += estilos.estilos
 	}
-	static insertar( text , position ){
-		let mensaje = new Mensaje( text )
-		if(position.x != undefined && position['y'] != undefined) mensaje.moverA(position)
+	static insertar( text , config ){
+		let mensaje = new Mensaje( text , config.estilos  )
+		if(config.x != undefined && config['y'] != undefined) mensaje.moverA(config)
 		juego['mensaje'] = mensaje
 		return mensaje
 	}

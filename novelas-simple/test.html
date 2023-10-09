@@ -1,0 +1,41 @@
+<body></body>
+<script>
+function insertarIntermedios(array) {
+  // Creamos un nuevo array vacío para almacenar el resultado
+  let nuevoArray = [];
+  // Recorremos el array original con un bucle for
+  for (let i = 0; i < array.length; i++) {
+    // Obtenemos el objeto actual y lo añadimos al nuevo array
+    let actual = array[i];
+    nuevoArray.push(actual);
+    // Si no es el último elemento del array, comprobamos la distancia con el siguiente
+    if (i < array.length - 1) {
+      // Obtenemos el objeto siguiente
+      let siguiente = array[i + 1];
+      // Calculamos la diferencia absoluta entre las coordenadas x e y de ambos objetos
+      let diferenciaX = Math.abs(actual.x - siguiente.x);
+      let diferenciaY = Math.abs(actual.y - siguiente.y);
+      // Si alguna de las diferencias es mayor que 2, creamos un objeto intermedio con valores promedio de x e y
+      if (diferenciaX > 2 || diferenciaY > 2) {
+        let intermedio = {
+          x: (actual.x + siguiente.x) / 2,
+          y: (actual.y + siguiente.y) / 2,
+        };
+        // Añadimos el objeto intermedio al nuevo array
+        nuevoArray.push(intermedio);
+      }
+    }
+  }
+  if(array.length != nuevoArray.length) {
+    nuevoArray = insertarIntermedios(nuevoArray)
+  }
+  // Devolvemos el nuevo array con los objetos intermedios insertados
+  return nuevoArray;
+}
+
+console.log( insertarIntermedios([
+    {x:10 , y:10},
+    {x:14 , y:16}
+]) )
+
+</script>

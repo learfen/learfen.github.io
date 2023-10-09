@@ -43,8 +43,9 @@
 		<button onclick="openEditor()" class="btn btn-primary ">Nuevo</button>
 		<input style="display:none" type="file" id="file" class="form-control" >
 		<button onclick="this.previousElementSibling.click()" class="btn btn-primary ">Abrir</button>
+		<button onclick="saveTemp()" class="btn btn-primary ">Guardar</button>
 		<button onclick="download()" class="btn btn-primary ">Descargar</button>
-		<button onclick="playNewVersion(document.querySelector('.view-lines'))" class="btn btn-primary ">Play</button> 
+		<button onclick="playNewVersion()" class="btn btn-primary ">Play</button> 
 	</div>
 	<script src="monaco-editor/min/vs/loader.js"></script>
 		<script>
@@ -69,12 +70,19 @@
 				fr.onload=() => openEditor(fr.result);				
 				fr.readAsText(this.files[0]);
 			})
-			function playNewVersion( node ){
+			function playNewVersion(){
+				saveTemp()
+				location.reload()
+			}
+			function play(){
+				let node = document.querySelector('.view-lines')
 				let x = document.createElement('script')
 				try {
 					x.innerHTML = editor.getValue()
 					document.body.appendChild(x)
-					setTimeout(() => reset() , 500)
+					setTimeout(() => {
+						reset() 
+					}, 500)
 				} catch (error) {
 					console.log(error)
 				}
@@ -85,6 +93,13 @@
 				element.setAttribute('download', 'juego.js');
 				element.click();
 				document.body.removeChild(element);
+			}
+			function saveTemp(){
+				localStorage.setItem('code', editor.getValue())
+			}
+			if(localStorage.getItem('code')){
+				openEditor( localStorage.getItem('code') )
+				setTimeout(()=> play() , 2000)
 			}
 		</script>
 </body>

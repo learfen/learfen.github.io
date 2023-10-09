@@ -42,5 +42,23 @@
 <script src="./componentes/transicion.js?d=1"></script>
 <script src="./componentes/escena.js?d=1"></script>
 <script src="./componentes/personaje.js?d=1"></script>
-<script src="./componentes/juego.js?d=1"></script>
+<script>
+	
+	function play( data ){
+		let node = document.querySelector('.view-lines')
+		let x = document.createElement('script')
+		try {
+			x.innerHTML = data
+			document.body.appendChild(x)
+			setTimeout(() => {
+				reset() 
+			}, 500)
+		} catch (error) {
+			console.log(error)
+		}
+	}
+	if(localStorage.getItem('code')){
+		setTimeout(()=> play( localStorage.getItem('code') ) , 2000)
+	}
+</script>
 </html>
