@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -61,4 +62,44 @@
 		setTimeout(()=> play( localStorage.getItem('code') ) , 2000)
 	}
 </script>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<link rel="stylesheet" href="./recursos/css/bootstrap.min.css">
+	<link rel="stylesheet" href="./recursos/css/index.css?d=1">
+	<link rel="stylesheet" href="./recursos/css/animate.min.css">
+</head>
+<body class="w-100">
+	<div id="info" class="p-2 bg-primary oculto position-fixed w-100">
+		<span>Puntos: <b id="puntos">0</b></span>
+		<button id="botonMostrarMenu" class="btn btn-primary">Mostrar menu</button>
+	</div>
+	<div id="inicio" class="w-100 vh-100 bg-primary position-fixed d-flex justify-content-center align-items-center" style="z-index:1001">
+		<div class="vw-25">
+			<h3>Juego de trivia</h3>
+			<button class="btn btn-primary w-100" id="botonIniciar">Iniciar</button>
+		</div>
+	</div>
+	<div id="menu" class="oculto animate__animated animate__fadeIn w-100 position-fixed top-0 start-0">
+		<h3>Soy el menu</h3>
+		<div class="d-flex justify-content-center align-items-center flex-column">
+			<button class="btn">Reiniciar</button>
+		</div>
+	</div>
+	<div id="game" class="position-absolute w-100 vh-100 start-0 top-0 p-0 m-0 mt-5">
+	</div>
+	<div class="position-fixed bottom-0 start-0" id="coordenadas"></div>
+</body>
+<script src="./recursos/bootstrap.bundle.min.js"></script>
+<script src="./index.js?d=1"></script>
+<script src="./componentes/menu.js?d=1"></script>
+<script src="./componentes/transicion.js?d=1"></script>
+<script src="./componentes/escena.js?d=1"></script>
+<script src="./componentes/personaje.js?d=1"></script>
+<script src="./componentes/juego.js?d=1"></script>
+>>>>>>> 18cbcf56a2237cd619eb5546a053a22308e371b8
 </html>
