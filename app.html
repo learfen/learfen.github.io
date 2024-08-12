@@ -1,0 +1,267 @@
+<style>
+    body{
+        padding:5px
+    }
+    .keyboard{
+        height:fit-content;
+    }
+    .keyboard span{
+        font-size:12px;
+        display:block;
+    }
+    .keyboard span.special-big{
+        font-size: 1.3rem;
+    }
+    .keyboard>.keyboardinner{
+        display:block;
+        min-height:fit-content;
+        max-width: fit-content;
+        display:flex;
+    }
+    .keyboard>.keyboardinner>div{
+        float:none;
+    }
+    .keys{
+        min-width:3rem !important;
+    }
+    .keys:hover{
+        cursor:pointer
+    }
+    .row{
+        display:flex;
+        width:100%
+    }
+    .flex{
+        display:flex;
+    }
+    .flex.wrap{
+        flex-wrap: wrap;
+    }
+    .row.between,
+    .flex.between{
+        justify-content: space-between;
+    }
+    .row.center,
+    .flex.center{
+        justify-content: center;
+        align-items:center
+    }
+    .w-100{
+        width:100%
+    }
+    .ps-2{
+        padding-left:2rem
+    }
+    .ps-4{
+        padding-left:4rem
+    }
+    .pt-4{
+        padding-top:4rem
+    }
+    .pa-1{
+        padding:1rem
+    }
+    .pb-1px{
+        padding-bottom:10px
+    }
+    .pa-1px{
+        padding:10px
+    }
+    .key-enter{
+        margin-top:-1rem;
+        min-height:4rem;
+    }
+    
+    .key-active{
+    background:red
+    }
+    .key-uppercase .keys{
+        text-transform: uppercase;
+    }
+</style>
+
+<h1 id="key"></h1>
+<div class="keyboard flex center">
+    <div class="keyboardinner">
+        <div class="float-left margin-right-30">
+            <div class="row between ps-2 pb-1px">
+                <div class="keys specialkeys" name="escape"><span class="special">Esc</span></div>
+                <div class="row between">
+                    <div class="row ps-2">
+                        <div class="keys specialkeys" name="f1"><span class="special">F1</span></div>
+                        <div class="keys specialkeys" name="f2"><span class="special">F2</span></div>
+                        <div class="keys specialkeys" name="f3"><span class="special">F3</span></div>
+                        <div class="keys specialkeys" name="f4"><span class="special">F4</span></div>    
+                    </div>
+                    <div class="row">
+                        <div class="keys specialkeys" name="f5"><span class="special">F5</span></div>
+                        <div class="keys specialkeys" name="f6"><span class="special">F6</span></div>
+                        <div class="keys specialkeys" name="f7"><span class="special">F7</span></div>
+                        <div class="keys specialkeys" name="f8"><span class="special">F8</span></div>
+                    </div>
+                    <div class="row">
+                        <div class="keys specialkeys" name="f9"><span class="special">F9</span></div>
+                        <div class="keys specialkeys" name="f10"><span class="special">F10</span></div>
+                        <div class="keys specialkeys" name="f11"><span class="special">F11</span></div>
+                        <div class="keys specialkeys" name="f12"><span class="special">F12</span></div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="keys specialkeys" name="|"><span class="special">°</span><span>|</span></div>
+                <div class="keys specialkeys" name="1"><span class="special">!</span><span>1</span></div>
+                <div class="keys specialkeys" name="2"><span class="special">@ "</span><span>2</span></div>
+                <div class="keys specialkeys" name="3"><span class="special">#</span><span>3</span></div>
+                <div class="keys specialkeys" name="4"><span class="special">$ ~</span><span>4</span></div>
+                <div class="keys specialkeys" name="5"><span class="special">%</span><span>5</span></div>
+                <div class="keys specialkeys" name="6"><span class="special">^ &</span><span>6</span></div>
+                <div class="keys specialkeys" name="7"><span class="special">/</span><span>7</span></div>
+                <div class="keys specialkeys" name="8"><span class="special">(</span><span>8</span></div>
+                <div class="keys specialkeys" name="9"><span class="special">)</span><span>9</span></div>
+                <div class="keys specialkeys" name="0"><span class="special">=</span><span>0</span></div>
+                <div class="keys specialkeys" name="'"><span class="special-big pa-1px">? '</span></div>
+                <div class="keys specialkeys" name="¿"><span class="special-big pa-1px">¿ ¡</span></div>
+                <div class="keys backspace" name="backspace"><span>Backspace</span></div>
+            </div>
+            
+            <div class="row">
+                <div class="keys tab" name="tab">Tab</div>
+                <div class="keys" name="q">q</div>
+                <div class="keys" name="w">w</div>
+                <div class="keys" name="e">e</div>
+                <div class="keys" name="r">r</div>
+                <div class="keys" name="t">t</div>
+                <div class="keys" name="y">y</div>
+                <div class="keys" name="u">u</div>
+                <div class="keys" name="i">i</div>
+                <div class="keys" name="o">o</div>
+                <div class="keys" name="p">p</div>
+                <div class="keys specialkeys flex center" name="open-corchete">
+                    <span class="text-center pa-1px">^ `</span><span class="text-center pa-1px">[</span>
+                </div>
+                <div class="keys specialkeys flex center" name="close-corchete">
+                    <span class="text-center pa-1px">* +</span><span class="text-center pa-1px">]</span>
+                </div>
+                <div class="keys specialkeys backslash" name="enter"><span class="special">Enter</span></div>
+            </div>
+            
+            <div class="row between">
+                <div class="keys shift specialkeys" name="mayus-block">
+                    <span>
+                        Block
+                    </span>
+                    <span>Mayus</span>
+                </div>
+                <div class="keys" name="a">a</div>
+                <div class="keys" name="s">s</div>
+                <div class="keys" name="d">d</div>
+                <div class="keys" name="f">f</div>
+                <div class="keys" name="g">g</div>
+                <div class="keys" name="h">h</div>
+                <div class="keys" name="j">j</div>
+                <div class="keys" name="k">k</div>
+                <div class="keys" name="l">l</div>
+                <div class="keys" name="ñ">ñ</div>
+                <div class="keys specialkeys" name="open-key"><span class="special">´</span><span>{</span></div>
+                <div class="keys specialkeys" name="close-key"><span class="special-big"></span><span class="special-big pa-1px flex center">}</span></div>
+                <div class="keys key-enter" name="enter"></div>
+            </div>
+
+            
+            <div class="row">
+                <div class="keys shift" name="shift">Shift</div>
+                <div class="keys specialkeys" name="tag"><span class="special">&lt;</span><span>&gt;</span></div>
+                <div class="keys" name="z">z</div>
+                <div class="keys" name="x">x</div>
+                <div class="keys" name="c">c</div>
+                <div class="keys" name="v">v</div>
+                <div class="keys" name="b">b</div>
+                <div class="keys" name="n">n</div>
+                <div class="keys" name="m">m</div>
+                <div class="keys specialkeys" name=","><span class="special">;</span><span>,</span></div>
+                <div class="keys specialkeys" name="."><span class="special">:</span><span>.</span></div>
+                <div class="keys specialkeys" name="}"><span class="special">-</span><span>_</span></div>
+                <div class="keys shift w-100" name="shift">Shift</div>
+            </div>
+
+
+            <div class="row">
+                <div class="keys" name="ctrl">Ctrl</div>
+                <div class="keys flex center" name="sys" svg="icon-win"></div>
+                <div class="keys" name="alt">Alt</div>
+                <div class=" spacebar keys" name="space"><span>Barra espaciadora</span></div>
+                <div class="keys" name="alt-gr">Alt Gr</div>
+                <div class="keys flex center" name="sys" svg="icon-win"></div>
+                <div class="keys flex center" name="menu" svg="icon-menucontext"></div>
+                <div class="keys" name="ctrl">Ctrl</div>
+            </div>
+        </div>
+
+
+        <div class="float-left margin-right-30">
+            
+            <div class="row pb-1px">
+                <div class="keys"><span>Impr</span></div>
+                <div class="keys twowords flex center" name="scroll-Lock"><span>Scroll<br>Lock</span></div>
+                <div class="keys twowords flex center" name="pausa"><span>Pausa</span></div>
+            </div>
+
+            <div class="row row-center">
+                <div class="keys flex center" name="Insert"><span>Insert</span></div>
+                <div class="keys flex center" name="Inicio"><span>Inicio</span></div>
+                <div class="keys flex center" name="RePage"><span>RePage</span></div>
+            </div>
+            
+            <div class="row row-center">
+                <div class="keys flex center" name="Delete"><span>Delete</span></div>
+                <div class="keys flex center" name="Fin"><span>Fin</span></div>
+                <div class="keys flex center" name="AvPage"><span>AvPage</span></div>
+            </div>
+
+            
+            <div class="row center  pt-4">
+                <div class="align-center">
+                    <div class="keys">&#8679;</div>
+                    <div class="clear"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="keys">&#8678;</div>
+                <div class="keys">&#8681;</div>
+                <div class="keys">&#8680;</div>
+            </div>
+        </div>
+
+        <div class="float-left pt-4">
+            <div class="row">
+                <div class="keys twowords flex center" name="num-lock"><span>Num<br>Lock</span></div>
+                <div class="keys" name="dividir">/</div>
+                <div class="keys" name="multiplicar">*</div>
+            </div>
+            <div class="row">
+                <div class="keys" name="7">7</div>
+                <div class="keys" name="8">8</div>
+                <div class="keys" name="9">9</div>
+            </div>
+            <div class="row">
+                <div class="keys" name="4">4</div>
+                <div class="keys" name="5">5</div>
+                <div class="keys" name="6">6</div></div>
+            <div class="row">
+                <div class="keys" name="1">1</div>
+                <div class="keys" name="2">2</div>
+                <div class="keys" name="3">3</div></div>
+            <div class="row">
+                <div class="keys zero" name="0">0</div>
+                <div class="keys" name="punto">.</div></div>
+        </div>
+
+        <div class="float-left pt-4 flex" style="flex-direction: column;max-width:fit-content">
+            <div class="keys" name="restar">-</div>
+            <div class="keys plus" name="sumar">+</div>
+            <div class="keys enter1" name="enter">Enter</div>
+        </div>
+        <div></div>
+    </div>
+</div>
