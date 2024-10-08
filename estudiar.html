@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conceptos Básicos de Programación y Web</title>
+  <style>
+    body {
+      font-family: console, monospace;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      padding: 20px;
+    }
+    .card {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      width: 300px;
+      margin: 15px;
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .card:hover {
+      transform: scale(1.05);
+    }
+    .text-start{
+      text-align: left;
+    }
+    .d-block{
+      display: block;
+    }
+    h2 {
+      color: #333;
+      font-size: 20px;
+      display: flex;
+      justify-content: space-around; 
+    }
+    p {
+      color: #555;
+      font-size: 16px;
+    }
+    code {
+      background-color: #f1f1f1;
+      padding: 5px;
+      border-radius: 5px;
+      display: block;
+      margin: 10px 0;
+    }
+    .figure-rectangle,.figure-rombo{
+      border:1px solid #ccc;
+      padding: 5px;
+      min-width: 5rem;
+      margin-top:-.25rem;
+    }
+    .figure-rombo{
+      max-width: 2.5rem;
+      max-height: 2.5rem;
+      min-width: 2.5rem;
+      min-height: 2.5rem;
+      transform: rotate(45deg);
+      i {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        transform: rotate(-45deg);
+        font-size: .9rem;
+      }
+    }
+    .position-absolute{
+      position: absolute;
+    }
+    .ms-2{
+      margin-left: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Card 1 -->
+    <div class="card">
+      <h2>¿Qué es la Programación?</h2>
+      <p>La programación incluye el diseño del algoritmo, el codigo y las operaciones que se debe realizar para resolver un problema.</p>
+      <p><strong>Conceptos clave:</strong> Lenguajes de programación, Algoritmos, Código fuente.</p>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="card">
+      <h2>Algoritmos</h2>
+      <p>Un algoritmo es una serie de pasos consecutivos y finitos para resolver un problema o realizar una tarea.</p>
+      <p><strong>Conceptos clave:</strong> Eficiencia, Lógica.</p>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="card">
+      <h2> Variables <small class="d-block figure-rectangle">var a = 10</small></h2>
+      <p>Una variable es un espacio en la memoria de la computadora donde se puede almacenar un valor que puede cambiar.</p>
+      <small class="text-start d-block">Un texto</small>
+      <code>let nombre = "Ana";</code>
+      <small class="text-start d-block">Un numero</small>
+      <code>let edad = 12;</code>
+      <small class="text-start d-block">Una lista</small>
+      <code>let edadHermanos = [13, 14];</code>
+      <small class="text-start d-block">Un booleano</small>
+      <code>let tieneHermanos = true;</code>
+      <p><strong>Conceptos clave:</strong> Tipos de datos: números, cadenas, booleanos.</p>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="card">
+      <div>
+        <h2>Condicionales <small class="d-block figure-rombo"> <i>a==10</i> </small></h2>
+        <p>Las estructuras condicionales permiten tomar decisiones en base a condiciones que tienen solo 2 respuestas posibles si o no.</p>
+        <small class="text-start d-block">[ if ] si tiene hermanos entonces</small>
+        <code class="text-start">
+          if (tieneHermanos) {<br>
+          &nbsp;&nbsp;console.log("Tiene hermanos");<br>
+          }
+        </code>
+        
+        <small class="text-start d-block">[ if / else ] si tiene hermanos entonces , sino </small>
+        <code class="text-start">
+          if (tieneHermanos) {<br>
+          &nbsp;&nbsp;console.log("Tiene hermanos");<br>
+          } else {<br>
+          &nbsp;&nbsp;console.log("No tiene hermanos");<br>
+          }
+        </code>
+      </div>  
+      <p><strong>Conceptos clave:</strong> condición, if, else.</p>
+    </div>
+    <div class="card">
+      <div>
+        <h2>Operadores</h2>
+        <p>Hay 2 tipos basicos de operadores en las condiciones.</p>
+        <small class="text-start d-block"><b>Lógicos</b> ( y:&& ) (o:||)</small>
+        <code class="text-start">
+          if (tieneAuto && tieneLicencia) {<br>
+          &nbsp;&nbsp;console.log("Puede manejar");<br>
+          }
+        </code>
+        <small class="text-start d-block"><b>Aritmeticos</b> <, >, ==, !=, <=, >=</small>
+        <li class="text-start">Mayor-menor</li>
+        <code class="text-start">
+          if (hora < 7 || hora > 12) {<br>
+          &nbsp;&nbsp;console.log("Escuela cerrada");<br>
+          }
+        </code>
+        <li class="text-start">Igualdad y distinto</li>
+        <code class="text-start">
+          if (hora == 12 || hora != 13) {<br>
+          &nbsp;&nbsp;console.log("Escuela cerrada");<br>
+          }
+        </code>
+      </div>
+      <p><strong>Conceptos clave:</strong> operadores, y, o, igual, distinto, mayor, menor.</p>
+    </div>
+
+    <!-- Card 5 -->
+    <div class="card">
+      <h2>Bucles o Loops</h2>
+      <p>Un bucle permite ejecutar un bloque de código varias veces, según una condición.</p>
+      <code class="text-start">
+        let contador = 0
+        while (contador < 10) {<br>
+          &nbsp;&nbsp;console.log(i);<br>
+          &nbsp;&nbsp;contador = contador + |;<br>
+        }
+      </code>
+      <p><strong>Conceptos clave:</strong> ciclo, while, iteración.</p>
+    </div>
+
+    <!-- Card 6 -->
+    <div class="card">
+      <h2>Funciones</h2>
+      <p>Una función es un bloque de código realiza una tarea específica con nombre, esto permite que pueda reutilizarse.</p>
+      <code>
+        function saludar(nombre) {<br>
+        &nbsp;&nbsp;return "Hola, " + nombre;<br>
+        }
+      </code>
+      <p><strong>Conceptos clave:</strong> Parámetros, Retorno de valor.</p>
+    </div>
+
+    <!-- Card 7 -->
+    <div class="card">
+      <h2>HTML (HyperText Markup Language)</h2>
+      <p>HTML es el lenguaje de marcado utilizado para estructurar y presentar contenido en la web.</p>
+      <code>
+        &lt;h1&gt;¡Hola, Mundo!&lt;/h1&gt;<br>
+        &lt;p&gt;Este es un párrafo.&lt;/p&gt;
+      </code>
+      <p><strong>Conceptos clave:</strong> Etiquetas, Estructura del documento.</p>
+    </div>
+
+    <!-- Card 8 -->
+    <div class="card">
+      <h2>CSS (Cascading Style Sheets)</h2>
+      <p>CSS es el lenguaje que se utiliza para describir la presentación visual de una página web.</p>
+      <code>
+        h1 {<br>
+        &nbsp;&nbsp;color: blue;<br>
+        }
+      </code>
+      <p><strong>Conceptos clave:</strong> Selectores, Estilos.</p>
+    </div>
+
+    <!-- Card 9 -->
+    <div class="card">
+      <h2>JavaScript</h2>
+      <p>JavaScript es un lenguaje de programación que permite agregar interactividad a las páginas web.</p>
+      <code>
+        document.querySelector('h1').textContent = 'Hola, Mundo!';
+      </code>
+      <p><strong>Conceptos clave:</strong> Manipulación del DOM, Eventos.</p>
+    </div>
+
+    <!-- Card 10 -->
+    <div class="card">
+      <div>
+        <h2>Diagrama de flujo</h2>
+        <p>Un diagrama de flujo es una representación visual de un flujo de datos.</p>
+      
+      </div>
+      <p><strong>Conceptos clave:</strong> Diagrama de flujo, sentido, operacion, condición, bucle.</p>
+    </div>
+  </div>
+
+</body>
+</html>
