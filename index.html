@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Institución Educativa - Material Design Tabs</title>
+		<!-- Google Fonts: Roboto (estilo Material Design) -->
+		<link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet" />
+		<!-- Tailwind CSS CDN -->
+		<script src="https://cdn.tailwindcss.com"></script>
+		<!-- icons font awesome free CDN -->
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+		<style>
+			/* Aplicamos la fuente Roboto para un look Material */
+			:root{
+				--bg-red-600: #f56565;
+			}
+			body {
+				font-family: "Roboto", sans-serif;
+				color:#333 !important;
+			}
+			/* Estilos para el tab activo */
+			.active-tab {
+				border-bottom: 2px solid #3b82f6; /* Azul (blue-500) */
+				color: #3b82f6;
+			}
+			.tab-button {
+				transition: background 0.5s ease;
+			}
+			#post-body, #post-head {
+				a{
+					background-color: #f6513b;
+					color:#fff;
+					padding: .5rem;
+					display: inline-block;
+				}
+				h1{
+					font-size: 2.5rem;
+					font-weight: bold;
+				}
+				h2{
+					font-size: 2rem;
+					font-weight: bold;
+				}
+				h3{
+					font-size: 1.5rem;
+					font-weight: bold;
+				}
+				p{
+					font-size: 1rem;
+					padding:.5rem 0px;
+				}
+				img{
+					display: block;
+				}
+				ul{
+					list-style: disc;
+					padding-left: 20px;
+				}
+				table {
+					border-collapse: collapse;
+					border: 1px solid black;
+					margin:1rem 0px;
+					width: 100%;
+					max-width: 100% !important;
+					tr{
+						width: 100%;
+						max-width: 100% !important;
+						td{
+							border: 1px solid #aaa;
+							padding: 0.25rem;
+						}
+						td,td>p{
+							font-size: 10px !important;
+						}
+					}
+					tr:first-child{
+						td,th,td>p{
+							text-align: center !important;
+							font-size: 10px !important;
+							color:#fff;
+							background-color: var(--bg-red-600) !important;
+						}
+						td{
+							border-color: var(--bg-red-600) !important;
+						}
+					}
+				}
+			}
+		</style>
+	</head>
+	<body class="bg-gray-100">
+		<div class="container mx-auto p-4">
+			<!-- Header -->
+			<header class="mb-6 flex items-center bg-white p-3 pe-4 rounded-lg">
+				<img class="mr-2" src="/images.png" style="height: 70px; width: auto" />
+				<div>
+					<h1 class="text-2xl font-bold text-gray-800">Instituto Gral Jose de San Martin</h1>
+					<small><b>Corrientes/Goya</b>:Corrientes 783 <br /><b>Telefonos:</b> <phone>424226</phone> | <phone>439917</phone> | <phone>432016</phone></small>
+				</div>
+			</header>
+			<div class="container mx-auto py-2 flex justify-end relative">
+				<div class="w-full md:w-auto md:me-3 md:border-2 border-solid border-gray-300 rounded-lg md:absolute md:mt-[-90px]">
+					<button class="button absolute z-20 mt-3 mx-2">
+						<i class="fa-solid fa-magnifying-glass"></i></button
+					><input class="p-2 px-7 relative rounded-lg w-full md:max-w-[200px] z-0" type="search" 1 />
+				</div>
+			</div>
+			<!-- Contenedor de Tabs con estilo Material Design -->
+			<div id="viewIndex" class="hidden bg-white rounded-lg shadow-lg">
+				<!-- Botones de las pestañas -->
+				<div class="border-b border-gray-300 bg-red-400 rounded-t-lg text-red-800">
+					<nav class="flex">
+						<button class="tab-button rounded-lg flex-1 py-3 text-center font-medium" data-tab="jardin">Jardín</button>
+						<button class="tab-button rounded-lg flex-1 py-3 text-center font-medium" data-tab="primaria">Primaria</button>
+						<button class="tab-button rounded-lg flex-1 py-3 text-center font-medium" data-tab="secundaria">Secundaria</button>
+						<button class="tab-button rounded-lg flex-1 py-3 text-center font-medium" data-tab="terciario">Terciario</button>
+					</nav>
+				</div>
+				<div id="inicio">
+					<div class="flex flex-wrap gap-x-6 gap-y-2 px-1 pt-2"></div>
+					<button class="text-gray-500 block button uppercase w-full p-2">ver más</button>
+				</div>
+				<!-- Buttons -->
+
+				<div id="buttons" class="my-1 py-2 flex flex-wrap items-center gap-1 justify-center hidden">
+					<button class="button w-[18ch] bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-xl">Horario</button>
+					<button class="button w-[18ch] bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-xl">Inscripciones</button>
+					<button class="button w-[18ch] bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-xl">Contacto</button>
+					<button class="button w-[18ch] bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-xl">Sugerencias</button>
+				</div>
+				<!-- Contenido de cada Tab -->
+				<div class="p-6">
+					<!-- Contenido para Jardín -->
+					<div id="jardin" class="tab-content hidden">
+						<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+							<div class="bg-white p-3 rounded-lg shadow-md">
+								<h3 class="text-md font-semibold mb-2">Post Informativo</h3>
+								<p>Contenido del post informativo para Jardín.</p>
+							</div>
+							<div class="bg-white p-3 rounded-lg shadow-md">
+								<h3 class="text-md font-semibold mb-2">Novedades</h3>
+								<p>Contenido de novedades para Jardín.</p>
+							</div>
+							<div class="bg-white p-3 rounded-lg shadow-md">
+								<h3 class="text-md font-semibold mb-2">Calificaciones</h3>
+								<p>Contenido de calificaciones para Jardín.</p>
+							</div>
+						</div>
+						<button class="text-gray-500 button text-uppercase">ver más</button>
+					</div>
+
+					<!-- Contenido para Primaria -->
+					<div id="primaria" class="tab-content hidden">
+						<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+							<div class="bg-white p-6 rounded-lg shadow-md">
+								<h3 class="text-xl font-semibold mb-2">Post Informativo</h3>
+								<p>Contenido del post informativo para Primaria.</p>
+							</div>
+							<div class="bg-white p-6 rounded-lg shadow-md">
+								<h3 class="text-xl font-semibold mb-2">Novedades</h3>
+								<p>Contenido de novedades para Primaria.</p>
+							</div>
+							<div class="bg-white p-6 rounded-lg shadow-md">
+								<h3 class="text-xl font-semibold mb-2">Calificaciones</h3>
+								<p>Contenido de calificaciones para Primaria.</p>
+							</div>
+						</div>
+					</div>
+
+					<!-- Contenido para Secundaria -->
+					<div id="secundaria" class="tab-content hidden">
+						<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+							<div class="bg-white p-6 rounded-lg shadow-md">
+								<h3 class="text-xl font-semibold mb-2">Post Informativo</h3>
+								<p>Contenido del post informativo para Secundaria.</p>
+							</div>
+							<div class="bg-white p-6 rounded-lg shadow-md">
+								<h3 class="text-xl font-semibold mb-2">Novedades</h3>
+								<p>Contenido de novedades para Secundaria.</p>
+							</div>
+							<div class="bg-white p-6 rounded-lg shadow-md">
+								<h3 class="text-xl font-semibold mb-2">Calificaciones</h3>
+								<p>Contenido de calificaciones para Secundaria.</p>
+							</div>
+						</div>
+					</div>
+
+					<!-- Contenido para Terciario -->
+					<div id="terciario" class="tab-content hidden">
+						<!-- Cada carrera se separa con un espacio -->
+						<div class="space-y-8">
+							<!-- Carrera: Profesorado de Informática -->
+							<div>
+								<h3 class="text-2xl font-bold mb-4">Profesorado de Informática</h3>
+								<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+									<div class="bg-white p-6 rounded-lg shadow-md">
+										<h4 class="text-xl font-semibold mb-2">Post Informativo</h4>
+										<p>Contenido del post informativo para Profesorado de Informática.</p>
+									</div>
+									<div class="bg-white p-6 rounded-lg shadow-md">
+										<h4 class="text-xl font-semibold mb-2">Novedades</h4>
+										<p>Contenido de novedades para Profesorado de Informática.</p>
+									</div>
+									<div class="bg-white p-6 rounded-lg shadow-md">
+										<h4 class="text-xl font-semibold mb-2">Calificaciones</h4>
+										<p>Contenido de calificaciones para Profesorado de Informática.</p>
+									</div>
+								</div>
+								<!-- Vistas de la Carrera -->
+								<div class="mt-6">
+									<h4 class="text-xl font-bold mb-3">Vistas de la Carrera</h4>
+									<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+										<div class="bg-white p-6 rounded-lg shadow-md">
+											<h5 class="font-semibold mb-2">Inscripción a Exámenes</h5>
+											<p>Detalles sobre inscripción a exámenes.</p>
+										</div>
+										<div class="bg-white p-6 rounded-lg shadow-md">
+											<h5 class="font-semibold mb-2">Inscripción a Carreras</h5>
+											<p>Detalles sobre inscripción a carreras.</p>
+										</div>
+										<div class="bg-white p-6 rounded-lg shadow-md">
+											<h5 class="font-semibold mb-2">Inscripción a Materias</h5>
+											<p>Detalles sobre inscripción a materias.</p>
+										</div>
+										<div class="bg-white p-6 rounded-lg shadow-md">
+											<h5 class="font-semibold mb-2">Encuesta de Materia</h5>
+											<p>Detalles sobre encuesta de materia.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Carrera: Profesorado de Biología -->
+							<div>
+								<h3 class="text-2xl font-bold mb-4">Profesorado de Biología</h3>
+								<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+									<div class="bg-white p-6 rounded-lg shadow-md">
+										<h4 class="text-xl font-semibold mb-2">Post Informativo</h4>
+										<p>Contenido del post informativo para Profesorado de Biología.</p>
+									</div>
+									<div class="bg-white p-6 rounded-lg shadow-md">
+										<h4 class="text-xl font-semibold mb-2">Novedades</h4>
+										<p>Contenido de novedades para Profesorado de Biología.</p>
+									</div>
+									<div class="bg-white p-6 rounded-lg shadow-md">
+										<h4 class="text-xl font-semibold mb-2">Calificaciones</h4>
+										<p>Contenido de calificaciones para Profesorado de Biología.</p>
+									</div>
+								</div>
+								<!-- Vistas de la Carrera -->
+								<div class="mt-6">
+									<h4 class="text-xl font-bold mb-3">Vistas de la Carrera</h4>
+									<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+										<div class="bg-white p-6 rounded-lg shadow-md">
+											<h5 class="font-semibold mb-2">Inscripción a Exámenes</h5>
+											<p>Detalles sobre inscripción a exámenes.</p>
+										</div>
+										<div class="bg-white p-6 rounded-lg shadow-md">
+											<h5 class="font-semibold mb-2">Inscripción a Carreras</h5>
+											<p>Detalles sobre inscripción a carreras.</p>
+										</div>
+										<div class="bg-white p-6 rounded-lg shadow-md">
+											<h5 class="font-semibold mb-2">Inscripción a Materias</h5>
+											<p>Detalles sobre inscripción a materias.</p>
+										</div>
+										<div class="bg-white p-6 rounded-lg shadow-md">
+											<h5 class="font-semibold mb-2">Encuesta de Materia</h5>
+											<p>Detalles sobre encuesta de materia.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Carrera: Enfermería -->
+							<div>
+								<h3 class="text-2xl font-bold mb-4">Enfermería</h3>
+								<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+									<div class="bg-white p-6 rounded-lg shadow-md">
+										<h4 class="text-xl font-semibold mb-2">Post Informativo</h4>
+										<p>Contenido del post informativo para Enfermería.</p>
+									</div>
+									<div class="bg-white p-6 rounded-lg shadow-md">
+										<h4 class="text-xl font-semibold mb-2">Novedades</h4>
+										<p>Contenido de novedades para Enfermería.</p>
+									</div>
+									<div class="bg-white p-6 rounded-lg shadow-md">
+										<h4 class="text-xl font-semibold mb-2">Calificaciones</h4>
+										<p>Contenido de calificaciones para Enfermería.</p>
+									</div>
+								</div>
+								<!-- Vistas de la Carrera -->
+								<div class="mt-6">
+									<h4 class="text-xl font-bold mb-3">Vistas de la Carrera</h4>
+									<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+										<div class="bg-white p-6 rounded-lg shadow-md">
+											<h5 class="font-semibold mb-2">Inscripción a Exámenes</h5>
+											<p>Detalles sobre inscripción a exámenes.</p>
+										</div>
+										<div class="bg-white p-6 rounded-lg shadow-md">
+											<h5 class="font-semibold mb-2">Inscripción a Carreras</h5>
+											<p>Detalles sobre inscripción a carreras.</p>
+										</div>
+										<div class="bg-white p-6 rounded-lg shadow-md">
+											<h5 class="font-semibold mb-2">Inscripción a Materias</h5>
+											<p>Detalles sobre inscripción a materias.</p>
+										</div>
+										<div class="bg-white p-6 rounded-lg shadow-md">
+											<h5 class="font-semibold mb-2">Encuesta de Materia</h5>
+											<p>Detalles sobre encuesta de materia.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- Fin de contenido de Terciario -->
+				</div>
+			</div>
+			<div id="viewPost" class="hidden">
+				<div class="container mx-auto rounded-lg shadow-lg bg-slate-50">
+					<div class="flex items-center">
+						<a href="javascript:history.back()" class=" ms-2 text-white flex items-center justify-center w-[20px] h-[20px] text-xl font-bold p-4 rounded-full bg-gray-700 hover:bg-gray-800 button"><</a>
+						<h3 id="post-title" class="text-gray-600 font-weight-700 text-3xl font-bold p-4"></h3>
+					</div>
+					<p id="post-text" class="text-gray-600 text-md bg-slate-50 px-4 font-light italic"></p>
+					<div id="post-body" class="p-4"></div>
+				</div>
+			</div>
+			<!-- Footer -->
+			<footer class="mt-8 text-center text-gray-600">
+				<p>&copy; 2025 Institución Educativa. Todos los derechos reservados.</p>
+			</footer>
+		</div>
+		
+		<div id="post-template" class="hidden">
+			<div class="px-0 pb-1 mx-1 mt-2 mb-1 border-b-2 w-full md:w-[320px] ">
+				<div name="portada" class="relative flex justify-center bg-gray-600 aspect-w-16 aspect-h-9 md:h-[240px]"></div>
+				<a class="bg-gray-100 rounded-b-lg" href="#" name="link">
+					<h3 class="text-md font-semibold px-3 pt-3 pb-2" name="title">Calificaciones</h3>
+					<p name="text" class="px-3 h-[40px] text-[12px]">Contenido de calificaciones para Jardín.</p>
+				</a>
+				<div class="flex flex-wrap mb-2 tags p-1" name="tags">
+					<small name="tag" class="button hover:cursor-pointer hover:bg-gray-600 text-gray-400 text-[10px] rounded-xl bg-gray-200 me-1 mb-1 px-2 py-1"
+						>Jueves 8 de Abril 2023</small
+					>
+				</div>
+			</div>
+		</div>
+		<!-- JavaScript simple para el manejo de Tabs -->
+		<script type="module">
+			const tabButtons = document.querySelectorAll(".tab-button");
+			const tabContents = document.querySelectorAll(".tab-content");
+			const inicio = document.querySelector("#inicio");
+			const buttons = document.querySelector("#buttons");
+			// /?post=uuid | /index.html?post=uuid
+			const indexView = window.location.search.split("=").length === 1;
+			if(indexView){
+				document.querySelector("#viewIndex").classList.remove("hidden");
+				let tabOpen = null;
+				tabButtons.forEach((button) => {
+					button.addEventListener("click", () => {
+						// Quitar el estado activo de todos los botones
+						tabButtons.forEach((btn) => btn.classList.remove("bg-red-500", "text-white"));
+						// Ocultar todo el contenido de los tabs
+						tabContents.forEach((content) => content.classList.add("hidden"));
+						// si tocamos el tab abierto, abrimos el inicio
+						if (tabOpen == button) {
+							inicio.classList.remove("hidden");
+							buttons.classList.add("hidden");
+							tabOpen = null;
+							return;
+						}
+						inicio.classList.add("hidden");
+						if (buttons.classList.contains("hidden")) buttons.classList.remove("hidden");
+						tabOpen = button;
+						// Activar el botón clickeado y mostrar su contenido
+						button.classList.add("bg-red-500", "text-white");
+						const tabId = button.getAttribute("data-tab");
+						document.getElementById(tabId).classList.remove("hidden");
+					});
+				});
+				//tabButtons[0].click();
+
+				window.onload = () => {
+					fetch("/posts/index.json").then(async (res) => {
+						const data = await res.json();
+						const answers = data.map((answerUser) => {
+							let answerItem = {
+								Creado: formatearFecha(answerUser.created),
+							};
+							for (let key in answerUser) {
+								answerItem[key] = answerUser[key];
+							}
+							return answerItem;
+						});
+						postRender(answers);
+					});
+				};
+			} else {
+				const queries = window.location.search.split("?")[1]
+				queries.split("&").forEach((query) => {
+					const [key, value] = query.split("=");
+					if(key == "post") openPost(value)	
+				})
+			}
+
+			function formatearFecha(fechaString) {
+				let d = fechaString.split(" ")[0].split("/").reverse().join("-");
+				const fecha = new Date(d);
+				const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+				const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+				const diaSemana = diasSemana[fecha.getDay()];
+				const dia = fecha.getDate();
+				const mes = meses[fecha.getMonth()];
+
+				return `${diaSemana} ${dia} de ${mes}`;
+			}
+
+			function postRender(items) {
+				const inicio = document.querySelector("#inicio");
+				for (let item of items) {
+					// template de post
+					let t = document.querySelector("#post-template");
+					const template = document.querySelector("#post-template").children[0].cloneNode(true);
+					template.id = "";
+					template.querySelector("[name=title]").innerHTML = item["title"];
+					template.querySelector("[name=text]").innerHTML = item["text"].slice(0, 30);
+					const link = template.querySelector("[name=link]")
+					link.href = "./?post="+item.level+"/"+item.uuid;
+					let mediaType = item["cover"].split(".")[1] == "mp4" ? "video" : "image";
+					if (mediaType == "image")
+						template.querySelector(
+							"[name=portada]"
+						).innerHTML = `<img loading="lazy" class=" md:absolute start-50 end-50 top-50 bottom-50 block mx-auto md:h-[240px] w-auto rounded-t-lg bg-black" src="/posts/${item.level}/${item.uuid}/${item.cover}" alt="${item["Titulo"]}" />`;
+					else
+						template.querySelector(
+							"[name=portada]"
+						).innerHTML = `<video loading="lazy" class=" absolute start-50 end-50 top-50 bottom-50 block mx-auto h-[240px] w-auto rounded-t-lg bg-black" src="/posts/${item.level}/${item.uuid}/${item.cover}" controls></video>`;
+					// template de tag
+					const tagTemplate = template.querySelector("[name=tag]").cloneNode(true);
+
+					// borramos los tags de ejemplo
+					const tags = template.querySelector("[name=tags]");
+					tags.innerHTML = "";
+
+					// insertamos los tags
+					const getTag = str => {
+						const itemTemplate = tagTemplate.cloneNode();
+						itemTemplate.innerHTML = str;
+						return itemTemplate
+					}
+					for (let tag of ["created", "type", "level"]) {						
+						if(item[tag].search(',') > -1) {
+							item[tag].split(',').map((s) => tags.appendChild(getTag(s.trim())))
+						}else{
+							tags.appendChild(getTag(item[tag] || item[tag][0].fileId));
+						}
+					}
+					// insertamos el post
+					inicio.children[0].appendChild(template);
+				}
+			}
+
+			function parseBody(string){
+				let newString = string.split('\\n\\n\\n\\n').join('\\n').split('\\n').join('<br>').split('\\t').join('    ').split('\\x3C').join('<')
+				return newString
+			}
+
+			function openPost(uuid) {
+				document.querySelector("#viewIndex").classList.add("hidden");
+				document.querySelector("#viewPost").classList.remove("hidden");
+				fetch(`/posts/${uuid}/index.html`).then(async (res) => {
+					const data = await res.text();
+					let title = data.split('title" content="')[1].split('"')[0]
+					let text = data.split('description" content="')[1].split('"')[0]
+					document.querySelector("#post-title").innerHTML = title
+					document.querySelector("#post-text").innerHTML = text
+
+
+				})
+				fetch(`/posts/${uuid}/body.html`).then(async (res) => {
+					const data = await res.text();
+					if(data.search('File not found') > -1) return;
+					document.querySelector("#post-body").innerHTML = parseBody(data);
+					let tables = document.querySelectorAll("#post-body table");
+					for(let table of tables){
+						const div = document.createElement("div");
+						div.classList.add("overflow-x-auto");
+						div.innerHTML = table.outerHTML;
+						table.outerHTML = div.outerHTML;
+
+						document.querySelectorAll("#post-body h1,#post-body h2,#post-body h3").forEach((head) => {
+							head.innerText = head.innerText;
+						})
+						document.querySelectorAll("#post-body td").forEach((td) => {
+							td.classList.add("min-w-[30ch]")
+							td.classList.add("md:min-w-0");
+						})
+						document.querySelector("#post-body").addEventListener('click',(event) => {
+							if(event.target.tagName == 'TD') {
+								let select = document.querySelector("#post-body tr.selected")
+								if(select){
+									select.classList.remove('bg-gray-100')
+									select.classList.remove('selected')
+								}
+								event.target.parentNode.classList.toggle('bg-gray-100')
+								event.target.parentNode.classList.toggle('selected')
+							}
+						})
+					}
+				});
+			}
+		</script>
+	</body>
+</html>
