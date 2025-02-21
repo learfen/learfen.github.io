@@ -27,7 +27,7 @@
 			.tab-button {
 				transition: background 0.5s ease;
 			}
-			#post-body {
+			#post-body, #post-head {
 				a{
 					background-color: #f6513b;
 					color:#fff;
@@ -35,23 +35,23 @@
 					display: inline-block;
 				}
 				h1{
-					font-size: 2.5rem !important;
-					font-weight: bold !important;
+					font-size: 2.5rem;
+					font-weight: bold;
 				}
 				h2{
-					font-size: 2rem !important;
-					font-weight: bold !important;
+					font-size: 2rem;
+					font-weight: bold;
 				}
 				h3{
-					font-size: 1.5rem !important;
-					font-weight: bold !important;
+					font-size: 1.5rem;
+					font-weight: bold;
 				}
 				p{
-					font-size: 1rem !important;
-					padding:.5rem 0px !important;
+					font-size: 1rem;
+					padding:.5rem 0px;
 				}
 				img{
-					display: block !important;
+					display: block;
 				}
 				ul{
 					list-style: disc;
@@ -318,9 +318,13 @@
 				</div>
 			</div>
 			<div id="viewPost" class="hidden">
-				<div class="container mx-auto p-4 bg-white rounded-lg shadow-lg">
-					<h3>Post</h3>
-					<div id="post-body"></div>
+				<div class="container mx-auto rounded-lg shadow-lg bg-slate-50">
+					<div class="flex items-center">
+						<a href="javascript:history.back()" class=" ms-2 text-white flex items-center justify-center w-[20px] h-[20px] text-xl font-bold p-4 rounded-full bg-gray-700 hover:bg-gray-800 button"><</a>
+						<h3 id="post-title" class="text-gray-600 font-weight-700 text-3xl font-bold p-4"></h3>
+					</div>
+					<p id="post-text" class="text-gray-600 text-md bg-slate-50 px-4 font-light italic"></p>
+					<div id="post-body" class="p-4"></div>
 				</div>
 			</div>
 			<!-- Footer -->
@@ -417,7 +421,6 @@
 			function postRender(items) {
 				const inicio = document.querySelector("#inicio");
 				for (let item of items) {
-					console.log(item);
 					// template de post
 					let t = document.querySelector("#post-template");
 					const template = document.querySelector("#post-template").children[0].cloneNode(true);
@@ -425,7 +428,7 @@
 					template.querySelector("[name=title]").innerHTML = item["title"];
 					template.querySelector("[name=text]").innerHTML = item["text"].slice(0, 30);
 					const link = template.querySelector("[name=link]")
-					link.href = "./?post="+item.level+"/"+item.uuid;
+					link.href = "/?post="+item.level+"/"+item.uuid;
 					let mediaType = item["cover"].split(".")[1] == "mp4" ? "video" : "image";
 					if (mediaType == "image")
 						template.querySelector(
@@ -443,10 +446,17 @@
 					tags.innerHTML = "";
 
 					// insertamos los tags
-					for (let tag of ["created", "type", "level"]) {
+					const getTag = str => {
 						const itemTemplate = tagTemplate.cloneNode();
-						itemTemplate.innerHTML = item[tag] || item[tag][0].fileId;
-						tags.appendChild(itemTemplate);
+						itemTemplate.innerHTML = str;
+						return itemTemplate
+					}
+					for (let tag of ["created", "type", "level"]) {						
+						if(item[tag].search(',') > -1) {
+							item[tag].split(',').map((s) => tags.appendChild(getTag(s.trim())))
+						}else{
+							tags.appendChild(getTag(item[tag] || item[tag][0].fileId));
+						}
 					}
 					// insertamos el post
 					inicio.children[0].appendChild(template);
@@ -461,7 +471,16 @@
 			function openPost(uuid) {
 				document.querySelector("#viewIndex").classList.add("hidden");
 				document.querySelector("#viewPost").classList.remove("hidden");
-				fetch(`./posts/${uuid}/body.html`).then(async (res) => {
+				fetch(`/posts/${uuid}/index.html`).then(async (res) => {
+					const data = await res.text();
+					let title = data.split('title" content="')[1].split('"')[0]
+					let text = data.split('description" content="')[1].split('"')[0]
+					document.querySelector("#post-title").innerHTML = title
+					document.querySelector("#post-text").innerHTML = text
+
+
+				})
+				fetch(`/posts/${uuid}/body.html`).then(async (res) => {
 					const data = await res.text();
 					if(data.search('File not found') > -1) return;
 					document.querySelector("#post-body").innerHTML = parseBody(data);
@@ -486,7 +505,6 @@
 									select.classList.remove('bg-gray-100')
 									select.classList.remove('selected')
 								}
-
 								event.target.parentNode.classList.toggle('bg-gray-100')
 								event.target.parentNode.classList.toggle('selected')
 							}
