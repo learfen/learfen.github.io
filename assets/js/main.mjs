@@ -139,10 +139,15 @@ function openTab(tabName) {
 function postRender(nodeRenderSelector, items) {
 	const nodeRender = document.querySelector(nodeRenderSelector);
 	for (let item of items) {
+		item.medias = ""
 		// template de post
 		let t = document.querySelector("#post-template");
 		const template = document.querySelector("#post-template").children[0].cloneNode(true);
 		template.id = "";
+		let imgs = item.files.filter( i => i.split('.').pop() != 'mp4')
+		let videos = item.files.filter( i => i.split('.').pop() == 'mp4')
+		if(imgs.length || videos.length)
+			item.medias = `${imgs.length ? `${imgs.length} imagenes` : ""} ${videos.length ? `${videos.length} videos` : ""}`;
 		template.querySelector("[name=title]").innerHTML = item["title"];
 		template.querySelector("[name=text]").innerHTML = item["text"].split('.')[0].length > 120 ?  item["text"].slice(0, 120) : item["text"].split('.')[0] + "...";
 		const link = template.querySelector("[name=link]");
@@ -169,11 +174,12 @@ function postRender(nodeRenderSelector, items) {
 			itemTemplate.innerHTML = str;
 			return itemTemplate;
 		};
-		for (let tag of ["created", "type", "level"]) {
+		for (let tag of ["created", "type", "level","medias"]) {
+			if(!item[tag]) continue
 			if (item[tag].search(",") > -1) {
 				item[tag].split(",").map((s) => tags.appendChild(getTag(s.trim())));
 			} else {
-				tags.appendChild(getTag(item[tag] || item[tag][0].fileId));
+				tags.appendChild(getTag(item[tag] || item[tag][0]?.fileId));
 			}
 		}
 		// insertamos el post
@@ -194,8 +200,16 @@ function openPost(uuid) {
 		const data = await res.text();
 		let title = data.split('title" content="')[1].split('"')[0];
 		let text = data.split('description" content="')[1].split('"')[0];
+		let sources = ""
+		if(data.split('sources" content="').length > 1)
+			sources = data.split('sources" content="')[1].split('"')[0];
 		document.querySelector("#post-title").innerHTML = title;
 		document.querySelector("#post-text").innerHTML = text;
+		if(sources)
+			document.querySelector("#post-sources").innerHTML = sources.split(',').map((item) => {
+				if(item.split('.').pop() == 'mp4')	return `<video class="md:h-[240px] w-full h-auto block" controls src="/posts/${uuid}/${item}">${item}</video>`
+				return `<img class="md:h-[240px] w-full h-auto block" src="/posts/${uuid}/${item}">`
+			}).join('');	
 	});
 	// archivo con el cuerpo
 	fetch(`/posts/${uuid}/body.html`).then(async (res) => {
@@ -203,6 +217,7 @@ function openPost(uuid) {
 		if (data.search("File not found") > -1) return;
 		document.querySelector("#post-body").innerHTML = parseBody(data);
 		let tables = document.querySelectorAll("#post-body table");
+		console.log(data)
 		for (let table of tables) {
 			const div = document.createElement("div");
 			div.classList.add("overflow-x-auto");
@@ -279,14 +294,6 @@ document.querySelector('dialog').addEventListener("click", (e) => {
 	}
 });
 
-function main() {
-	setTimeout(() => {
-		document.querySelector("#background").remove();
-	}, 500);
-}
-window.addEventListener("load", () => {
-	main();
-});
 
 const dialogHTML = document.querySelector("#dialogGlobal")
 function dialog(keyData, next){
@@ -309,3 +316,22 @@ document.addEventListener('click', (event) => {
 		}
 	}
 })
+
+
+
+function main() {
+	let background = document.querySelector("#background")
+	const closeBackgrond = (e) => {
+		if(background){
+			background.classList.add("animate__fadeOut")
+			setTimeout(() => background.remove() , 600)
+		}
+	}
+	
+	document.querySelector('.fireplace').addEventListener("click", closeBackgrond);
+	background.addEventListener("click", closeBackgrond);
+	setTimeout(() => { closeBackgrond() }, 1500);
+}
+window.addEventListener("load", () => {
+	main();
+});
