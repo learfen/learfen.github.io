@@ -207,8 +207,8 @@ function openPost(uuid) {
 		document.querySelector("#post-text").innerHTML = text;
 		if(sources)
 			document.querySelector("#post-sources").innerHTML = sources.split(',').map((item) => {
-				if(item.split('.').pop() == 'mp4')	return `<video class="md:h-[240px] w-full h-auto block" controls src="/posts/${uuid}/${item}">${item}</video>`
-				return `<img class="md:h-[240px] w-full h-auto block" src="/posts/${uuid}/${item}">`
+				if(item.split('.').pop() == 'mp4')	return `<video class="w-full h-auto block md:inline-flex rounded-md shadow-md bg-white p-1 md:w-auto md:h-[240px] " controls src="/posts/${uuid}/${item}">${item}</video>`
+				return `<img class="w-full h-auto block md:inline-flex rounded-md shadow-md bg-white p-1 md:w-auto md:h-[240px] " src="/posts/${uuid}/${item}">`
 			}).join('');	
 	});
 	// archivo con el cuerpo
