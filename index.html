@@ -553,7 +553,6 @@
 			fetch(GAS_URL, {
 				method: "POST",
 				redirect: "follow",
-				headers: { "Content-Type": "text/plain;charset=utf-8" },
 				body: JSON.stringify({
 					action: "SAVE_FILE",
 					userId: username,
@@ -607,7 +606,6 @@
 			if (!newName || newName === oldName) return;
 			fetch("/api/files/rename", {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ oldName, newName })
 			}).then(r => r.json()).then(d => {
 				if (d.error) return alert(d.error);
