@@ -1,0 +1,600 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  letter-spacing: 2px;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif,
+    "Press Start 2P",
+    cursive;
+  user-select: none;
+}
+html,
+body {
+  width: 100vw;
+  height: 100vh;
+  background-color: #0c3061;
+  overflow: none;
+}
+:root {
+  --fondo-inicio: #333;
+}
+#app {
+  overflow: none;
+  min-width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  z-index: 3;
+  margin:0 auto;
+  position: relative;
+  justify-content: center;
+  /*
+  background: var(--fondo-inicio);
+  */
+  background-size: cover;
+  background-position: center;
+}
+#room {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(60deg);
+}
+.wall.back {
+  position: absolute;
+  width: 100%;
+  height: 300px;
+  height: 100%;
+  display: none;
+  background: transparent;
+  background-repeat: no-repeat;
+  background-size: 100% 200px;
+  background-position: bottom;
+  transform: rotateX(-90deg) translateX(0px) translateY(0px) translateZ(-99vh) ;
+  
+  transform-origin: bottom;
+}
+.wall.right {
+  position: absolute;
+  width: 100%;
+  height: 120%;
+  background: #3f3f3f;
+  right: -4%;
+  display: none;
+  transform: rotateY(-90deg) translateZ(0px) translateX(95%) translateY(-16%);
+  transform-origin: right;
+}
+.wall.left {
+  position: absolute;
+  width: 100%;
+  height: 120%;
+  background: #3a3a3a;
+  left: -4%;
+  display: none;
+  transform: rotateY(90deg) translateZ(0px) translateX(-95%) translateY(-16%);
+  transform-origin: left;
+}
+.wall.front {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  /* esta pantalla se usara como menu y como inventario, tambien para mostrar mensajes es un grid de 20x20 */
+  display: grid;
+  grid-template-columns: repeat(20, 1fr);
+  grid-template-rows: repeat(20, 1fr);
+  transform: rotateX(-90deg) translateX(0%) translateZ(100vh) translateY(-100vh);
+  transform-origin: top;
+}
+.dialog {
+  opacity: 0;
+  z-index: 0;
+  position: fixed;
+  transition: opacity 1s ease-in-out;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  background-color: transparent;
+  left: 0px;
+  top: 0px;
+  &[open] {
+    display: flex;
+    z-index: 100;
+  }
+}
+.instructions {
+  position: absolute;
+  top: 30px;
+  right: 20px;
+  .instruction,
+  .ref-button {
+    color: white;
+    text-shadow: 1px 1px 2px black;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px;
+    span {
+      font-weight: bold;
+      display: flex;
+      background-color: #eee;
+      color: black;
+      width: 3rem;
+      height: 3rem;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+    }
+  }
+}
+/* haremos un bonito menu estilo videojuegos flotante la clase .menu es la que flota y contiene los botones */
+.menu {
+  background-color: #fff;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid black;
+  width: fit-content;
+  height: fit-content;
+  min-height: 100px;
+  min-width: 280px;
+  max-height: 80vh;
+  padding: 1rem;
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-height: 220px;
+    li {
+      width: 100%;
+      order: 1;
+      all: unset;
+      display: block;
+      img {
+        width: 40px;
+        height: 40px;
+        display: block;
+        object-fit: cover;
+      }
+      button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        height: 100%;
+        margin: 0px auto;
+        padding: 10px;
+        border: 1px solid black;
+        border-radius: 5px;
+        background-color: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        &:hover {
+          background-color: #f5f5f5;
+        }
+        &:focus {
+          background-color: #f5f5f5;
+          outline: none;
+          border: 1px solid black;
+          box-shadow: 0 0 0 2px black;
+        }
+      }
+    }
+  }
+  button[close] {
+    width: 100%;
+    /* ocuparemos todo el espacio de la ultima fila*/
+    grid-column: 1 / -1;
+  }
+}
+/* creamos el efecto fade-in para que entre suavemente el menu */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.fade-in {
+  animation: fadeIn 1s ease-in-out;
+  opacity: 1;
+}
+/* ahora creamos el efecto fade-out */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.fade-out {
+  animation: fadeOut 1s ease-in-out;
+}
+
+.escenario {
+  position: absolute;
+  display: grid;
+  padding: 0px 0px 0px;
+  width: 800px;
+  height: 640px;
+  background-color: transparent;
+  border: 0px;
+  z-index: 10;
+  img, canvas {
+    top: 0px;
+    transform-style: preserve-3d;
+  }
+  &.principal {
+    transition: margin-left .3s ease-in-out, margin-right .3s ease-in-out , margin-top .3s ease-in-out , margin-bottom .3s ease-in-out;
+    transform-style: preserve-3d;
+    perspective-origin: 50% 50%;
+    display: block;
+    z-index: 20;
+    /*box-shadow: inset 0 0 20px 20px #222;*/
+    background-position: center;
+    background:transparent;
+    background-image:none;
+    transform:perspective(640px) rotateX(60deg) translateZ(-29px) translateX(9px) translateY(3px);
+    position:absolute;
+    div,img,canvas{
+      position: absolute;
+    }
+  }
+  #scene, .principal{
+    transform:perspective(640px) rotateX(60deg) translateZ(-29px) translateX(9px) translateY(3px);
+  }
+  .cell {
+    /*border: 1px solid rgba(0, 0, 200, 0.1);*/
+    color:transparent;
+    position: relative;
+  }
+  .elemento {
+    position: absolute;
+    object-fit: fill;
+    object-position: center; 
+    transform: rotateX(-80deg) perspective(640px) translateZ(1px);
+    transform-origin: bottom center;
+    visibility:hidden;
+    &.player {
+      zoom: 1;
+      transition:all .2s ease-in-out;
+      margin-top:5px;
+      transform: rotateX(-80deg) perspective(640px) translateZ(20px);
+      filter: drop-shadow(1px 7px 5px rgba(0, 0, 0, 0.8)) !important;
+      background-position-y:bottom !important;
+    }
+  }
+  .elemento-renderizado{
+    transition: all 1s ease;
+    visibility:visible;
+  }
+}
+
+#scene{
+  
+  &.cell-number .cell{
+    color:black;
+  }
+  &.cell-border .cell{
+    /*
+    border: 1px solid rgba(0, 0, 200, 0.4);
+    */
+  }
+}
+
+@media screen and (min-width:980px) {
+  #app{
+    min-width: 800px;
+    min-height: 600px;
+    max-height: 600px;
+    max-width: 800px;
+  }
+}
+
+.no-scroll {
+  overflow: hidden !important;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.joystick {
+  position: fixed;
+  bottom: 40px;
+  left: 40px;
+  width: 120px;
+  height: 120px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  touch-action: none;
+  z-index: 3000;
+  display: none;
+}
+.joystick-buttons {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  width: 150px;
+  height: 150px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  touch-action: none;
+  z-index: 1000;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0px 0px 10px black;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 50%;
+    &:hover {
+      background-color: #f5f5f5;
+    }
+  }
+}
+
+.stick {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#toast-container {
+  position: fixed;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+  z-index: 99999;
+}
+
+.toast {
+  min-width: 200px;
+  max-width: 80vw;
+  padding: 12px 18px;
+  border-radius: 8px;
+  background: linear-gradient(
+    180deg,
+    rgba(30, 30, 30, 0.9),
+    rgba(10, 10, 10, 0.9)
+  );
+  color: #fff;
+  font-family: sans-serif;
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  animation: toast-in 0.25s ease forwards;
+}
+
+.toast.out {
+  animation: toast-out 0.25s ease forwards;
+}
+
+@keyframes toast-in {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+}
+
+/* estilo tipo tecla */
+.key {
+  display: inline-block;
+  padding: 2px 6px;
+  margin: 0 2px;
+  border-radius: 4px;
+  background: #222;
+  border: 1px solid #555;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+#barInfo {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(1, 1fr);
+  width: 100%;
+  max-width: 90vw;
+  min-width: fit-content;
+  min-height: fit-content;
+  border: 1px solid black;
+  background-color: rgba(0, 0, 0, 0.5);
+  position: fixed;
+  top: 30px;
+  left: 5vw;
+  z-index: 100;
+  .info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 1.3rem;
+    padding:0px .5rem;
+    background-color: rgba(255, 255, 255, 0.5);
+    text-shadow: 2px 2px 2px black;
+  }
+}
+
+#dialog {
+  position: fixed;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 500px;
+  background: rgba(10, 10, 10, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 16px;
+  color: #fff;
+  font-family: sans-serif;
+  display: none;
+  z-index: 1000;
+  &.opened {
+    display: block;
+    animation: dialog-in 0.25s ease forwards;
+  }
+  &.closed {
+    animation: dialog-out 0.25s ease forwards;
+  }
+  #dialog-text {
+    min-height: 60px;
+    line-height: 1.4;
+  }
+
+  #dialog-options {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .option {
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .key {
+    font-weight: bold;
+    margin-right: 6px;
+    color: #0ff;
+  }
+}
+
+.title-game {
+  z-index: 20000;
+  position: fixed;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  background: rgba(10, 10, 10, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 16px;
+  color: #fff;
+  text-align: center;
+  text-transform: uppercase;
+  font-family: sans-serif;
+  display: block;
+  animation: dialog-in 0.25s ease forwards;
+}
+
+.entrada{
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+.entrada.aparecer{
+  opacity: 1;
+}
+
+.show-solid .effect-solid{
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid #333;
+}
+
+.recortada {
+  clip-path: inset(0 42% 65% 42%); 
+}
+
+.estado{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: fit-content;
+  height: fit-content;
+  transition: transform .2s ease, translate .2s ease;
+  text-shadow: #fff 1px 1px 2px ,
+              #fff -1px 1px 2px,
+              #fff 1px -1px 2px,
+              #fff -1px -1px 2px;
+  z-index: 100;
+  padding:0rem;
+  color:#333;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-align: center;
+  font-family: sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+  .vidas{
+    display: flex;
+    justify-content: start;
+    text-align: center;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    letter-spacing: -4px;
+    width: 50px;
+    margin-left: 0px;
+    margin-top:20px;
+    font-size: 1ch;
+  }
+  &#player-estado{
+    .vidas{
+      font-size: 2ch;
+      line-height: 0ch;
+    }
+  }
+  div{
+    position:relative !important
+  }
+}

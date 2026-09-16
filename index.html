@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Gamemaker 2.0</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+	<div id="app">
+		<div id="errorRender" style="position: fixed; top: 0; left: 0;padding:0px 20px;background-color: red;"></div>
+		<dialog id="info">
+			<div id="info-content">
+				<div></div>
+			</div>
+		</dialog>
+	</div>
+
+	<!-- VISTA DE ESCENA Y CÁMARA -->
+	<div class="scene" id="scene">
+		<div class="camera-viewport" id="cameraViewport">
+			<div class="grid-wrap" id="gridWrap">
+				<div class="grid" id="grid"></div>
+			</div>
+			<div class="container-ayuda">
+				<div id="ayuda" class="bg-white bg-50 text-gray-600"></div>
+			</div>
+		</div>
+	</div>
+
+	<div class="absolute top-0 p-1 start-0 bg-gray-400">
+		<span id="username"></span>
+		<button id="logout" onclick="logout()" class="p-1 mx-1 rounded-lg bg-red-400 text-white">Cerrar
+			Sesi&oacute;n</button>
+	</div>
+
+	<!-- PANEL DE CONTROLES -->
+	<div class="controls">
+		<!-- BARRA DE ESTADO DEL JUEGO -->
+		<div class="state-bar">
+			<span>Estado: <strong id="stateDisplay">start</strong></span>
+			<div class="btn-row">
+				<button class="btn" onclick="cambiarEstadoUI('play')">Play</button>
+				<button class="btn gold" onclick="cambiarEstadoUI('pausa')">Pausa</button>
+				<button class="btn" onclick="cambiarEstadoUI('inventario')">Inventario</button>
+				<button class="btn" onclick="cambiarEstadoUI('inventario:menu')">Inv. Menú</button>
+				<button class="btn" onclick="cambiarEstadoUI('inventario:cerrar')">Cerrar Inv.</button>
+				<button id="toggleCode" class="btn">Codigo</button>
+			</div>
+		</div>
+
+		<!-- PRESETS DE OBJETOS -->
+		<div class="dim-inputs">
+			<label>W (X)</label><input type="number" id="dimW" min="1" max="20" value="1">
+			<label>H (Z)</label><input type="number" id="dimH" min="1" max="10" value="1">
+			<label>D (Y)</label><input type="number" id="dimD" min="1" max="20" value="1">
+		</div>
+
+		<div class="btn-row">
+			<button class="btn blue" onclick="crearBloqueDesdeUI(true)">+ Sólido</button>
+			<button class="btn wall" onclick="paredHorizontal()">+ Pared Horiz.</button>
+			<button class="btn wall" onclick="paredVertical()">+ Pared Vert.</button>
+			<button class="btn" onclick="crearBloqueDesdeUI(false)">+ Sensor</button>
+			<button class="btn gold" onclick="crearJugadorUI()">★ Player</button>
+			<button class="btn danger" onclick="eliminarSeleccionadoUI()">✕ Eliminar</button>
+		</div>
+
+
+		<!-- JSON Y LIMPIEZA -->
+		<div class="btn-row">
+			<button class="btn primary" onclick="exportarEstadoUI()">Exportar JSON</button>
+			<button class="btn primary" onclick="importarEstadoUI()">Cargar JSON</button>
+			<button class="btn danger" onclick="limpiarEscenaUI()">Limpiar Escena</button>
+		</div>
+
+		<!-- PAD DE MOVIMIENTO XY -->
+		<div class="move-pad">
+			<div></div>
+			<button class="btn" onclick="evento('arriba')">↑</button>
+			<div></div>
+			<button class="btn" onclick="evento('izquierda')">←</button>
+			<button class="btn" onclick="evento('abajo')">↓</button>
+			<button class="btn" onclick="evento('derecha')">→</button>
+		</div>
+
+		<!-- PAD ELEVACIÓN Z -->
+		<div class="move-pad-3d">
+			<div></div>
+			<button class="btn" onclick="moverSeleccionado(0,0,1)">▲</button>
+			<div></div>
+			<div></div>
+			<button class="btn" onclick="moverSeleccionado(0,0,-1)">▼</button>
+			<div></div>
+		</div>
+	</div>
+
+	<div id="error-code" style="z-index:100"
+		class="fixed bottom-0 mt-1 z-[100] w-[300px] bg-gray-100 text-white text-sm rounded-lg"></div>
+
+	<div class="status" id="status">Consola de eventos...</div>
+
+
+	<div id="code-container">
+		<div class="flex justify-between w-full p-1 ms-1/4 shadow-md mb-1 bg-gray-200 rounded-lg">
+			<div class="text-sm p-1" style="border:1px white solid;border-radius:10px" id="fileName"></div>
+		</div>
+		<div id="editor1" class="editor-container"></div>
+	</div>
+
+
+	<!-- modal simula una hoja para relatar una historia -->
+	<div id="relatar" class="hidden">
+		<div class="top-0 start-0 fixed w-full h-full bg-black bg-50 flex justify-center items-center z-[10000000]">
+			<div style="width:80ch;height:5px;overflow-y:hidden;transition: height 0.4s ease-in-out, width 0.4s ease-in-out;transition-behavior: allow-discrete; "
+				class="markdown rounded-lg bg-slate-300 text-gray-800 relative">
+				<div class="prose p-10 max-w-none  prose-sm"></div>
+				<div class="flex justify-between p-4 gap-2 absolute bottom-0 w-full bg-slate-400">
+					<div><span name="cursor"></span>/<span name="total"></span></div>
+					<small>[S] para salir</small>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="toast-container" class="fixed top-0 end-0 z-[1000]"></div>
+
+	<script src="/js/marked.umd.js"></script>
+	<script src="/js/gif.lib.js"></script>
+	<script src="/js/gif.frames.js"></script>
+	<script src="/js/src/object-helper.js"></script>
+	<script src="/js/src/events.js"></script>
+	<script src="/js/src/scene.js"></script>
+	<script src="/js/src/physics.js"></script>
+	<script src="/js/src/character.js"></script>
+	<script src="/js/src/inventory.js"></script>
+	<script src="/js/procedural.js"></script>
+	<script src="/js/src/main.js"></script>
+	<script src="/js/src/neto.js"></script>
+	<script src="/js/src/dev.js"></script>
+	<script src="/js/loader.min.js"></script>
+	<script src="/api/files/global.js"></script>
+	<script>
+		const GAS_URL = "https://script.google.com/macros/s/AKfycbxMy4kn4KLOpH0Zobo6aO9tdcPqrCut06bZgR6M4miArCIyqSF5Va7m6fEgoev4Te-kWQ/exec";
+
+		function logout() {
+			localStorage.clear()
+			// limpiar las cookies
+			document.cookie.split(";").forEach(function (c) { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
+			location.href = "/login.html"
+		}
+
+		const username = localStorage.getItem("username");
+
+		if (!username) logout()
+
+		document.querySelector("#username").innerHTML = username;
+
+		setInterval(() => {
+			fetch("/api/refresh")
+				.then(r => r.json())
+				.then(d => {
+					// si es 401
+					if (d.code === 401) {
+						logout()
+					}
+				})
+		}, 60 * 1000)
+		let escenaSeleccionada = null
+		// si en la url query existe escena
+		if (new URLSearchParams(window.location.search).get("escena")) {
+			escenaSeleccionada = new URLSearchParams(window.location.search).get("escena")
+			localStorage.setItem("escenaSeleccionada", escenaSeleccionada)
+		}
+
+		function abrirEscena() {
+			if (localStorage.getItem("escenaSeleccionada")) {
+				escenaSeleccionada = localStorage.getItem("escenaSeleccionada")
+			}
+			if (escenaSeleccionada) {
+				openFile(`/api/files/${escenaSeleccionada}.js`)
+			}
+		}
+
+
+		/* EDITOR */
+
+		let codeDataText = "";
+		let useEditor = false
+		let editorOpen = null;
+		let buttonCodeToggle = document.querySelector("#toggleCode");
+
+		require.config({
+			paths: {
+				vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs",
+				//vs: "http://localhost:3001",
+			},
+		});
+		require(["vs/editor/editor.main"], function (ev) {
+			//require(["/editor/editor.main"], function (ev) {
+			editorOpen = () => {
+				editor = monaco.editor.create(
+					document.getElementById("editor1"),
+					{
+						value: codeDataText,
+						language: "javascript",
+						theme: "vs-dark",
+						automaticLayout: true,
+						minimap: { enabled: false },
+					},
+				);
+				installImagesEditor()
+				// detectar cambios en el editor
+				editor.onDidChangeModelContent((x) => {
+					if (!pushChanges)
+						return setTimeout(() => (pushChanges = true), 500);
+					revisionCodigo()
+					revisionImagenes()
+					updateChanges();
+				});
+				if (!useEditor) useEditor = editor;
+				return editor;
+			};
+		});
+
+		function revisionImagenes() {
+			let codigo = editor.getValue()
+			let imagenesUsadasCodigo = [...codigo.matchAll(
+				/escenaActiva\(\)\s*\.agregar\(\s*\d+\s*,\s*\d+\s*,\s*"([^"]+)"/g
+			)].map(m => m[1]);
+
+			if (localStorage.getItem("escenaSeleccionada") === 'global') {
+				// si en el codigo existe pescar(
+				let pescarCut = codigo.split('pescar([')
+				if (pescarCut.length > 1) {
+					// si no tiene la funcion pescar
+					let imagesArray = JSON.parse(`[${pescarCut[1].split(']')[0]}]`)
+					for (let key of imagesArray) {
+						imagenesUsadasCodigo.push(key)
+					}
+				}
+			}
+
+			// usamos set para eliminar repetidos
+			imagenesUsadasCodigo = Array.from(new Set(imagenesUsadasCodigo))
+
+			const imagenesImportadasCodigo = [...codigo.matchAll(/usarImagen\(\s*"([^"]+)"/g)].map(m => m[1]);
+			for (let key of imagenesUsadasCodigo) {
+				if (!imagenesImportadas.hasOwnProperty(key) && !imagenesImportadasCodigo.includes(key)) {
+					errorRender(`No importaste la imagen : "${key}" en la escena. <br>Elige en <b>RECURSOS</b> y escribe <b>${key}</b> cuando selecciones y pregunte el alias.`).setGroup("imagen", key)
+				} else {
+					errorRender().clearGroup("imagen", key)
+				}
+			}
+		}
+
+		function revisionCodigo() {
+			let codigo = String(editor.getValue())
+			// si la escena activa es global
+			if (localStorage.getItem("escenaSeleccionada") != "global") {
+				// si no tiene la funcion juego
+				if (!codigo.includes("juego")) {
+					errorRender("No tienes la funcion juego").setGroup("juego")
+				} else {
+					errorRender().clearGroup("juego")
+				}
+				// si no tiene la funcion escenaActiva
+				if (!codigo.includes("empezarEn")) {
+					errorRender("No tienes la funcion escenaActiva").setGroup("player-start")
+				} else {
+					errorRender().clearGroup("player-start")
+				}
+			}
+			// si no tiene la misma cantidad de { abiertos que cerrados
+			let abiertos = [...codigo.matchAll(/\{/g)].length
+			let cerrados = [...codigo.matchAll(/\}/g)].length
+			if (abiertos != cerrados) {
+				errorRender("Te falto cerrar o abrir llaves <b>{}</b>").setGroup("llaves")
+			} else {
+				errorRender().clearGroup("llaves")
+			}
+			// lo mismo con los parentesis ahora
+			abiertos = [...codigo.matchAll(/\(/g)].length
+			cerrados = [...codigo.matchAll(/\)/g)].length
+			if (abiertos != cerrados) {
+				errorRender("Te falto cerrar o abrir parentesis <b>( )</b>").setGroup("parentesis")
+			} else {
+				errorRender().clearGroup("parentesis")
+			}
+			// lo mismo con los corchetes ahora
+			abiertos = [...codigo.matchAll(/\[/g)].length
+			cerrados = [...codigo.matchAll(/\]/g)].length
+			if (abiertos != cerrados) {
+				errorRender("Te falto cerrar o abrir corchetes <b>[ ]</b>").setGroup("corchetes")
+			} else {
+				errorRender().clearGroup("corchetes")
+			}
+
+
+			// si no tiene la funcion escenaActiva
+			if (codigo.includes("escenaActiva.")) {
+				errorRender("escenaActiva es una funcion, lleva parentesis asi: <b>escenaActiva()</b>").setGroup("escena-error-1")
+			} else {
+				errorRender().clearGroup("escena-error-1")
+			}
+		}
+
+
+		const images = document.querySelector("#images")
+		let onloaded = false
+		let installedImages = false
+		let imagesBackend = null
+		let editor = null
+		let fileOpen = ""
+		let stateChanges = {
+			time: Date.now(),
+			code: "",
+		};
+		const openCode = () => {
+			dialogCode.show();
+			setTimeout(() => {
+				dialogCode.classList.add("open");
+				// editorOpen();
+			}, 250);
+		};
+		const closeCode = () => {
+			dialogCode.classList.add("close");
+			setTimeout(() => {
+				dialogCode.classList.remove("open");
+				dialogCode.classList.remove("close");
+				dialogCode.close();
+			}, 500);
+		};
+		const toggleCode = () => {
+			if (!dialogCode.getAttribute("open")) openCode();
+			else closeCode();
+
+			setTimeout(() => {
+				if (!editor) {
+					editorOpen();
+				}
+			}, 250);
+		}
+		buttonCodeToggle.addEventListener("click", toggleCode);
+
+		const toastManager = () => {
+			let toastContainer = document.createElement("div");
+			toastContainer.classList.add("relative", "mt-4", "top-5", "end-5", "bg-black/40", "w-full", "h-fit", "flex", "justify-center", "items-center", "text-white", "text-2xl", "font-bold", "p-0", "rouned-lg");
+			toastContainer.zIndex = "2000";
+			document.querySelector('#toast-container').appendChild(toastContainer);
+			return {
+				push(html, seconds) {
+					if (!seconds) seconds = 3
+					// insertamos un div
+					let div = document.createElement("div");
+					div.classList.add("w-full", "flex", "justify-center", "items-center", "text-white", "text-sm", "uppercase", "font-bold", "p-1", "m-1", "rouned-lg");
+					div.style.border = "1px solid white";
+					div.style.background = "cornflowerblue";
+					div.style.textShadow = "0px 0px 3px #111";
+					div.style.marginRight = "0px";
+					div.style.transition = "margin-right 0.75s ease-in-out";
+					div.innerHTML = html
+					toastContainer.appendChild(div);
+					if (seconds) esperarY(seconds, async () => {
+						div.style.marginRight = "-280px";
+						await esperar(1)
+						div.remove()
+					})
+					return div
+				}
+			}
+		}
+
+		function installImagesEditor() {
+			if (installedImages) return;
+			installedImages = true
+			const pushImage = (image) => {
+				const imageItem = document.createElement("img");
+				imageItem.src = "/games/images/" + image;
+				imageItem.alt = image;
+				imageItem.style.width = "auto";
+				imageItem.style.height = "40px";
+				images.appendChild(imageItem);
+			}
+			function listImagesManager(data, cursor) {
+				if (cursor === undefined) {
+					cursor = -1
+				}
+
+				let total = data.length
+				let pageSize = 20
+				let pages = Math.ceil(data.length / pageSize)
+				let imageIndex = document.querySelector("#imageIndex")
+				const updateStatus = () => imageIndex.innerHTML = `${cursor + 1} / ${pages}`
+				const render = () => {
+					document.querySelector("#images").innerHTML = "";
+
+					for (let i = cursor * pageSize; i < (cursor * pageSize) + pageSize; i++) {
+						if (i == data.length) break;
+						pushImage(data[i])
+					}
+
+					updateStatus()
+				}
+				return {
+					total,
+					pages,
+					cursor,
+					next() {
+						if (pages > cursor + 1) {
+							cursor++
+							render()
+						}
+					},
+					back() {
+						if (cursor - 1 > -1) {
+							cursor--
+							render()
+						}
+					},
+					reload() {
+						onloaded = false
+						listImages()
+					}
+				}
+			}
+			const listImages = (e) => {
+				if (e !== undefined) e.target.parentNode.click()
+				if (!document.querySelector("#imageIndex")) return;
+				if (!onloaded) {
+					onloaded = true
+					fetch("/api/images")
+						.then((response) => response.json())
+						.then((data) => {
+							imagesBackend = listImagesManager(data)
+							imagesBackend.next()
+						})
+						.catch((error) => {
+							errorRender("No se pudieron cargar las imagenes")
+							console.error("Error:", error);
+						});
+				}
+			}
+
+
+			const upload = () => {
+				// create input file
+				const image = document.createElement("input");
+				image.type = "file";
+				image.accept = "image/*";
+				image.onchange = (e) => {
+					const file = e.target.files[0];
+					const formData = new FormData();
+					formData.append("file", file);
+					fetch("/api/images", {
+						method: "POST",
+						body: formData,
+					})
+						.then((response) => response.json())
+						.then((data) => {
+							if (data.hasOwnProperty("error")) return errorRender(data.error)
+							pushImage(data.filename)
+							toastManager().push("Imagen cargada con exito")
+						})
+						.catch((error) => {
+							errorRender(String(error))
+							console.error("Error:", error);
+						});
+				};
+				image.click();
+			}
+
+			const addImage = (e) => {
+				if (e.target.tagName !== "IMG") return
+				let ref = prompt("Ingresa un alias para la imagen")
+				if (!ref) return;
+				const code = `usarImagen("${ref}","${e.target.src.replace(location.href, "/")}")`;
+				useEditor.setValue(code + ";\n" + useEditor.getValue());
+				images.previousElementSibling.click()
+			}
+			listImages()
+			//document.querySelector("#listImages").addEventListener("click", listImages);
+			//document.querySelector("#images").addEventListener("click", addImage);
+			//document.querySelector("#upload").addEventListener("click", upload);
+
+		}
+
+
+
+
+		// Cargar archivo del usuario desde GAS
+		const openFile = async (fileName) => {
+			if (!editor) {
+				await new Promise((resolve) => {
+					let x = setInterval(() => {
+						if (typeof editorOpen === 'function') {
+							clearInterval(x);
+							resolve();
+						}
+					}, 10);
+				});
+			}
+
+			editorOpen();
+			toastManager().push("Cargando archivo...");
+
+			try {
+				const url = new URL(GAS_URL);
+				url.searchParams.append("action", "GET_FILE");
+				url.searchParams.append("userId", username);
+				url.searchParams.append("userEmail", `${username}@gamemaker.com`);
+				url.searchParams.append("fileName", fileName);
+
+				const response = await fetch(url, { method: "GET", redirect: "follow" });
+				const result = await response.json();
+
+				if (result.status === "success") {
+					pushChanges = false;
+					fileOpen = fileName;
+					codeDataText = result.code || "";
+					editor.setValue(codeDataText);
+					toastManager().push("Archivo cargado correctamente");
+					return true;
+				} else {
+					toastManager().push("No se encontró el archivo.");
+					return false;
+				}
+			} catch (error) {
+				console.error("Error al abrir archivo:", error);
+				toastManager().push("Error al conectar con Google Apps Script");
+				return false;
+			}
+		};
+
+		// Guardar archivo en GAS
+		const updateChanges = (config) => {
+			if (localStorage.getItem("userFile") == "tutorial") return;
+
+			config = config || { force: false, next: null };
+			if (stateChanges.code == useEditor.getValue() && !config?.force) return;
+
+			if (stateChanges.time < Date.now() - 5000 || config?.force) {
+				stateChanges.time = Date.now();
+				stateChanges.code = useEditor.getValue();
+			} else {
+				return setTimeout(() => updateChanges(config), 5000);
+			}
+
+			const toast = toastManager().push('Guardando código...');
+			const newCodeDataText = useEditor.getValue();
+
+			fetch(GAS_URL, {
+				method: "POST",
+				redirect: "follow",
+				headers: { "Content-Type": "text/plain;charset=utf-8" },
+				body: JSON.stringify({
+					action: "SAVE_FILE",
+					userId: username,
+					userEmail: `${username}@gamemaker.com`,
+					payload: {
+						fileName: fileOpen,
+						code: newCodeDataText
+					}
+				})
+			})
+				.then((response) => response.json())
+				.then((data) => {
+					if (typeof config.next === "function") config.next();
+					toastManager().push('¡Guardado completo!');
+				})
+				.catch((error) => {
+					errorRender("No se pudo guardar: " + String(error));
+					console.error("Error:", error);
+				});
+		};
+
+		abrirEscena()
+
+		const getButtonDropdownNav = (text) => {
+			let container = document.createElement("div");
+			container.style.cssText = "display:flex;align-items:center;gap:2px;";
+
+			let button = document.createElement("button");
+			button.classList.add("btn", "w-full", "p-1", "toggle-btn");
+			button.innerHTML = text.replace('.js', '');
+			button.setAttribute('name', text)
+
+			let pencil = document.createElement("button");
+			pencil.classList.add("btn", "pencil-btn");
+			pencil.innerHTML = "&#9998;";
+			pencil.title = "Renombrar";
+			pencil.setAttribute('data-scene', text);
+			pencil.style.cssText = "font-size:1.1em;padding:2px 6px;opacity:0.6;cursor:pointer;flex-shrink:0;";
+
+			container.appendChild(button);
+			container.appendChild(pencil);
+			return container;
+		};
+
+		document.addEventListener("click", (e) => {
+			const pencil = e.target.closest?.(".pencil-btn");
+			if (!pencil) return;
+			e.stopPropagation();
+			const oldName = pencil.getAttribute("data-scene").replace('.js', '');
+			const newName = prompt("Nuevo nombre:", oldName);
+			if (!newName || newName === oldName) return;
+			fetch("/api/files/rename", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ oldName, newName })
+			}).then(r => r.json()).then(d => {
+				if (d.error) return alert(d.error);
+				const finalName = d.file || newName;
+				if (escenaSeleccionada === oldName) {
+					localStorage.setItem("escenaSeleccionada", finalName);
+					location.reload();
+				} else {
+					document.querySelector("#myListScene").innerHTML = "";
+					listFiles();
+				}
+			});
+		});
+		const listFiles = () => {
+			fetch("/api/files")
+				.then((response) => response.json())
+				.then((data) => {
+					let x = setInterval(() => {
+
+						let myListScene = document.querySelector("#myListScene");
+						if (myListScene) {
+							data.sort((a, b) => a.localeCompare(b)).forEach((file) => {
+								myListScene.appendChild(getButtonDropdownNav(file));
+							});
+							if (!localStorage.getItem("escenaSeleccionada")) {
+								// si existe "menu" en la lista abrimos
+								localStorage.setItem("escenaSeleccionada", "menu")
+								abrirEscena()
+							}
+
+							clearInterval(x);
+						}
+
+					}, 100)
+				});
+		};
+		listFiles()
+	</script>
+</body>
+
+</html>

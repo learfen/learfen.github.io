@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>GameMaker School</title>
+
+	<script src="./js/tailwindcss.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    .pixel-bg {
+      background-image:
+        linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-blue-500 via-blue-400 to-blue-300">
+
+  <div class="min-h-screen flex items-center justify-center p-6">
+
+    <div class="w-full max-w-6xl grid lg:grid-cols-2 gap-10 items-center">
+
+      <!-- LEFT -->
+      <div class="text-center lg:text-left text-slate-800">
+
+        <div class="inline-flex items-center gap-3 bg-white/70 px-5 py-3 rounded-2xl shadow-lg mb-6">
+          <span class="text-4xl">🎮</span>
+
+          <div>
+            <h1 class="text-3xl md:text-5xl font-bold">
+              GameMaker School
+            </h1>
+
+            <p class="text-slate-600 text-lg">
+              Aprende creando videojuegos
+            </p>
+          </div>
+        </div>
+
+        <p class="text-xl leading-relaxed max-w-xl mb-8">
+          Diseña niveles, sube imágenes, guarda tus proyectos
+          y crea videojuegos increíbles junto a otros estudiantes.
+        </p>
+
+        <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
+
+          <div class="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-lg w-36 text-center">
+            <div class="text-4xl mb-2">🕹️</div>
+            <div class="font-semibold">Mini Games</div>
+          </div>
+
+          <div class="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-lg w-36 text-center">
+            <div class="text-4xl mb-2">🎨</div>
+            <div class="font-semibold">Pixel Art</div>
+          </div>
+
+          <div class="bg-white/80 backdrop-blur rounded-2xl p-4 shadow-lg w-36 text-center">
+            <div class="text-4xl mb-2">🚀</div>
+            <div class="font-semibold">Publica</div>
+          </div>
+
+        </div>
+
+        <!-- IMAGE -->
+        <div class="mt-10 hidden lg:block">
+          <img
+            src="/images/login-image-preview.jpeg"
+            style="width:auto;height:200px"
+            class="rounded-3xl shadow-2xl border-8 border-white rotate-1 hover:rotate-0 transition-all duration-300"
+          />
+        </div>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div class="bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl p-4 md:p-10 border border-white/40">
+
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br bg-plate-200 flex items-center justify-center text-white text-3xl shadow-lg">
+            👾
+          </div>
+
+          <div>
+            <h2 class="text-3xl font-bold text-slate-800">
+              Bienvenido
+            </h2>
+
+            <p class="text-slate-500">
+              Accede o crea tu cuenta
+            </p>
+          </div>
+        </div>
+
+        <!-- REGISTER -->
+        <div class="mb-10 rounded-lg bg-blue-100 ">
+
+
+          <div class="p-1 flex items-center justify-between w-full">
+            <button open="signin" class=" w-1/2 m-0 text-center cursor-pointer text-xl font-semibold text-slate-700 border-0 px-4 py-1 rounded-md">
+              🔐 Iniciar sesión
+            </button>
+            <button open="signup" class=" w-1/2 m-0 text-center cursor-pointer text-xl font-semibold text-slate-700 border-0 px-4 py-1 rounded-md bg-gray-300">
+              ✨ Registro
+            </button>
+          </div>
+
+          <form id="signup" method="post" action="/register" class="hidden bg-blue-100 p-4">
+
+            <input
+              name="username"
+              placeholder="Usuario"
+              class="w-full my-2 block rounded-2xl border-2 border-cyan-200 bg-white px-3 py-2 text-md outline-none focus:border-cyan-500 transition"
+            />
+
+            <input
+              name="password"
+              type="password"
+              placeholder="Contraseña"
+              class="w-full my-2 block rounded-2xl border-2 border-cyan-200 bg-white px-3 py-2 text-md outline-none focus:border-cyan-500 transition"
+            />
+
+            <button
+              class="w-full uppercase  rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 py-4 text-lg text-white shadow-lg hover:scale-[1.02] transition"
+            >
+              Crear Cuenta 🚀
+            </button>
+
+          </form>
+
+          <form id="signin" method="post" action="/login" class="bg-blue-100 p-4">
+
+            <input
+              name="username"
+              placeholder="Usuario"
+              class="w-full my-2 block rounded-2xl border-2 border-blue-200 bg-white px-3 py-2 text-md outline-none focus:border-blue-500 transition"
+            />
+
+            <input
+              name="password"
+              type="password"
+              placeholder="Contraseña"
+              class="w-full my-2 block rounded-2xl border-2 border-blue-200 bg-white px-3 py-2 text-md outline-none focus:border-blue-500 transition"
+            />
+
+            <button
+              class="w-full uppercase  rounded-2xl bg-gradient-to-r from-cian-500 to-blue-600 py-4 text-lg text-white shadow-lg hover:scale-[1.02] transition"
+            >
+              Entrar 🎮
+            </button>
+
+          </form>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="mt-8 text-center text-slate-500 text-sm">
+          Plataforma educativa para crear videojuegos y compartir proyectos.
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+  <script>
+  // URL de tu aplicación desplegada en Google Apps Script
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbxMy4kn4KLOpH0Zobo6aO9tdcPqrCut06bZgR6M4miArCIyqSF5Va7m6fEgoev4Te-kWQ/exec";
+
+  function createDialog(texto) {
+    const dialog = document.createElement("dialog");
+    dialog.className = "bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl p-4 md:p-10 border border-white/40";
+    
+    const container = document.createElement("div");
+    container.className = "flex items-center gap-3 mb-8";
+    dialog.appendChild(container);
+    
+    const content = document.createElement("div");
+    content.className = "text-slate-700";
+    content.innerHTML = texto;
+    dialog.appendChild(content);
+
+    const button = document.createElement("button");
+    button.className = "px-4 py-2 w-full mt-5 rounded-lg bg-gray-200 hover:bg-gray-300";
+    button.innerHTML = "Cerrar";
+    button.addEventListener("click", () => dialog.close());
+
+    content.appendChild(button);
+    dialog.addEventListener("click", () => dialog.close());
+    document.body.appendChild(dialog);
+    dialog.showModal();
+    return dialog;
+  }
+
+  const buttonSignin = document.querySelector("button[open=signin]");
+  const buttonSignup = document.querySelector("button[open=signup]");
+
+  const toggleForm = (e) => {
+    e.preventDefault();
+    buttonSignin.classList.toggle("bg-gray-300");
+    buttonSignup.classList.toggle("bg-gray-300");
+    document.querySelector("form#signin").classList.toggle("hidden");
+    document.querySelector("form#signup").classList.toggle("hidden");
+  };
+
+  buttonSignin.addEventListener("click", toggleForm);
+  buttonSignup.addEventListener("click", toggleForm);
+
+  document.querySelectorAll("form").forEach(form => {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      const username = formData.get("username");
+      const password = formData.get("password");
+      const actionType = e.target.id === "signup" ? "REGISTER" : "LOGIN";
+
+      try {
+        const response = await fetch(GAS_URL, {
+          method: "POST",
+          redirect: "follow",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: actionType,
+            userId: username,
+            userEmail: `${username}@gamemaker.com`, // Se asigna un identificador único
+            password: password
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+          localStorage.setItem("username", username);
+          window.location.href = "/index.html";
+        } else {
+          createDialog(result.error || "Ocurrió un error al procesar la solicitud.");
+        }
+      } catch (error) {
+        createDialog("Error de conexión con Google Apps Script.");
+      }
+    });
+  });
+</script>
+</body>
+</html>
