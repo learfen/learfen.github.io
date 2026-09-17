@@ -175,7 +175,7 @@
   </div>
   <script>
   // URL de tu aplicación desplegada en Google Apps Script
-  var GAS_URL = "https://script.google.com/macros/s/AKfycbwrgOqSmcpVyj58cjbjGxfxJmuGx8oM_zPlM3S8Iyv4yFzg3cyEeoM9ZkiFrrHJ_glIXg/exec";
+  var GAS_URL = "https://script.google.com/macros/s/AKfycby74zjqaxdSrhvAa5eBPdnuLvoP8uzKGuU2AsRuznnumipzVaC2AJ0s7OmHaaBLtROnUQ/exec";
 
   function createDialog(texto) {
     const dialog = document.createElement("dialog");
@@ -227,18 +227,19 @@
 
       try {
         const response = await fetch(GAS_URL, {
-          method: "POST",
-          redirect: "follow",
-			headers: {
-          "Content-Type": "text/plain;charset=utf-8"
-        },
-          body: JSON.stringify({
-            action: actionType,
-            userId: username,
-            userEmail: `${username}@gamemaker.com`, // Se asigna un identificador único
-            password: password
-          })
-        });
+			  method: "POST",
+			  redirect: "follow",
+			  headers: {
+			    "Content-Type": "text/plain" // 👈 Solo 'text/plain', sin ';charset=utf-8'
+			  },
+			  body: JSON.stringify({
+			    action: actionType,
+			    username: username,
+			    userId: username,
+			    userEmail: `${username}@gamemaker.com`,
+			    password: password
+			  })
+			});
 
         const result = await response.json();
 
