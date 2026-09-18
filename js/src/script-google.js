@@ -1,1 +1,1 @@
-GAS_URL=""
+var GAS_URL=""
