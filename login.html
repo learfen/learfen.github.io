@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <title>GameMaker School</title>
 
-	<script src="./js/tailwindcss.js"></script>
+  <script src="./js/tailwindcss.js"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,9 +19,15 @@
 
     .pixel-bg {
       background-image:
-        linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+        linear-gradient(rgba(255, 255, 255, .06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .06) 1px, transparent 1px);
       background-size: 24px 24px;
+    }
+    .submit.disabled{
+        /* cursor loading time */
+        cursor: wait !important;
+        /* filtro blanco y negro */
+        filter: grayscale(1) !important;
     }
   </style>
 </head>
@@ -74,11 +81,8 @@
 
         <!-- IMAGE -->
         <div class="mt-10 hidden lg:block">
-          <img
-            src="/images/login-image-preview.jpeg"
-            style="width:auto;height:200px"
-            class="rounded-3xl shadow-2xl border-8 border-white rotate-1 hover:rotate-0 transition-all duration-300"
-          />
+          <img src="/images/login-image-preview.jpeg" style="width:auto;height:200px"
+            class="rounded-3xl shadow-2xl border-8 border-white rotate-1 hover:rotate-0 transition-all duration-300" />
         </div>
 
       </div>
@@ -87,7 +91,8 @@
       <div class="bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl p-4 md:p-10 border border-white/40">
 
         <div class="flex items-center gap-3 mb-8">
-          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br bg-plate-200 flex items-center justify-center text-white text-3xl shadow-lg">
+          <div
+            class="w-14 h-14 rounded-2xl bg-gradient-to-br bg-plate-200 flex items-center justify-center text-white text-3xl shadow-lg">
             👾
           </div>
 
@@ -107,55 +112,43 @@
 
 
           <div class="p-1 flex items-center justify-between w-full">
-            <button open="signin" class=" w-1/2 m-0 text-center cursor-pointer text-xl font-semibold text-slate-700 border-0 px-4 py-1 rounded-md">
+            <button open="signin"
+              class=" w-1/2 m-0 text-center cursor-pointer text-xl font-semibold text-slate-700 border-0 px-4 py-1 rounded-md">
               🔐 Iniciar sesión
             </button>
-            <button open="signup" class=" w-1/2 m-0 text-center cursor-pointer text-xl font-semibold text-slate-700 border-0 px-4 py-1 rounded-md bg-gray-300">
+            <button open="signup"
+              class=" w-1/2 m-0 text-center cursor-pointer text-xl font-semibold text-slate-700 border-0 px-4 py-1 rounded-md bg-gray-300">
               ✨ Registro
             </button>
           </div>
 
           <form id="signup" method="post" action="/register" class="hidden bg-blue-100 p-4">
 
-            <input
-              name="username"
-              placeholder="Usuario"
-              class="w-full my-2 block rounded-2xl border-2 border-cyan-200 bg-white px-3 py-2 text-md outline-none focus:border-cyan-500 transition"
-            />
+            <input name="username" placeholder="Usuario"
+              class="w-full my-2 block rounded-2xl border-2 border-cyan-200 bg-white px-3 py-2 text-md outline-none focus:border-cyan-500 transition" />
 
-            <input
-              name="password"
-              type="password"
-              placeholder="Contraseña"
-              class="w-full my-2 block rounded-2xl border-2 border-cyan-200 bg-white px-3 py-2 text-md outline-none focus:border-cyan-500 transition"
-            />
+            <input name="password" type="password" placeholder="Contraseña"
+              class="w-full my-2 block rounded-2xl border-2 border-cyan-200 bg-white px-3 py-2 text-md outline-none focus:border-cyan-500 transition" />
 
             <button
-              class="w-full uppercase  rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 py-4 text-lg text-white shadow-lg hover:scale-[1.02] transition"
-            >
+              id="button-signup"
+              class="w-full submit uppercase  rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 py-4 text-lg text-white shadow-lg hover:scale-[1.02] transition">
               Crear Cuenta 🚀
             </button>
 
           </form>
 
-          <form id="signin" method="post" action="/login" class="bg-blue-100 p-4">
+          <form id="signin" method="post" action="/index.html" class="bg-blue-100 p-4">
 
-            <input
-              name="username"
-              placeholder="Usuario"
-              class="w-full my-2 block rounded-2xl border-2 border-blue-200 bg-white px-3 py-2 text-md outline-none focus:border-blue-500 transition"
-            />
+            <input name="username" placeholder="Usuario"
+              class="w-full my-2 block rounded-2xl border-2 border-blue-200 bg-white px-3 py-2 text-md outline-none focus:border-blue-500 transition" />
 
-            <input
-              name="password"
-              type="password"
-              placeholder="Contraseña"
-              class="w-full my-2 block rounded-2xl border-2 border-blue-200 bg-white px-3 py-2 text-md outline-none focus:border-blue-500 transition"
-            />
+            <input name="password" type="password" placeholder="Contraseña"
+              class="w-full my-2 block rounded-2xl border-2 border-blue-200 bg-white px-3 py-2 text-md outline-none focus:border-blue-500 transition" />
 
             <button
-              class="w-full uppercase  rounded-2xl bg-gradient-to-r from-cian-500 to-blue-600 py-4 text-lg text-white shadow-lg hover:scale-[1.02] transition"
-            >
+              id="button-signin"
+              class="w-full submit uppercase  rounded-2xl bg-gradient-to-r from-cian-500 to-blue-600 py-4 text-lg text-white shadow-lg hover:scale-[1.02] transition">
               Entrar 🎮
             </button>
 
@@ -167,93 +160,104 @@
         <div class="mt-8 text-center text-slate-500 text-sm">
           Plataforma educativa para crear videojuegos y compartir proyectos.
         </div>
-
       </div>
 
     </div>
 
   </div>
+  
   <script>
-  // URL de tu aplicación desplegada en Google Apps Script
-  var GAS_URL = "https://script.google.com/macros/s/AKfycby74zjqaxdSrhvAa5eBPdnuLvoP8uzKGuU2AsRuznnumipzVaC2AJ0s7OmHaaBLtROnUQ/exec";
+    // URL de tu aplicación desplegada en Google Apps Script
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyB2RK5YsmPhZeyJS9ioP-hKmhyfMT3qPm4slP7jaFOKX4DMsVZPUWrax_XVuFltYlAqg/exec";
 
-  function createDialog(texto) {
-    const dialog = document.createElement("dialog");
-    dialog.className = "bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl p-4 md:p-10 border border-white/40";
-    
-    const container = document.createElement("div");
-    container.className = "flex items-center gap-3 mb-8";
-    dialog.appendChild(container);
-    
-    const content = document.createElement("div");
-    content.className = "text-slate-700";
-    content.innerHTML = texto;
-    dialog.appendChild(content);
+    function createDialog(texto) {
+      const dialog = document.createElement("dialog");
+      dialog.className = "bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl p-4 md:p-10 border border-white/40";
 
-    const button = document.createElement("button");
-    button.className = "px-4 py-2 w-full mt-5 rounded-lg bg-gray-200 hover:bg-gray-300";
-    button.innerHTML = "Cerrar";
-    button.addEventListener("click", () => dialog.close());
+      const container = document.createElement("div");
+      container.className = "flex items-center gap-3 mb-8";
+      dialog.appendChild(container);
 
-    content.appendChild(button);
-    dialog.addEventListener("click", () => dialog.close());
-    document.body.appendChild(dialog);
-    dialog.showModal();
-    return dialog;
-  }
+      const content = document.createElement("div");
+      content.className = "text-slate-700";
+      content.innerHTML = texto;
+      dialog.appendChild(content);
 
-  const buttonSignin = document.querySelector("button[open=signin]");
-  const buttonSignup = document.querySelector("button[open=signup]");
+      const button = document.createElement("button");
+      button.className = "px-4 py-2 w-full mt-5 rounded-lg bg-gray-200 hover:bg-gray-300";
+      button.innerHTML = "Cerrar";
+      button.addEventListener("click", () => dialog.close());
 
-  const toggleForm = (e) => {
-    e.preventDefault();
-    buttonSignin.classList.toggle("bg-gray-300");
-    buttonSignup.classList.toggle("bg-gray-300");
-    document.querySelector("form#signin").classList.toggle("hidden");
-    document.querySelector("form#signup").classList.toggle("hidden");
-  };
+      content.appendChild(button);
+      dialog.addEventListener("click", () => dialog.close());
+      document.body.appendChild(dialog);
+      dialog.showModal();
+      return dialog;
+    }
 
-  buttonSignin.addEventListener("click", toggleForm);
-  buttonSignup.addEventListener("click", toggleForm);
+    const buttonSignin = document.querySelector("button[open=signin]");
+    const buttonSignup = document.querySelector("button[open=signup]");
 
-  document.querySelectorAll("form").forEach(form => {
-    form.addEventListener("submit", async (e) => {
+    const toggleForm = (e) => {
       e.preventDefault();
-      
-      const formData = new FormData(e.target);
-      const username = formData.get("username");
-      const password = formData.get("password");
-      const actionType = e.target.id === "signup" ? "REGISTER" : "LOGIN";
+      buttonSignin.classList.toggle("bg-gray-300");
+      buttonSignup.classList.toggle("bg-gray-300");
+      document.querySelector("form#signin").classList.toggle("hidden");
+      document.querySelector("form#signup").classList.toggle("hidden");
+    };
 
-      try {
-        const response = await fetch(GAS_URL, {
-			  method: "POST",
-			  redirect: "follow",
-			  headers: {
-			    "Content-Type": "text/plain" // 👈 Solo 'text/plain', sin ';charset=utf-8'
-			  },
-			  body: JSON.stringify({
-			    action: actionType,
-			    username: username,
-			    userId: username,
-			    userEmail: `${username}@gamemaker.com`,
-			    password: password
-			  })
-			});
+    buttonSignin.addEventListener("click", toggleForm);
+    buttonSignup.addEventListener("click", toggleForm);
 
-        const result = await response.json();
+    let working = false;
+    document.querySelectorAll("form").forEach(form => {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (working) return;
+        working = true;
+        let button = e.target.querySelector('.submit')
+        button.classList.add('disabled')
+        button.disabled = true
 
-        if (result.status === "success") {
-          localStorage.setItem("username", username);
-          window.location.href = "/index.html";
-        } else {
-          createDialog(result.error || "Ocurrió un error al procesar la solicitud.");
+        const formData = new FormData(e.target);
+        const username = formData.get("username");
+        const password = formData.get("password");
+        const actionType = e.target.id === "signup" ? "REGISTER" : "LOGIN";
+
+        try {
+          const response = await fetch(GAS_URL, {
+            method: "POST",
+            redirect: "follow",
+            headers: {
+              "Content-Type": "text/plain"
+            },
+            body: JSON.stringify({
+              action: actionType,
+              userId: username,
+              userEmail: `${username}@gamemaker.com`, // Se asigna un identificador único
+              password: password
+            })
+          });
+
+          const result = await response.json();
+
+          if (result.status === "success") {
+            localStorage.setItem("username", username);
+            window.location.href = "/index.html";
+          } else {
+            createDialog(result.error || "Ocurrió un error al procesar la solicitud.");
+          }
+        } catch (error) {
+          console.log(error)
+          createDialog("Error de conexión con Google Apps Script.");
+        } finally {
+          working = false;
+          button.disabled = false
+          button.classList.remove('disabled')
         }
-      } catch (error) {
-        createDialog("Error de conexión con Google Apps Script.");
-      }
+      });
     });
-  });
-</script>
+  </script>
 </body>
+
 </html>
