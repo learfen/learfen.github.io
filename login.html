@@ -23,11 +23,12 @@
         linear-gradient(90deg, rgba(255, 255, 255, .06) 1px, transparent 1px);
       background-size: 24px 24px;
     }
-    .submit.disabled{
-        /* cursor loading time */
-        cursor: wait !important;
-        /* filtro blanco y negro */
-        filter: grayscale(1) !important;
+
+    .submit.disabled {
+      /* cursor loading time */
+      cursor: wait !important;
+      /* filtro blanco y negro */
+      filter: grayscale(1) !important;
     }
   </style>
 </head>
@@ -122,7 +123,7 @@
             </button>
           </div>
 
-          <form id="signup" method="post" action="/register" class="hidden bg-blue-100 p-4">
+          <form id="signup" method="post" action="/api/register" class="hidden bg-blue-100 p-4">
 
             <input name="username" placeholder="Usuario"
               class="w-full my-2 block rounded-2xl border-2 border-cyan-200 bg-white px-3 py-2 text-md outline-none focus:border-cyan-500 transition" />
@@ -130,15 +131,14 @@
             <input name="password" type="password" placeholder="Contraseña"
               class="w-full my-2 block rounded-2xl border-2 border-cyan-200 bg-white px-3 py-2 text-md outline-none focus:border-cyan-500 transition" />
 
-            <button
-              id="button-signup"
+            <button id="button-signup"
               class="w-full submit uppercase  rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 py-4 text-lg text-white shadow-lg hover:scale-[1.02] transition">
               Crear Cuenta 🚀
             </button>
 
           </form>
 
-          <form id="signin" method="post" action="/index.html" class="bg-blue-100 p-4">
+          <form id="signin" method="post" action="/api/login" class="bg-blue-100 p-4">
 
             <input name="username" placeholder="Usuario"
               class="w-full my-2 block rounded-2xl border-2 border-blue-200 bg-white px-3 py-2 text-md outline-none focus:border-blue-500 transition" />
@@ -146,8 +146,7 @@
             <input name="password" type="password" placeholder="Contraseña"
               class="w-full my-2 block rounded-2xl border-2 border-blue-200 bg-white px-3 py-2 text-md outline-none focus:border-blue-500 transition" />
 
-            <button
-              id="button-signin"
+            <button id="button-signin"
               class="w-full submit uppercase  rounded-2xl bg-gradient-to-r from-cian-500 to-blue-600 py-4 text-lg text-white shadow-lg hover:scale-[1.02] transition">
               Entrar 🎮
             </button>
@@ -165,7 +164,6 @@
     </div>
 
   </div>
-  
   <script src="/js/src/script-google.js"></script>
   <script>
 
@@ -224,24 +222,18 @@
         const actionType = e.target.id === "signup" ? "REGISTER" : "LOGIN";
 
         try {
-          const response = await fetch(GAS_URL, {
-            method: "POST",
-            redirect: "follow",
-            headers: {
-              "Content-Type": "text/plain"
-            },
+          const result = await $fetch(form.action, {
             body: JSON.stringify({
-              action: actionType,
               userId: username,
               userEmail: `${username}@gamemaker.com`, // Se asigna un identificador único
               password: password
             })
           });
 
-          const result = await response.json();
-
+          console.log(result)
           if (result.status === "success") {
             localStorage.setItem("username", username);
+            localStorage.setItem("token", result.token);
             window.location.href = "/index.html";
           } else {
             createDialog(result.error || "Ocurrió un error al procesar la solicitud.");

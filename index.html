@@ -126,6 +126,7 @@
 
 	<div id="toast-container" class="fixed top-0 end-0 z-[1000]"></div>
 
+  <script src="/js/src/script-google.js"></script>
 	<script src="/js/marked.umd.js"></script>
 	<script src="/js/gif.lib.js"></script>
 	<script src="/js/gif.frames.js"></script>
@@ -140,9 +141,7 @@
 	<script src="/js/src/neto.js"></script>
 	<script src="/js/src/dev.js"></script>
 	<script src="/js/loader.min.js"></script>
-	<script src="/api/files/global.js"></script>
 	<script>
-		const GAS_URL = "https://script.google.com/macros/s/AKfycbxMy4kn4KLOpH0Zobo6aO9tdcPqrCut06bZgR6M4miArCIyqSF5Va7m6fEgoev4Te-kWQ/exec";
 
 		function logout() {
 			localStorage.clear()
@@ -158,14 +157,15 @@
 		document.querySelector("#username").innerHTML = username;
 
 		setInterval(() => {
-			fetch("/api/refresh")
-				.then(r => r.json())
+			/*
+			$fetch("/api/refresh")
 				.then(d => {
 					// si es 401
 					if (d.code === 401) {
 						logout()
 					}
 				})
+			*/
 		}, 60 * 1000)
 		let escenaSeleccionada = null
 		// si en la url query existe escena
@@ -174,12 +174,14 @@
 			localStorage.setItem("escenaSeleccionada", escenaSeleccionada)
 		}
 
-		function abrirEscena() {
+		async function abrirEscena() {
+			// importamos utilizando fetch /api/files/global
 			if (localStorage.getItem("escenaSeleccionada")) {
 				escenaSeleccionada = localStorage.getItem("escenaSeleccionada")
 			}
 			if (escenaSeleccionada) {
-				openFile(`/api/files/${escenaSeleccionada}.js`)
+				await cargarGlobal()
+				openFile(escenaSeleccionada)
 			}
 		}
 
@@ -430,8 +432,8 @@
 				if (!document.querySelector("#imageIndex")) return;
 				if (!onloaded) {
 					onloaded = true
-					fetch("/api/images")
-						.then((response) => response.json())
+					getImagesFromGithub()
+					//$fetch("/api/images")
 						.then((data) => {
 							imagesBackend = listImagesManager(data)
 							imagesBackend.next()
@@ -453,11 +455,9 @@
 					const file = e.target.files[0];
 					const formData = new FormData();
 					formData.append("file", file);
-					fetch("/api/images", {
-						method: "POST",
+					$fetch("/api/images", {
 						body: formData,
 					})
-						.then((response) => response.json())
 						.then((data) => {
 							if (data.hasOwnProperty("error")) return errorRender(data.error)
 							pushImage(data.filename)
@@ -491,6 +491,7 @@
 
 		// Cargar archivo del usuario desde GAS
 		const openFile = async (fileName) => {
+			if(!fileName) return ;
 			if (!editor) {
 				await new Promise((resolve) => {
 					let x = setInterval(() => {
@@ -503,24 +504,21 @@
 			}
 
 			editorOpen();
+
 			toastManager().push("Cargando archivo...");
-
+			console.log('abiendo archivo', fileName)
+			const nodoFileName = document.querySelector("#fileName");
+			nodoFileName.innerHTML = `Cargando(${fileName}) ... `;
 			try {
-				const url = new URL(GAS_URL);
-				url.searchParams.append("action", "GET_FILE");
-				url.searchParams.append("userId", username);
-				url.searchParams.append("userEmail", `${username}@gamemaker.com`);
-				url.searchParams.append("fileName", fileName);
-
-				const response = await fetch(url, { method: "GET", redirect: "follow" });
-				const result = await response.json();
-
+				const result = await $fetch(`/api/file/${fileName}`);
+				console.log('Archivo abierto: ',[fileName, result])
 				if (result.status === "success") {
 					pushChanges = false;
 					fileOpen = fileName;
 					codeDataText = result.code || "";
 					editor.setValue(codeDataText);
 					toastManager().push("Archivo cargado correctamente");
+					nodoFileName.innerHTML = fileName;
 					return true;
 				} else {
 					toastManager().push("No se encontró el archivo.");
@@ -550,20 +548,12 @@
 			const toast = toastManager().push('Guardando código...');
 			const newCodeDataText = useEditor.getValue();
 
-			fetch(GAS_URL, {
-				method: "POST",
-				redirect: "follow",
+			$fetch("/api/file", {
 				body: JSON.stringify({
-					action: "SAVE_FILE",
-					userId: username,
-					userEmail: `${username}@gamemaker.com`,
-					payload: {
-						fileName: fileOpen,
-						code: newCodeDataText
-					}
+					fileName: fileOpen,
+					code: newCodeDataText
 				})
 			})
-				.then((response) => response.json())
 				.then((data) => {
 					if (typeof config.next === "function") config.next();
 					toastManager().push('¡Guardado completo!');
@@ -604,8 +594,7 @@
 			const oldName = pencil.getAttribute("data-scene").replace('.js', '');
 			const newName = prompt("Nuevo nombre:", oldName);
 			if (!newName || newName === oldName) return;
-			fetch("/api/files/rename", {
-				method: "POST",
+			$fetch("/api/files/rename", {
 				body: JSON.stringify({ oldName, newName })
 			}).then(r => r.json()).then(d => {
 				if (d.error) return alert(d.error);
@@ -620,16 +609,19 @@
 			});
 		});
 		const listFiles = () => {
-			fetch("/api/files")
-				.then((response) => response.json())
+			$fetch("/api/files")
 				.then((data) => {
+					console.log("====================== list ================== ")
+					console.log(typeof data , data)
 					let x = setInterval(() => {
 
 						let myListScene = document.querySelector("#myListScene");
 						if (myListScene) {
+							
 							data.sort((a, b) => a.localeCompare(b)).forEach((file) => {
 								myListScene.appendChild(getButtonDropdownNav(file));
 							});
+
 							if (!localStorage.getItem("escenaSeleccionada")) {
 								// si existe "menu" en la lista abrimos
 								localStorage.setItem("escenaSeleccionada", "menu")
