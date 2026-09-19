@@ -698,10 +698,10 @@ function cargarGlobal() {
 	globalCargado = true;
 	// si el tag <script src="/api/files/global.js"> ya lo cargo, no inyectar otra
 	// copia (cada escuchar del archivo quedaria registrado dos veces)
-	if (document.querySelector('script[src$="/api/files/global.js"]')) return;
-	fetch("/api/files/global.js")
-		.then((r) => r.text())
+	if (document.querySelector('script[src$="/api/files/global"]')) return;
+	return $fetch("/api/file/global")
 		.then((code) => {
+			console.log('Archivo abierto: ',{result})
 			if (!code || code.indexOf("404") === 0) return;
 			let script = document.createElement("script");
 			// misma sintaxis amigable que las escenas
