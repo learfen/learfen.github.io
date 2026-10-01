@@ -76,15 +76,15 @@ escuchar("a", () => {
 	}
 });
 
-function decir(elemento) {
+function decir(elemento, time) {
 	// decir("texto") hace hablar al player; decir(elemento) cablea los diálogos
 	// del elemento. Un solo nombre para no sombrear la otra versión con el
 	// hoisting de function (y para no romper el parseo estricto ESM).
 	if (typeof elemento === "string") {
 		try {
-			if (player()) player().decir(elemento);
+			if (player()) player().decir(elemento, time);
 		} catch (error) {
-			esperarY(.5, () => decir(elemento));
+			esperarY(.5, () => decir(elemento, time));
 		}
 		return;
 	}
@@ -100,7 +100,7 @@ function decir(elemento) {
 	}
 	elemento.preguntar = async function (pregunta, respuestas) {
 		estado("dialogo:preguntando");
-		elemento.decir(pregunta);
+		elemento.decir(pregunta, time);
 		let first = true;
 		let index = 0;
 		if (!respuestas) respuestas = [];
@@ -137,7 +137,7 @@ function decir(elemento) {
 			dialogoPreguntando = (a) => {
 				elemento.cerrarDecir();
 				clearInterval(intervalDialog);
-				elemento.decir(a.texto);
+				elemento.decir(a.texto, time);
 				esperarY(0.3, () => {
 					estado("play");
 				});
@@ -355,6 +355,10 @@ function lanzar(obj) {
 	let time = 0;
 	let launch = false;
 	obj.ejecutarLanzamiento = async function (opciones) {
+		console.log("lanzar", opciones)
+		if(opciones.hasOwnProperty('condicion'))
+			if(!opciones['condicion']()) return obj;
+		console.log("lanzar", opciones)
 		// si el objeto ya no esta en la escena (fue eliminado), no disparar mas
 		if (!escenaActiva().elementos.some(o => o.id === obj.id)) return;
 		// cooldown entre lanzamientos: opciones.cada segundos (default 1.5)
@@ -481,7 +485,9 @@ function lanzar(obj) {
 				let eventoImpacto = true;
 				opciones.impacto({
 					origen:obj,
+					quien:proyectil,
 					objeto: proyectil,
+					elemento: impactoCon,
 					con: impactoCon,
 					cancelar() {
 						eventoImpacto = false;
@@ -491,12 +497,14 @@ function lanzar(obj) {
 					evento("colision", {
 						objeto: proyectil,
 						quien: proyectil,
+						elemento: impactoCon,
 						con: impactoCon,
 					});
 				}
 			} else {
 				evento("colision", {
 					objeto: proyectil,
+					elemento: proyectil,
 					quien: proyectil,
 					con: impactoCon,
 				});
@@ -711,12 +719,24 @@ function estadoAnimado(elemento) {
 		return elemento;
 	};
 	elemento.perderVida = (n) => {
-		if(elemento.vidas() > 0) {
+		// solo mueren objetos con vida real (usarVidas): paredes/arbustos/planos
+		// tienen vidas:1 por defecto pero no son destruibles
+		if(elemento.destruible && elemento.vidas() > 0) {
 			elemento.restarVida(n);
 			if(elemento.vidas() === 0) {
 				evento("destruido", { elemento });
 				evento("destruido:" + elemento.id, { elemento });
 				evento("destruido:@" + elemento.tipo, { elemento });
+				// un enemigo derrotado se elimina de la escena: eliminarObjeto
+				// deja datos.elementos[id] = {destruido:true} (ver scene.js) para
+				// que al recargar NO reaparezca. El player muerto se maneja aparte.
+				if (
+					window.sceneManager &&
+					elemento.id !== "player" &&
+					elemento.id !== player()?.id
+				) {
+					window.sceneManager.eliminarObjeto(elemento.id);
+				}
 			}
 		}
 	}
@@ -829,17 +849,20 @@ function estadoAnimado(elemento) {
 		if (tipo) elemento.propiedades("movimiento-aleatorio-tipo", tipo);
 		if (!limite) {
 			limite = {
-				x: [1, 18],
-				y: [1, 18],
+				x: [0, 19],
+				y: [0, 19],
 			};
 		}
+		// guardamos la config para poder rearmar .aleatorio() si luego
+		// .seguir() lo cancela y el enemigo termina perdiendo al player
+		elemento.aleatorioConfig = { limite, tipo };
+		// .aleatorio() cancela un .seguir() previo
+		if (elemento.persecusion) elemento.dejarDeSeguir?.();
 		if (estado() != "play") {
 			setTimeout(() => elemento.aleatorio(limite), 250);
 			return elemento;
 		}
 		if (elemento.propiedades("movimiento-aleatorio") == "cancelado") {
-			//elemento.nodo.style.transition = "all 3s ease-in-out";
-			setTimeout(() => elemento.aleatorio(limite), 250);
 			return elemento;
 		}
 		if (elemento.propiedades("movimiento-aleatorio") == "pausado") {
@@ -932,6 +955,9 @@ function estadoAnimado(elemento) {
 				sentido.dx,
 				sentido.dy,
 				0,
+				false,
+				false,
+				tipo,
 			);
 			if (moved && elemento.imagenAlias) {
 				elemento.orientacion = sentido.dx > 0
@@ -1065,7 +1091,115 @@ function animar(obj) {
 		}
 		return rayos;
 	}
+	// ¿algún objeto solido (no plano) tapa la linea de vision hacia (x,y,z)?
+	// los muros ocupan varias celdas (w x d) pero solo existen como elemento
+	// en su celda origen: hay que comprobar la huella completa, no solo x/y.
+	function tapaVista(x, y, z) {
+		return window.sceneManager.elementos.some((e) => {
+			if (e.id === obj.id) return false;
+			if (!e.propiedades("solido") || e.propiedades("plano")) return false;
+			const w = Math.max(1, e.w || 1);
+			const d = Math.max(1, e.d || 1);
+			return x >= e.x && x < e.x + w && y >= e.y && y < e.y + d && z >= e.z && z < e.z + Math.max(1, e.h || 1);
+		});
+	}
+	// Zoneo: ¿el objetivo (player) es visible AHORA MISMO desde la posicion actual?
+	// reutiliza el rango segun la vision configurada y respeta muros.
+	function veAhora() {
+		const cfg = obj.visionConfig;
+		if (!cfg) return false;
+		const distancia = cfg.distancia || 2;
+		const objetivo = cfg.selector === "player" ? player() : null;
+		if (!objetivo) return false;
+		const ox = objetivo.x, oy = objetivo.y, oz = objetivo.z;
+		const x = obj.x, y = obj.y, z = obj.z;
+		const enRango = (c) => c.x == ox && c.y == oy && c.z == oz;
+		const dirs =
+			cfg.tipo === "circula"
+				? ["arriba", "abajo", "izquierda", "derecha"]
+				: [obj.orientacion || "abajo"];
+		const vec = {
+			arriba: [0, -1, 1, 0],
+			abajo: [0, 1, 1, 0],
+			izquierda: [-1, 0, 0, 1],
+			derecha: [1, 0, 0, 1],
+		};
+		for (let dir of dirs) {
+			if (cfg.tipo === "recta") {
+				// linea recta: celda por celda, corta en el primer muro
+				for (let i = 1; i <= distancia; i++) {
+					const c = { x: x + vec[dir][0] * i, y: y + vec[dir][1] * i, z };
+					if (enRango(c)) return true;
+					if (tapaVista(c.x, c.y, c.z)) break;
+				}
+				continue;
+			}
+			for (let rayo of conoEnRango(x, y, z, vec[dir][0], vec[dir][1], vec[dir][2], vec[dir][3], distancia)) {
+				for (let c of rayo) {
+					if (enRango(c)) return true;
+					if (tapaVista(c.x, c.y, c.z)) break;
+				}
+			}
+		}
+		return false;
+	}
+	obj.visionCircular = function (selector, action, distancia) {
+		// $visionCircular
+		// como .vision(), pero sin cono: ve en todas las direcciones
+		// a la misma distancia, sin depender de la orientacion
+		obj.visionConfig = { selector, distancia, tipo: "circula" };
+		escuchar("mover:" + selector, (info) => {
+			let x = obj.x;
+			let y = obj.y;
+			let z = obj.z;
+			if (!distancia) distancia = 2;
+
+			const crearRango = {
+				arriba(n) {
+					return conoEnRango(x, y, z, 0, -1, 1, 0, n);
+				},
+				abajo(n) {
+					return conoEnRango(x, y, z, 0, 1, 1, 0, n);
+				},
+				izquierda(n) {
+					return conoEnRango(x, y, z, -1, 0, 0, 1, n);
+				},
+				derecha(n) {
+					return conoEnRango(x, y, z, 1, 0, 0, 1, n);
+				},
+			};
+
+			for (let dir of ["arriba", "abajo", "izquierda", "derecha"]) {
+				for (let rayo of crearRango[dir](distancia)) {
+					for (let rango of rayo) {
+						if (
+							info.x == rango.x &&
+							info.y == rango.y &&
+							info.z == rango.z
+						) {
+							// recuerda la ultima posicion donde vio al objetivo:
+							// .seguir() ira ahi, no a su posicion real (a traves de muros)
+							obj.ultimaPosicionVista = { x: info.x, y: info.y, z: info.z };
+							return action({
+								origen: obj,
+								objeto: undefined,
+								x: rango.x,
+								y: rango.y,
+								z: rango.z,
+							});
+						}
+						// los solidos planos (agua, trampas) no tapan la vista
+						if (tapaVista(rango.x, rango.y, rango.z)) {
+							break;
+						}
+					}
+				}
+			}
+		});
+		return obj
+	};
 	obj.vision = function (selector, action, distancia) {
+		obj.visionConfig = { selector, distancia, tipo: "cono" };
 		escuchar("mover:" + selector, (info) => {
 			let x = obj.x;
 			let y = obj.y;
@@ -1093,29 +1227,24 @@ function animar(obj) {
 			obj.orientacion = dir;
 			for (let rayo of crearRango[dir](distancia)) {
 				for (let rango of rayo) {
-					let objeto = window.sceneManager.elementos.find(
-						(e) =>
-							e.x == rango.x && e.y == rango.y && e.z == rango.z,
-					);
 					if (
 						info.x == rango.x &&
 						info.y == rango.y &&
 						info.z == rango.z
 					) {
+						// recuerda la ultima posicion donde vio al objetivo:
+						// .seguir() ira ahi, no a su posicion real (a traves de muros)
+						obj.ultimaPosicionVista = { x: info.x, y: info.y, z: info.z };
 						return action({
 							origen: obj,
-							objeto,
+							objeto: undefined,
 							x: rango.x,
 							y: rango.y,
 							z: rango.z,
 						});
 					}
 					// los solidos planos (agua, trampas) no tapan la vista
-					if (
-						objeto &&
-						objeto.propiedades("solido") &&
-						!objeto.propiedades("plano")
-					) {
+					if (tapaVista(rango.x, rango.y, rango.z)) {
 						break;
 					}
 				}
@@ -1124,6 +1253,7 @@ function animar(obj) {
 	};
 	obj.visionRecta = function (selector, action, distancia) {
 		if (!distancia) distancia = 2;
+		obj.visionConfig = { selector, distancia, tipo: "recta" };
 
 		const rangosDe = () => {
 			const x = obj.x, y = obj.y, z = obj.z;
@@ -1140,14 +1270,7 @@ function animar(obj) {
 		const enVision = (x, y, z) => {
 			for (let rango of rangosDe()) {
 				if (rango.x == x && rango.y == y && rango.z == z) return true;
-				if (escenaActiva().elementos.some(
-					(e) =>
-						e.id !== obj.id &&
-						e.x == rango.x &&
-						e.y == rango.y &&
-						e.z == rango.z &&
-						e.propiedades("solido"),
-				)) return false;
+				if (tapaVista(rango.x, rango.y, rango.z)) return false;
 			}
 			return false;
 		};
@@ -1222,7 +1345,9 @@ function animar(obj) {
 		if (obj?.persecusion) {
 			obj.siguiendo = true;
 			obj.persecusion.detener();
+			obj.persecusion = null;
 		}
+		obj.persiguiendo = false;
 		return obj;
 	};
 	obj.seguir = (config) => {
@@ -1230,6 +1355,8 @@ function animar(obj) {
 		// calcularemos la ruta utilizando los puntos de referencia y los obstaculos que deberemos rodear
 		// utilizaremos un metodo eficiente para encontrar la ruta mas corta
 		if (obj["persiguiendo"]) return obj;
+		// .seguir() cancela un .aleatorio() previo
+		obj.propiedades("movimiento-aleatorio", "cancelado");
 		obj.solido().animar();
 		obj.persiguiendo = true;
 		let repeticion = repetir(() => {
@@ -1240,36 +1367,55 @@ function animar(obj) {
 				// si es solido/colisionable
 				if (item.id == obj.id || item.id === "player") continue;
 				if (item.propiedades("solido")) {
-					// si es un obstaculo
-					obstaculos.push({ x: item.x, y: item.y });
-
-					if (item.w > 1) {
-						for (let j = 0; j < item.w; j++) {
-							obstaculos.push({
-								z: item.z,
-								x: item.x + j,
-								y: item.y,
-							});
-						}
-					}
-					if (item.h > 1) {
-						for (let j = 0; j < item.h; j++) {
-							obstaculos.push({
-								z: item.z,
-								x: item.x,
-								y: item.y + j,
-							});
+					// si es un obstaculo: expandimos su huella real w x d en el plano
+					// (w=ancho X, d=profundidad Y; h es alto Z), si no el A* ve huecos
+					// en los muros largos y los atraviesa
+					const w = Math.max(1, item.w || 1);
+					const d = Math.max(1, item.d || 1);
+					for (let j = 0; j < w; j++) {
+						for (let k = 0; k < d; k++) {
+							obstaculos.push({ x: item.x + j, y: item.y + k });
 						}
 					}
 				}
 			}
+			// si vio al objetivo, va a la ultima posicion vista (no a su posicion
+			// real, que seria ver a traves de muros); si nunca lo vio, lo persigue
+			const objetivo = obj.ultimaPosicionVista || { x: player().x, y: player().y };
 			let route = encontrarRutaAStar(
 				{ x: obj.x, y: obj.y },
-				{ x: player().x, y: player().y },
+				{ x: objetivo.x, y: objetivo.y },
 				obstaculos,
 			);
-			if (route === null) return;
-			if (route.length < 2) return;
+			// no puede avanzar: igualmente mira al objetivo (como si atacara)
+			const mirarAJugador = () => {
+				let d = { x: objetivo.x - obj.x, y: objetivo.y - obj.y };
+				let ataque = Math.abs(d.x) > Math.abs(d.y)
+					? (d.x > 0 ? "derecha" : "izquierda")
+					: (d.y > 0 ? "abajo" : "arriba");
+				obj.orientacion = ataque;
+				obj.pintar(config?.imagenes?.[ataque] || obj.imagenAlias, {
+					pausado: false,
+					repetir: true,
+				});
+			};
+			if (route === null) { mirarAJugador(); return; }
+			if (route.length < 2) {
+				// llego a la ultima posicion vista: hace zoneo.
+				// si no ve al player, vuelve a su comportamiento anterior
+				// (si tenia .aleatorio(), lo rearma)
+				if (veAhora()) { mirarAJugador(); return; }
+				if (obj.aleatorioConfig) {
+					const cfgAleatorio = obj.aleatorioConfig;
+					obj.dejarDeSeguir();
+					obj.ultimaPosicionVista = null;
+					obj.propiedades("movimiento-aleatorio", null);
+					obj.aleatorio(cfgAleatorio.limite, cfgAleatorio.tipo);
+				} else {
+					mirarAJugador();
+				}
+				return;
+			}
 			let to = route[1];
 
 			// calcularemos hacia donde debe mirar
@@ -1283,7 +1429,7 @@ function animar(obj) {
 
 			if (to.x == player().x && to.y == player().y) {
 				// colision
-				if (config.hasOwnProperty("colision")) config.colision({
+				if (config?.hasOwnProperty?.("colision")) config.colision({
 					objeto: obj,
 					quien: obj,
 					con: player(),
@@ -1294,7 +1440,7 @@ function animar(obj) {
 					con: player(),
 				});
 				obj.orientacion = sentido;
-				obj.pintar(obj.imagenAlias, {
+				obj.pintar(config?.imagenes?.[sentido] || obj.imagenAlias, {
 					pausado: false,
 					repetir: true,
 				});
@@ -1303,11 +1449,11 @@ function animar(obj) {
 			let found = escenaActiva()
 				.en(to.x, to.y, obj.z, true)
 				.filter((o) => o.id !== obj.id && o.id !== "player" && o.propiedades("solido"));
-			if (found.length > 0) return;
+			if (found.length > 0) { mirarAJugador(); return; }
 
 			obj.mover(to.x, to.y);
 			obj.orientacion = sentido;
-			obj.pintar(obj.imagenAlias, {
+			obj.pintar(config?.imagenes?.[sentido] || obj.imagenAlias, {
 				pausado: false,
 				repetir: true,
 			});
@@ -1331,7 +1477,7 @@ function animar(obj) {
 let interaccionStandBy = false;
 escuchar(
 	"a",
-	(evento) => {
+	async (evento) => {
 		if (interaccionStandBy) return;
 		let objeto = player().mirandoObjeto();
 		if (objeto && Array.isArray(objeto) && objeto.length > 0) {
@@ -1351,6 +1497,22 @@ escuchar(
 						});
 					return;
 				} else {
+					// ítem guardado (inventario) sin interacción propia: se puede recoger.
+					// El enemigo se excluye porque tiene vidas, y su muerte ya lo elimina.
+					if (
+						item.propiedades("guardado") &&
+						!item.destruible &&
+						!item.esPlayer &&
+						typeof player().inventario?.guardar === "function"
+					) {
+						interaccionStandBy = true;
+						try {
+							await player().inventario.guardar(item);
+						} finally {
+							interaccionStandBy = false;
+						}
+						return;
+					}
 					window.evento("interactuar:" + item.id, {
 						elemento: item,
 						objeto: () => item,

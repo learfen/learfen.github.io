@@ -1,16 +1,13 @@
 var GAS_URL =
-	"https://script.google.com/macros/s/AKfycbzP926MGiMocu2TI7efLjmPvWpjBaOCrOEi3Oq4gZrhMsg4FZ_NrqkOIY1JF4YzvRmA-w/exec";
+	"https://script.google.com/macros/s/AKfycbxK10HxoTZ9ftkAVopuPUJWqediU6tVJ3o6H0xojPBl9yks6ikWjG_7MH0shSfckONyBQ/exec";
 
 async function $fetch(url, options) {
-	console.log({ url, options });
 	if (url.search("/api") === -1) {
 		return fetch(url, options);
 	}
 	let aux = url.replace(location.origin, "").split("/api/")[1];
-	console.log({ aux });
 	//console.log({aux})
 	let params = aux.split("/");
-	console.log({ params });
 	//console.log({params})
 	let action = "?api=" + params[0];
 	let optionsRequest = {
@@ -21,12 +18,6 @@ async function $fetch(url, options) {
 		},
 	};
 	//console.log({action})
-	if (
-		localStorage.getItem("token") != "undefined" &&
-		localStorage.getItem("token")
-	) {
-		action += "&token=" + localStorage.getItem("token");
-	}
 	//console.log({action})
 
 	if (options && options.hasOwnProperty("body")) {
@@ -38,17 +29,39 @@ async function $fetch(url, options) {
 		// eliminamos el primer parametro
 		action += "&params=" + params[1];
 	}
-	console.log(action, optionsRequest);
-	let res = await fetch(GAS_URL + action, optionsRequest);
-	try {
-		return await res.json();
-	} catch (error) {
-		try {
-			return await res.text();
-		} catch (error) {
-			return res;
-		}
+	
+    console.log(action, optionsRequest);
+	if (
+		localStorage.getItem("token") != "undefined" &&
+		localStorage.getItem("token")
+	) {
+		action += "&token=" + localStorage.getItem("token");
 	}
+    
+    const urlExec = GAS_URL + action;
+
+    return new Promise(async ( resolve, reject ) => {
+        let completed = false;
+        setTimeout(() => {
+            if (!completed) {
+                completed = true;
+                errorRender("No se pudo cargar: " + urlExec + " " + JSON.stringify(optionsRequest) )
+                console.log(action, optionsRequest);
+                reject();
+            }
+        }, 20*1000)
+        let res = await fetch(urlExec, optionsRequest);
+        completed = true;
+        try {
+            resolve( await res.json() );
+        } catch (error) {
+            try {
+                resolve( await res.text() );
+            } catch (error) {
+                resolve( res );
+            }
+        }
+    })
 }
 
 async function getImagesFromGithub() {

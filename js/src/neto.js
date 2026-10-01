@@ -26,14 +26,13 @@
 	};
 	window.neto = neto;
 
+	// Envío seguro: valida que exista la conexión y que el socket esté ABIERTO (readyState === 1)
 	window.red = (nombre, datos) => {
-		if (!neto.ws || neto.ws.readyState !== 1) return;
+		if (!neto.ws || typeof neto.ws.send !== "function" || neto.ws.readyState !== 1) return;
 		neto.ws.send(JSON.stringify({ op: nombre, datos: datos || {} }));
 	};
 
 	// Serializa el estado visible de un elemento: geometría + propiedades.
-	// Es un snapshot completo: quien lo recibe lo aplica entero, sin importar orden.
-	// Las claves de PROPS_NO_SERIALIZAR no son estado de escena (física/editor).
 	const PROPS_NO_SERIALIZAR = new Set([
 		"solido", "peso", "fuerza", "orientacion", "tipo", "imagenAlias", "escena",
 		"esPlayer", "animadoImagen", "piso", "vidas", "animado", "escala", "margenX",
@@ -78,10 +77,8 @@
 		if (neto.activo && neto.listo && !neto.silencioso) red("ws:updated", neto.serializar(elemento));
 		return elemento;
 	};
-	// alias histórico: neto.estado(el, { abierta: true })
 	neto.estado = (elemento, cambios) => neto.cambiar(elemento, cambios);
 
-	// marcar el elemento de cada jugador de la sala: poseer(caballero, 1); poseer(caballero2, 2)
 	function actualizarPosesiones() {
 		neto.mio = null;
 		neto.suyo = null;
@@ -97,8 +94,6 @@
 		return elemento;
 	};
 
-	// El joystick no depende de la selección del editor: mueve siempre al
-	// personaje que pertenece a este navegador.
 	neto.moverJugador = (direccion) => {
 		const pasos = {
 			arriba: [0, -1], abajo: [0, 1], izquierda: [-1, 0], derecha: [1, 0],
@@ -122,7 +117,6 @@
 		return (window.sceneManager?.elementos || []).find((o) => o.id === id) || null;
 	}
 
-	// los ids de paredes/puertas/cajas son aleatorios por sesion: se matchean por celda
 	function porXY(x, y) {
 		return (window.sceneManager?.elementos || []).find((o) => o.x === x && o.y === y && !o.esPlayer) || null;
 	}
@@ -148,59 +142,79 @@
 	function conectar() {
 		const params = new URLSearchParams(location.search);
 		if (params.get("neto") === null) return;
+
+		// Si el navegador no soporta WebSockets, salir limpiamente
+		if (typeof WebSocket === "undefined") {
+			console.warn("WebSocket no soportado en este entorno.");
+			return;
+		}
+
 		neto.activo = true;
 		document.body.classList.add("neto-mode");
 		instalarJoystickNeto();
+
 		const playerSolicitado = params.get("player") === "2" ? 2 : 1;
 		neto.rol = playerSolicitado;
 		const user = localStorage.getItem("username") || "invitado";
-		// La URL tiene prioridad: dos dispositivos no comparten localStorage.
-		// Usar ?sala=nombre permite unir jugadores con distinto usuario/sesión.
 		const escena = params.get("escena") || localStorage.getItem("escenaSeleccionada") || "principal";
 		const sala = params.get("sala") || user + ":" + escena;
 		neto.sala = sala;
-		// identidad estable por navegador: reconexiones conservan el rol
+
 		let pid = localStorage.getItem("neto_pid");
 		if (!pid) {
 			pid = Math.random().toString(36).slice(2, 10);
 			localStorage.setItem("neto_pid", pid);
 		}
-		const ws = new WebSocket(
-			location.origin.replace(/^http/, "ws") +
-				"/ws?sala=" + encodeURIComponent(sala) + "&pid=" + pid + "&player=" + playerSolicitado
-		);
-		neto.ws = ws;
-		ws.onmessage = (ev) => {
-			let msg;
-			try {
-				msg = JSON.parse(ev.data);
-			} catch {
-				return;
-			}
-			if (msg.op === "hola") {
-				neto.rol = msg.jugador;
-				actualizarPosesiones();
-				window.eventBus?.emitir("neto:rol", { rol: neto.rol });
-			} else if (msg.op === "estado-inicial") {
-				// El snapshot de la sala son elementos ya cambiados: se aplican
-				// como si acabaran de mutar (cajas empujadas, puertas abiertas...).
-				(msg.eliminados || []).forEach((id) => neto.eliminados.add(id));
-				(msg.estado || []).forEach(crearRemoto);
-				// cualquier id destruido que el creador de la escena ya dejó creando
-				// (ids deterministicos por semilla) se elimina de nuestra escena
-				(msg.eliminados || []).forEach(eliminarEliminado);
-			} else if (msg.op === "ws:eliminado" && msg.datos?.id) {
-				neto.eliminados.add(msg.datos.id);
-				eliminarEliminado(msg.datos.id);
-			} else if (msg.op === "ws:restaurar" && msg.datos?.id) {
-				// al tirar un objeto guardado vuelve a poder existir en la escena
-				neto.eliminados.delete(msg.datos.id);
-				if (window.sceneManager?.datos?.elementos) window.sceneManager.datos.elementos[msg.datos.id] = undefined;
-			} else if (msg.op === "ws:created" || msg.op === "ws:updated" || msg.op === "ws:removed" || msg.op === "ataque") {
-				// "ataque" es un efecto transitorio (no estado): se rutea al puente red:ataque
-				window.eventBus?.emitir(msg.op === "ataque" ? "red:ataque" : msg.op, msg.datos);
-			}
-		};
+
+		// Construcción de la URL del WebSocket
+		const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+		const wsUrl = protocol + "//" + location.host + "/ws?sala=" + encodeURIComponent(sala) + "&pid=" + pid + "&player=" + playerSolicitado;
+
+		try {
+			const ws = new WebSocket(wsUrl);
+			neto.ws = ws;
+
+			ws.onmessage = (ev) => {
+				let msg;
+				try {
+					msg = JSON.parse(ev.data);
+				} catch {
+					return;
+				}
+				if (msg.op === "hola") {
+					neto.rol = msg.jugador;
+					actualizarPosesiones();
+					window.eventBus?.emitir("neto:rol", { rol: neto.rol });
+				} else if (msg.op === "estado-inicial") {
+					(msg.eliminados || []).forEach((id) => neto.eliminados.add(id));
+					(msg.estado || []).forEach(crearRemoto);
+					(msg.eliminados || []).forEach(eliminarEliminado);
+				} else if (msg.op === "ws:eliminado" && msg.datos?.id) {
+					neto.eliminados.add(msg.datos.id);
+					eliminarEliminado(msg.datos.id);
+				} else if (msg.op === "ws:restaurar" && msg.datos?.id) {
+					neto.eliminados.delete(msg.datos.id);
+					if (window.sceneManager?.datos?.elementos) window.sceneManager.datos.elementos[msg.datos.id] = undefined;
+				} else if (msg.op === "ws:created" || msg.op === "ws:updated" || msg.op === "ws:removed" || msg.op === "ataque") {
+					window.eventBus?.emitir(msg.op === "ataque" ? "red:ataque" : msg.op, msg.datos);
+				}
+			};
+
+			// Capturar errores de conexión para no interrumpir la ejecución del script
+			ws.onerror = (err) => {
+				console.warn("No se pudo conectar al servidor WebSocket. El juego continuará en modo local.", err);
+			};
+
+			ws.onclose = () => {
+				neto.listo = false;
+			};
+
+		} catch (e) {
+			console.warn("Excepción al intentar instanciar WebSocket:", e);
+			neto.ws = null;
+			return;
+		}
+
 		neto.timers.arranque = setInterval(() => {
 			if (neto.mio || window.sceneManager?.elementos?.length > 2) {
 				clearInterval(neto.timers.arranque);
@@ -229,7 +243,7 @@
 				<button type="button" data-tecla="d">Saltar</button>
 			</div>`;
 		document.body.appendChild(controles);
-		// Evita que una pulsación larga (ej. Empujar) seleccione su texto en móvil.
+
 		["selectstart", "dragstart", "contextmenu"].forEach((tipo) =>
 			controles.addEventListener(tipo, (event) => event.preventDefault()),
 		);
@@ -248,12 +262,10 @@
 			const limite = rect.width * 0.28;
 			const escala = Math.min(1, limite / Math.max(Math.hypot(dx, dy), 1));
 			thumb.style.transform = `translate(${dx * escala}px, ${dy * escala}px)`;
-			// histeresis en el centro: armar a 12px, soltar solo al volver a 6px.
-			// evita el rebote que corta/retoma el movimiento por la vibra del dedo
+			
 			const dist = Math.hypot(dx, dy);
 			if (dist < (direccion ? 6 : 12)) return (direccion = null);
-			// sin eje claramente dominante (~45°) se conserva la direccion actual:
-			// sin diagonales ni parpadeo entre ejes
+			
 			const ax = Math.abs(dx);
 			const ay = Math.abs(dy);
 			const siguiente = ax >= ay * 1.6
@@ -269,9 +281,6 @@
 		const soltar = () => {
 			pulsando = false;
 			direccion = null;
-			// dirección re-emitida por el intervalo del joystick: es un HOLD, no un
-			// toque fresco. lo usa el guard de la ayuda (main.js) para no cerrarla
-			// mientras se mantiene el joystick.
 			window.direccionSostenida = null;
 			thumb.style.transform = "translate(0, 0)";
 		};
@@ -294,7 +303,6 @@
 			let ultimo = 0;
 			boton.addEventListener("pointerdown", (event) => {
 				event.preventDefault();
-				// mismo cooldown que el teclado (main.js): un tap no dispara 2 veces
 				const ahora = Date.now();
 				if (ahora - ultimo < 400) return;
 				ultimo = ahora;
@@ -310,7 +318,6 @@
 				event.preventDefault();
 				boton.setPointerCapture?.(event.pointerId);
 				neto.empujando = true;
-				// Equivale a presionar S: conserva los listeners y reglas del juego.
 				window.evento?.("s");
 			});
 			boton.addEventListener("pointerup", terminar);
@@ -319,7 +326,6 @@
 		});
 	}
 
-	// Animación 3D de una puerta que se abre/cierra + su estado persistente.
 	function puertaFX(d) {
 		if (d.animationOpen === undefined && d.abierta === undefined) return;
 		const puerta = porId(d.id) || (d.x !== undefined ? porXY(d.x, d.y) : null);
@@ -327,8 +333,6 @@
 		if (!obj?.parentNode) return;
 		setTransform(obj.parentNode, "rotateY", d.animationOpen ? "60deg" : (puerta.vertical ? "90deg" : "0deg"));
 		puerta.animationOpen = !!d.animationOpen;
-		// "abierta" es el estado persistente del candado; no se vuelve a cerrar
-		// aunque la puerta se anime a cerrarse después.
 		if (d.abierta !== undefined) puerta.propiedades("abierta", d.abierta);
 		if (d.animationOpen) puerta.noSolido();
 		else if (d.abierta !== undefined) puerta.solido();
@@ -345,38 +349,26 @@
 	function aplicarRemoto(d) {
 		const el = porId(d?.id) || (d?.x !== undefined ? porXY(d.x, d.y) : null);
 		if (!el) return;
-		// aplicar en silencio: scale/margenes re-emiten via neto.cambiar y
-		// esto es la replica, no el originador
 		neto.silencioso = true;
 		try {
-		teletransportar(el, d.x, d.y, d.z ?? 0);
-		if (d.orientacion && el.orientacion !== d.orientacion) el.orientar(d.orientacion);
-		if (d.solido !== undefined) el.propiedades("solido", !!d.solido);
-		// estilos que viajan en el snapshot: escala y márgenes (se aplican al crear
-		// y de nuevo en cada actualización para que el peer vea lo mismo)
-		if (d.escala !== undefined && el.propiedades("escala") !== d.escala) el.escala(d.escala);
-		if (d.margenX !== undefined) el.margenX(d.margenX);
-		if (d.margenY !== undefined) el.margenY(d.margenY);
-		aplicarEstado(d, el);
-		// las vidas se aplican al espejo Y al propio: el daño del arquero ocurre en
-		// el navegador del rol 1 (golpea al espejo local) y debe reflejarse aquí.
-		// se aplica DESPUES de aplicarEstado para que vidas-imagen ya esté seteada.
-		// solo los elementos con usarVidas (destruible) tienen vidas reales: el resto
-		// nace con vidas:1 por defecto y no debe mostrar marcador (pocion, puertas).
-		if (d.vidas !== undefined && el.destruible && typeof el.vidas === "function") {
-			el.vidas(d.vidas);
-			if (el.info && el.vidasTexto) el.info({ vidas: el.vidasTexto() });
-		}
-		puertaFX(d);
+			teletransportar(el, d.x, d.y, d.z ?? 0);
+			if (d.orientacion && el.orientacion !== d.orientacion) el.orientar(d.orientacion);
+			if (d.solido !== undefined) el.propiedades("solido", !!d.solido);
+			if (d.escala !== undefined && el.propiedades("escala") !== d.escala) el.escala(d.escala);
+			if (d.margenX !== undefined) el.margenX(d.margenX);
+			if (d.margenY !== undefined) el.margenY(d.margenY);
+			aplicarEstado(d, el);
+			if (d.vidas !== undefined && el.destruible && typeof el.vidas === "function") {
+				el.vidas(d.vidas);
+				if (el.info && el.vidasTexto) el.info({ vidas: el.vidasTexto() });
+			}
+			puertaFX(d);
 		} finally {
 			neto.silencioso = false;
 		}
 	}
 
 	function crearRemoto(d) {
-		// objetos con id aleatorio por sesion (paredes) se matchean por celda solo
-		// si el ocupante es del mismo alias; un id deterministico que aterriza en la
-		// celda de otro objeto (llave sobre el arquero) se crea igual
 		if (porId(d?.id)) return aplicarRemoto(d);
 		const enCelda = d?.x !== undefined ? porXY(d.x, d.y) : null;
 		if (enCelda && enCelda.imagenAlias === d.alias) return aplicarRemoto(d);
@@ -418,8 +410,6 @@
 		}
 	}
 
-	// el id ya figura como destruido en el backend: si un elemento con ese id
-	// sigue en la escena (lo creó la escena por semilla) se elimina en silencio
 	function eliminarEliminado(id) {
 		const el = porId(id);
 		if (!el || el === neto.mio || el === neto.suyo) return;
@@ -432,7 +422,6 @@
 	}
 
 	function ataqueRemoto(d) {
-		// el actor puede ser un id estable (caballero) o uno aleatorio por sesion (arquero)
 		const el = porId(d.actor) || (d.x !== undefined ? porXY(d.x, d.y) : null);
 		if (el) {
 			const base = el.imagenAlias || "";
@@ -448,15 +437,10 @@
 				}
 			});
 		}
-		// el proyectil replica en el peer: vuelo en linea recta a la misma velocidad
 		if (d.imagen && d.dir && d.dist) animarProyectil(d);
-		// el rival golpeado tambien pierde vida en la sim local del receptor
 		if (d.melee && d.objetivo) {
 			const objetivo = porId(d.objetivo) || porXY(d.objX, d.objY);
 			if (objetivo && objetivo !== neto.mio && objetivo !== neto.suyo && typeof objetivo.perderVida === "function") {
-				// perderVida (no restarVida) para que se lancen los eventos
-				// destruido:<id>/destruido:@tipo en el peer: el arquero suelta su
-				// llave en ambos navegadores y no solo en el que lo mató
 				objetivo.perderVida();
 				if (objetivo.vidas() === 0) window.sceneManager?.eliminarObjeto(objetivo.id);
 			}
@@ -464,7 +448,6 @@
 	}
 
 	function animarProyectil(d) {
-		// la replica llega via ws:created; esperamos unos frames a que exista
 		const sx = d.x + d.dir.dx;
 		const sy = d.y + d.dir.dy;
 		const ex = d.x + d.dir.dx * d.dist;
@@ -482,18 +465,15 @@
 			proy.y = sy + (ey - sy) * f;
 			window.sceneManager?.actualizarTransformNodo(proy);
 			if (f < 1) requestAnimationFrame(avanzen);
-			// la replica se elimina en el peer via ws:removed cuando impacta
 		};
 		requestAnimationFrame(avanzen);
 	}
 
 	function conectarPuentes() {
-		// primer orden: aplicar el canal genérico antes de que la escena lo vea
 		escuchar("ws:created", (d) => crearRemoto(d));
 		escuchar("ws:updated", (d) => aplicarRemoto(d));
 		escuchar("ws:removed", (d) => eliminarRemoto(d));
 
-		// la orientacion de un actor compartido (ej: arquero) viaja en el estado
 		escuchar("actor:orientar", (d) => {
 			if (!d?.actor || !d?.orientacion) return;
 			const el = porId(d.actor) || (d.x !== undefined ? porXY(d.x, d.y) : null);
@@ -502,11 +482,14 @@
 			red("ws:updated", neto.serializar(el));
 		});
 
-		// ataque/animacion: efecto transitorio, no es estado de escena
 		escuchar("ataque", (d) => { if (d?.actor) red("ataque", d); });
 		escuchar("red:ataque", (d) => ataqueRemoto(d));
 	}
 
-	conectar();
-	conectarPuentes();
+	try {
+		conectar();
+		conectarPuentes();
+	} catch (e) {
+		console.error(e);
+	}
 })();

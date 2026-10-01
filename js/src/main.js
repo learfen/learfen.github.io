@@ -3,6 +3,16 @@ var imagenesImportadasData = {};
 let imagenesListas = false;
 let assetsLoaded = false;
 var yo;
+var caches = window.caches;
+
+function mostrarLoader() {
+	let el = document.getElementById("asset-loader");
+	if (el) el.classList.remove("hidden");
+}
+function ocultarLoader() {
+	let el = document.getElementById("asset-loader");
+	if (el) el.classList.add("hidden");
+}
 function insertarImagenEnNodo(nodo, imagenAlias, prop){
 	if(!imagenesImportadasData[imagenAlias]){
 		let x = setInterval(() =>{
@@ -17,30 +27,151 @@ function insertarImagenEnNodo(nodo, imagenAlias, prop){
 		nodo.src = imagenesImportadasData[imagenAlias];
 }
 
+const DIRECCIONES_SPRITE = ["arriba", "abajo", "izquierda", "derecha"];
+let listaImagenesTotal = null;
+let precargasPendientes = [];
+let gameInstalled = false
+function revisarAssets() {
+	/*
+	if (precargasPendientes.length) {
+		Promise.all(precargasPendientes).then(revisarAssets);
+		return;
+	}
+		*/
+	if (
+		Object.keys(imagenesImportadasData).length ===
+		Object.keys(imagenesImportadas).length
+		//&& gameInstalled
+	) {
+		evento("ready:assets");
+	}
+}
+
+
+let imageStatus = document.querySelector("#image-status");
+const updateImagesStatus = (alias, value) => {
+	if(alias && value === false) {
+		// imagen png vacia o 1 bit negro
+		imagenesImportadasData[alias] = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
+	}
+	if(imageStatus) imageStatus.innerHTML = Object.keys(imagenesImportadasData).length + '/' + Object.keys(imagenesImportadas).length
+	setTimeout(() => revisarAssets(), 1000)
+}
 function usarImagen(alias, url) {
 	if(imagenesImportadas.hasOwnProperty(alias)) return ;
+	if(!imageStatus ) imageStatus = document.querySelector("#images-status");
 	//console.log('importando imagen ', alias, url);
 	imagenesImportadas[alias] = url;
-	// usamos la url y creamos un data url base 64 leyendo con fetch
-	return new Promise((resolve, reject) => {
-		//console.log('peticion importando imagen ', alias, url);
-		fetch(url)
-			.then((response) => response.blob())
-			.then((blob) => {
-				const reader = new FileReader();
-				reader.onloadend = () => {
-					imagenesImportadasData[alias] = reader.result;
-					if (
-						Object.keys(imagenesImportadasData).length ===
-						Object.keys(imagenesImportadas).length
-					) {
-						evento("ready:assets");
-					}
-					resolve();
-				};
-				reader.readAsDataURL(blob);
-			});
+	//imagenesImportadas[alias] = "https://raw.githubusercontent.com/learfen/learfen.github.io/refs/heads/main/"+url;
+	updateImagesStatus()
+	// const precarga = precargarVariantesDireccion(alias, url).catch(() => {});
+	// precargasPendientes.push(precarga);
+	let completed = false;
+
+	return new Promise(async (resolve, reject) => {
+
+		setTimeout(() => {
+			if (!completed) {
+				updateImagesStatus(alias, false);
+				completed = true;
+				errorRender("No se pudo cargar @" + alias + ": " + url);
+				reject();
+			}
+		}, 5000);
+		const getImageBlob = async function (url) {
+			if (typeof caches === "undefined") return (await fetch(url)).blob();
+			const cache = await caches.open("imagenes-v1");
+			const cached = await cache.match(url);
+
+			if (cached) {
+				return cached.blob();
+			}
+
+			const response = await fetch(url);
+
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}`);
+			}
+
+			await cache.put(url, response.clone());
+
+			return response.blob();
+		}
+
+		try {
+			const blob = await getImageBlob(url);
+
+			const reader = new FileReader();
+
+			reader.onloadend = () => {
+				imagenesImportadasData[alias] = reader.result;
+				completed = true;
+				resolve();
+				updateImagesStatus();
+			};
+
+			reader.onerror = (e) => {
+				completed = true;
+				updateImagesStatus(alias, false);
+				reject(e);
+			};
+
+			reader.readAsDataURL(blob);
+
+		} catch (e) {
+			completed = true;
+			updateImagesStatus(alias, false);
+			reject(e);
+		}
 	});
+}
+
+
+// al importar un alias base, revisa la lista de imágenes completa si existen las
+// variantes de dirección (<alias>-arriba/-abajo/-izquierda/-derecha) y las importa
+// también: sin esto el sprite solo se espeja (rotarY) al caminar y no se anima.
+async function obtenerListaImagenes() {
+	if (listaImagenesTotal) return listaImagenesTotal;
+	try {
+		let cache = localStorage.getItem("images");
+		if (cache) { listaImagenesTotal = JSON.parse(cache); return listaImagenesTotal; }
+	} catch (e) {}
+	try {
+		listaImagenesTotal = await getImagesFromGithub();
+	} catch (e) {
+		listaImagenesTotal = [];
+	}
+	return listaImagenesTotal;
+}
+
+async function precargarVariantesDireccion(alias, url) {
+	if (!alias || typeof alias !== "string") return;
+	if (DIRECCIONES_SPRITE.some((d) => alias.endsWith("-" + d))) return;
+	const lista = await obtenerListaImagenes();
+	const ultimoSlash = url.lastIndexOf("/");
+	const dirUrl = ultimoSlash > -1 ? url.slice(0, ultimoSlash + 1) : "";
+	const nombreArchivo = url.slice(ultimoSlash + 1);
+	const ext = (nombreArchivo.match(/\.\w+$/) || [""])[0];
+	const base = nombreArchivo
+		.slice(0, -ext.length)
+		.replace(/-(arriba|abajo|izquierda|derecha)$/i, "");
+	if (!nombreArchivo.includes(".")) return;
+	for (const dir of DIRECCIONES_SPRITE) {
+		const variante = alias + "-" + dir;
+		if (imagenesImportadas.hasOwnProperty(variante)) continue;
+		let existe = false;
+		if (Array.isArray(lista) && lista.length) {
+			existe = lista.some((n) => n.toLowerCase() === (base + "-" + dir + ext).toLowerCase());
+		} else {
+			// sin lista disponible: probamos que la variante exista (GET, solo status)
+			try {
+				existe = (await fetch(dirUrl + base + "-" + dir + ext, { method: "GET" })).ok;
+			} catch (e) { existe = false; }
+		}
+		if (existe) {
+			if(false) usarImagen(variante, dirUrl + base + "-" + dir + ext);
+		}
+	}
 }
 
 function aleatorio(start, end) {
@@ -124,6 +255,10 @@ const camera = {
 		camera.y = y;
 	},
 	updateFromPlayer() {
+		// en modo libre (cámara OFF) la perspectiva la fija actualizarCamara;
+		// volver a calcularla desde el player re-proyecta todo el escenario en
+		// cada paso y lo hace "vibrar"
+		if (window.sceneManager?.modoCamara === false) return;
 		let porcentaje = (20 / 100) * player().x * 25;
 		if (camera.x < porcentaje) {
 			for (let i = camera.x; i < porcentaje; i++) {
@@ -157,8 +292,11 @@ let ultimoTiempoTecla = 0;
 const COOLDOWN_TECLAS_MS = 200; // Límite de tiempo para evitar spam o desplazamiento acelerado
 let agarrando = false; // Mantener "s" para empujar/tirar
 var focusInputEscena = false
+document.addEventListener("keypress", (e) => {
+	if(window.scrollY < 200 && e.key === "ArrowDown") e.preventDefault();
+})
 document.addEventListener("keydown", (e) => {
-	if(window.scrollY > 200) return ;
+	if(window.scrollY > 200 || !player()) return ;
 	// repet del SO: cada pulsacion fisica = 1 evento (el desliz maneja el movimiento continuo)
 	if (e.repeat) return;
 	if(focusInputEscena) return;
@@ -473,7 +611,7 @@ function cambiarEscena(nuevaEscena, config) {
 		localStorage.setItem("userFile", user);
 	}
 	
-	localStorage.setItem("escenaSeleccionada", nuevaEscena);
+	localStorage.setItem(keyLocalstorageEscenaActiva, nuevaEscena);
 	location.href = "/";
 }
 
@@ -482,6 +620,8 @@ function player(nuevo) {
 	if (!nuevo.animado && nuevo.animar) nuevo.animar();
 	const anterior = window.sceneManager?.jugador;
 	if (anterior && anterior !== nuevo) anterior.esPlayer = false;
+	// "yo" es el jugador controlado; algunas escenas lo reasignan (neto/caballero)
+	if (window.yo === undefined) window.yo = nuevo;
 	nuevo.esPlayer = true;
 	window.sceneManager.jugador = nuevo;
 	if (!nuevo.inventario)
@@ -509,6 +649,7 @@ function crearJugadorUI(x,y, image, config) {
 		.animar()
 		// restauramos el inventario guardado del player en partidas anteriores
 		usarInventario( player , datos?.elementos?.["player"]?.items || [])
+	if (window.yo === undefined) window.yo = window.sceneManager.jugador;
 	// la pintura diferida apunta al jugador CREADO, no al global: si luego el
 	// juego hizo player(otro), no repintar con la imagen del player por defecto
 	const creado = window.sceneManager.jugador;
@@ -564,8 +705,13 @@ function moverSeleccionado(dx, dy, dz, vista) {
 	const scene = window.sceneManager;
 	if (!scene.idSeleccionado) return;
 	const obj = scene.elementos.find((o) => o.id === scene.idSeleccionado);
+
 	if (obj?.ocupado === true) return;
 	if (obj?.deslizando) return; // el bucle de deslizamiento maneja el avance
+	
+	if(typeof dx == 'object') {
+		if(dx.z) return obj.capa( obj.z + dx.z);
+	}
 	if (obj?.animado)
 		return moverOManiobrarAnimado(dx, dy, dz, vista, agarrando && obj === player());
 	if (obj) window.physicsEngine.intentarMover(obj, dx, dy, dz, false, false);
@@ -693,19 +839,31 @@ let gameStarted = false;
 // se llama despues de que `juego()` crea al player, asi puede registrar
 // opciones/funciones compartidas (ej: player().inventario.opciones(...)).
 let globalCargado = false;
+let globalListos = false;
+const keyLocalstorageEscenaActiva = "escenaSeleccionada"
 function cargarGlobal() {
 	if (globalCargado) return;
 	globalCargado = true;
 	// si el tag <script src="/api/files/global.js"> ya lo cargo, no inyectar otra
 	// copia (cada escuchar del archivo quedaria registrado dos veces)
-	if (document.querySelector('script[src$="/api/files/global"]')) return;
-	return $fetch("/api/file/global")
-		.then((code) => {
-			console.log('Archivo abierto: ',{result})
-			if (!code || code.indexOf("404") === 0) return;
-			let script = document.createElement("script");
+	if (document.querySelector('script[src="/api/file/global"]')) return;
+	const inyectar = (html) => {
+		const script = document.createElement("script");
+		script.innerHTML = html;
+		document.body.appendChild(script);
+		globalListos = true;
+	};
+	const cache = localStorage.getItem("file:global");
+	if (localStorage.getItem(keyLocalstorageEscenaActiva) !== "global" && cache) {
+		inyectar(cache);
+		return;
+	}
+	return $fetch("/api/file/global.js")
+		.then((res) => {
+			// la API devuelve {status, code}; code vacio => archivo inexistente
+			if (typeof res?.code !== "string" || !res.code) return;
 			// misma sintaxis amigable que las escenas
-			script.innerHTML = code
+			const html = `try{${res.code
 				.replaceAll("interactuar (", "interactuar(")
 				.replaceAll("interactuar(", "interactuar( async ")
 				.replaceAll(" si(", "if(")
@@ -713,8 +871,10 @@ function cargarGlobal() {
 				.replaceAll(" sino (", "sino(")
 				.replaceAll(" sino(", "else if(")
 				.replaceAll(" sino{", "else{")
-				.replaceAll(" sino {", "else{");
-			document.body.appendChild(script);
+				.replaceAll(" sino {", "else{")};
+				} catch(error){ console.log(error); }`;
+			localStorage.setItem("file:global", html);
+			inyectar(html);
 		})
 		.catch(() => {});
 }
@@ -725,18 +885,26 @@ const iniciarJuego = () => {
 	if (gameStarted) return;
 	gameStarted = true;
 	let count = 0;
-	let x = setTimeout(() => {
-		for(let key in imagenesImportadas){
-			if(!imagenesImportadas.hasOwnProperty(key)) {
-				console.log('Esperando a la imagen: '+key)
-				return 
-			}
-		}
+	console.log('iniciar juego')
+
+	let x = setInterval(() => {
 		try {
 			if (typeof juego === "function") {
-				juego();
+				console.log('------- juego() ----------')
 				// se ejecuta el global despues de que el player existe
 				cargarGlobal();
+				let xPlayer = setInterval(() => {
+					// global.js solo reacciona a { nuevo:true }; sin esto su
+					// init (imagenesPesca, inventario, los escuchar) nunca corre
+					if(player() && globalListos) {
+						evento("creado:player", { nuevo:true, elemento: player() });
+						clearInterval(xPlayer);
+					}
+				}, 100);
+				juego();
+				console.log('------- gameInstalled ----------', gameInstalled)
+				gameInstalled = true
+				
 				// restauramos los inventarios guardados de cajas/almacenes de esta escena
 				for (let [id, saved] of Object.entries(datos?.elementos || {})) {
 					if (!saved?.items?.length || id == "player" || saved.destruido) continue;
@@ -752,11 +920,12 @@ const iniciarJuego = () => {
 				setTimeout(() => {
 					window.eventBus.setEstado("play");
 					actualizarUI();
-					esperarY(1, () => estilarElementosAgua(escenaActiva().elementos.filter((e) => e.tipo == 'agua')));
+					esperarY(1, () => estilarElementosAgua(escenaActiva().elementos.filter((e) => e.tipo == 'agua' && !e.propiedades("redondear") )));
 				}, 500);
 				clearInterval(x);
 			}
 		} catch (error) {
+			console.log(error);
 			errorRender(error);
 			console.log(String(juego))
 			if (count === 1000) {
@@ -765,14 +934,22 @@ const iniciarJuego = () => {
 			}
 		}
 		count++;
-	}, 1000);
+	}, 500);
 };
 
 escuchar("ready:assets", () => {
-	assetsLoaded = true;
-	iniciarJuego();
+	if(!gameInstalled){
+		assetsLoaded = true;
+		iniciarJuego();
+	} else{
+		ocultarLoader();
+	}
 });
 escuchar("ready:scene", iniciarJuego);
+// fallback: si el estado llega a play, las imagenes ya no son bloqueantes
+escuchar("estado:cambio", (e) => {
+	if (e.estado === "play") ocultarLoader();
+});
 escuchar("creado", (obj) => {
 	//console.log("creado" , obj);
 })

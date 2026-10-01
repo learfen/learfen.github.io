@@ -9,6 +9,13 @@
 </head>
 
 <body>
+	<div id="asset-loader" class="asset-loader">
+		<div class="asset-loader-box">
+			<div class="asset-loader-spinner"></div>
+			<p>Cargando imágenes...</p>
+			<small id="images-status"></small>
+		</div>
+	</div>
 	<div id="app">
 		<div id="errorRender" style="position: fixed; top: 0; left: 0;padding:0px 20px;background-color: red;"></div>
 		<dialog id="info">
@@ -30,12 +37,12 @@
 		</div>
 	</div>
 
-	<div class="absolute top-0 p-1 start-0 bg-gray-400">
+	<div class="absolute top-0 p-1 start-0 bg-gray-400" style="z-index: 2;">
 		<span id="username"></span>
 		<button id="logout" onclick="logout()" class="p-1 mx-1 rounded-lg bg-red-400 text-white">Cerrar
 			Sesi&oacute;n</button>
 	</div>
-
+	<div id="barInfo" class="absolute top-0 p-1 start-0 flex justify-center" style="z-index: 2;margin:0 300px;width:500px"></div>
 	<!-- PANEL DE CONTROLES -->
 	<div class="controls">
 		<!-- BARRA DE ESTADO DEL JUEGO -->
@@ -77,26 +84,17 @@
 
 		<!-- PAD DE MOVIMIENTO XY -->
 		<div class="move-pad">
-			<div></div>
+			<button class="btn" onclick="moverSeleccionado({z:1})">▲</button>
 			<button class="btn" onclick="evento('arriba')">↑</button>
-			<div></div>
+			<button class="btn" onclick="moverSeleccionado({z:-1})">▼</button>
 			<button class="btn" onclick="evento('izquierda')">←</button>
 			<button class="btn" onclick="evento('abajo')">↓</button>
 			<button class="btn" onclick="evento('derecha')">→</button>
 		</div>
 
-		<!-- PAD ELEVACIÓN Z -->
-		<div class="move-pad-3d">
-			<div></div>
-			<button class="btn" onclick="moverSeleccionado(0,0,1)">▲</button>
-			<div></div>
-			<div></div>
-			<button class="btn" onclick="moverSeleccionado(0,0,-1)">▼</button>
-			<div></div>
-		</div>
 	</div>
 
-	<div id="error-code" style="z-index:100"
+	<div id="error-code" style="z-index:100;max-width:500px;max-height:90vh;overflow-y:auto"
 		class="fixed bottom-0 mt-1 z-[100] w-[300px] bg-gray-100 text-white text-sm rounded-lg"></div>
 
 	<div class="status" id="status">Consola de eventos...</div>
@@ -112,7 +110,7 @@
 
 	<!-- modal simula una hoja para relatar una historia -->
 	<div id="relatar" class="hidden">
-		<div class="top-0 start-0 fixed w-full h-full bg-black bg-50 flex justify-center items-center z-[10000000]">
+		<div class="top-0 start-0 absolute w-full h-full bg-black bg-50 flex justify-center items-center z-[10000000]">
 			<div style="width:80ch;height:5px;overflow-y:hidden;transition: height 0.4s ease-in-out, width 0.4s ease-in-out;transition-behavior: allow-discrete; "
 				class="markdown rounded-lg bg-slate-300 text-gray-800 relative">
 				<div class="prose p-10 max-w-none  prose-sm"></div>
@@ -248,8 +246,13 @@
 			imagenesUsadasCodigo = Array.from(new Set(imagenesUsadasCodigo))
 
 			const imagenesImportadasCodigo = [...codigo.matchAll(/usarImagen\(\s*"([^"]+)"/g)].map(m => m[1]);
+			// un alias base es valido si existe importado tal cual o con variantes
+			// direccionales ("lobo" existe si se importaron lobo-abajo/derecha/...)
+			const existeImagen = (key) =>
+				imagenesImportadas.hasOwnProperty(key) ||
+				imagenesImportadasCodigo.some(k => k.startsWith(key + "-"));
 			for (let key of imagenesUsadasCodigo) {
-				if (!imagenesImportadas.hasOwnProperty(key) && !imagenesImportadasCodigo.includes(key)) {
+				if (!existeImagen(key)) {
 					errorRender(`No importaste la imagen : "${key}" en la escena. <br>Elige en <b>RECURSOS</b> y escribe <b>${key}</b> cuando selecciones y pregunte el alias.`).setGroup("imagen", key)
 				} else {
 					errorRender().clearGroup("imagen", key)
@@ -260,9 +263,9 @@
 		function revisionCodigo() {
 			let codigo = String(editor.getValue())
 			// si la escena activa es global
-			if (localStorage.getItem("escenaSeleccionada") != "global") {
+			if (fileOpen != 'global' && fileOpen != 'global.js') {
 				// si no tiene la funcion juego
-				if (!codigo.includes("juego")) {
+				if (!codigo.includes("juego") ) {
 					errorRender("No tienes la funcion juego").setGroup("juego")
 				} else {
 					errorRender().clearGroup("juego")
@@ -316,9 +319,9 @@
 		let editor = null
 		let fileOpen = ""
 		let stateChanges = {
-			time: Date.now(),
 			code: "",
 		};
+		let guardarTimer = null;
 		const openCode = () => {
 			dialogCode.show();
 			setTimeout(() => {
@@ -486,7 +489,33 @@
 
 		}
 
+		function menuDefault(){
+	
 
+			empezarEn(0, 0);
+
+			relatar([`
+				#### Controles
+
+				- Usa las flechas del teclado para moverte
+				- Presiona E para atacar
+				- Presiona D para saltar
+
+				[Jugar](/?neto=1&escena=nivel1&sala=prueba-nivel1)
+
+			`])
+
+
+		// fin juego
+		}
+
+		function juegoDefault(){
+			// ¿Donde empieza el jugador?
+			empezarEn(0, 0);
+
+
+		// fin juego
+		}
 
 
 		// Cargar archivo del usuario desde GAS
@@ -510,43 +539,86 @@
 			const nodoFileName = document.querySelector("#fileName");
 			nodoFileName.innerHTML = `Cargando(${fileName}) ... `;
 			try {
-				const result = await $fetch(`/api/file/${fileName}`);
-				console.log('Archivo abierto: ',[fileName, result])
+				let result = {status:"success", code : localStorage.getItem("file:"+fileName.replace('.js',''))}
+				if(!result.code)
+					result = await $fetch(`/api/file/${fileName}`);
+				
 				if (result.status === "success") {
-					pushChanges = false;
+					try {
+						pushChanges = false;
 					fileOpen = fileName;
 					codeDataText = result.code || "";
+					if(!codeDataText){
+						// si es menu
+						if(fileName == "menu") codeDataText = String(menuDefault)
+							// eliminaremos los tabs duplicados para que se vea bien 
+							.replaceAll('\t\t','\t')
+							.replaceAll('		','	')
+							// reemplazaremos el nombre de la funcion
+							.replace('menuDefault','juego')
+						else {
+							codeDataText = String(juegoDefault).replace('juegoDefault','juego')
+						}
+					}
+					// cacheamos desde la primera apertura: solo el guardar viaja a Google
+					localStorage.setItem("file:"+fileName.replace('.js',''), codeDataText)
 					editor.setValue(codeDataText);
+
+					// evaluar la escena: sin esto `juego` no existe y la pantalla queda vacia
+					if (codeDataText.indexOf("function juego") !== -1) {
+						let script = document.createElement("script")
+						let parsed = codeDataText
+							.replaceAll("interactuar (", "interactuar(")
+							.replaceAll("interactuar(", "interactuar( async ")
+							.replaceAll("function juego  (", "function juego(")
+							.replaceAll("function juego (", "function juego(")
+							.replaceAll("function juego(", "async function juego(")
+							.replaceAll(" si(", "if(")
+							.replaceAll(" si (", "if(")
+							.replaceAll(" sino (", "sino(")
+							.replaceAll(" sino(", "else if(")
+							.replaceAll(" sino{", "else{")
+							.replaceAll(" sino {", "else{");
+						script.innerHTML = parsed
+						document.body.appendChild(script)
+					}
+
 					toastManager().push("Archivo cargado correctamente");
 					nodoFileName.innerHTML = fileName;
+					} catch (error) {
+						console.log("Error al procesar el archivo:", error);
+						toastManager().push("Error al procesar el archivo");
+					}
 					return true;
 				} else {
 					toastManager().push("No se encontró el archivo.");
 					return false;
 				}
 			} catch (error) {
-				console.error("Error al abrir archivo:", error);
+				console.log("Error al abrir archivo:", error);
 				toastManager().push("Error al conectar con Google Apps Script");
 				return false;
 			}
 		};
 
-		// Guardar archivo en GAS
+		// Guardar archivo en GAS (debounce: un unico timer que se reinicia al escribir)
 		const updateChanges = (config) => {
 			if (localStorage.getItem("userFile") == "tutorial") return;
 
 			config = config || { force: false, next: null };
+			// solo guarda si hay diferencias reales con lo ultimo escrito a disco
 			if (stateChanges.code == useEditor.getValue() && !config?.force) return;
 
-			if (stateChanges.time < Date.now() - 5000 || config?.force) {
-				stateChanges.time = Date.now();
-				stateChanges.code = useEditor.getValue();
-			} else {
-				return setTimeout(() => updateChanges(config), 5000);
-			}
+			clearTimeout(guardarTimer);
+			if (config?.force) return guardarCambios(config);
+			// espera N ms desde la ultima tecla antes de enviar (debounce)
+			guardarTimer = setTimeout(() => guardarCambios(config), 1500);
+		};
 
+		const guardarCambios = (config) => {
 			const toast = toastManager().push('Guardando código...');
 			const newCodeDataText = useEditor.getValue();
+			stateChanges.code = newCodeDataText;
 
 			$fetch("/api/file", {
 				body: JSON.stringify({
@@ -555,11 +627,17 @@
 				})
 			})
 				.then((data) => {
+					// primero actualizamos el local; si no, la recarga de
+					// config.next() mata la escritura y queda el codigo viejo.
+					// openFile lee la clave SIN .js, por eso la normalizamos
+					localStorage.setItem("file:"+fileOpen.replace('.js',''), newCodeDataText)
+					toast.innerHTML = '¡Guardado completo!';
 					if (typeof config.next === "function") config.next();
-					toastManager().push('¡Guardado completo!');
+					setTimeout(() => toast.remove(), 2000);
 				})
 				.catch((error) => {
-					errorRender("No se pudo guardar: " + String(error));
+					toast.style.background = "tomato";
+					toast.innerHTML = 'No se pudo guardar: ' + String(error);
 					console.error("Error:", error);
 				});
 		};
@@ -599,6 +677,14 @@
 			}).then(r => r.json()).then(d => {
 				if (d.error) return alert(d.error);
 				const finalName = d.file || newName;
+				// la lista viene del cache: la actualizamos con el nuevo nombre
+				let lista = localStorage.getItem("/api/files");
+				if (lista) {
+					lista = JSON.parse(lista);
+					lista.data = lista.data.map(f => f === oldName+".js" ? finalName+".js" : f);
+					lista.time = Date.now();
+					localStorage.setItem("/api/files", JSON.stringify(lista));
+				}
 				if (escenaSeleccionada === oldName) {
 					localStorage.setItem("escenaSeleccionada", finalName);
 					location.reload();
@@ -609,11 +695,8 @@
 			});
 		});
 		const listFiles = () => {
-			$fetch("/api/files")
-				.then((data) => {
-					console.log("====================== list ================== ")
-					console.log(typeof data , data)
-					let x = setInterval(() => {
+			const openData = data => {
+				let x = setInterval(() => {
 
 						let myListScene = document.querySelector("#myListScene");
 						if (myListScene) {
@@ -632,6 +715,18 @@
 						}
 
 					}, 100)
+			}
+			// la lista viene del cache; se actualiza solo al crear o renombrar escenas
+			if(localStorage.getItem("/api/files")){
+				let data = JSON.parse(localStorage.getItem("/api/files"))
+				return openData(data.data)
+			}
+			$fetch("/api/files")
+				.then((data) => {
+					localStorage.setItem("/api/files", JSON.stringify({data, time: Date.now()}))
+					openData(data)
+				}).catch((error) => {
+					console.log("Error:", error);
 				});
 		};
 		listFiles()

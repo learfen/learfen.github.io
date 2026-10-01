@@ -331,7 +331,7 @@ class SceneManager {
 	}
 	agregarEnInfo(contenedor, aliasImage, col) {
 		// si no existe la imagen
-		if (!urlsImages[aliasImage]) {
+		if (!imagenesImportadas[aliasImage]) {
 			errorRender("No existe la imagen " + aliasImage+ " debes importarla en el boton [imagenes] ");
 			return;
 		}
@@ -346,19 +346,20 @@ class SceneManager {
 		let image = document.createElement("img");
 		image.style.width = "auto";
 		image.style.height = "30px";
-		image.src = urlsImages[aliasImage].url;
+		image.src = imagenesImportadasData[aliasImage];
 		image.eliminar = () => image.remove();
 		div.appendChild(image);
 		return image;
 	}
-	cambiarPiso(url, cover, position) {
+	cambiarPiso(url, cover, position, next) {
 		// si url no tiene / buscaremos como si url fuera un imageAlias
 		if (url.search("/") === -1) {
 			const alias = url;
 			const aplicarCuandoEste = () => {
 				const data = imagenesImportadasData[alias];
 				if (data) {
-					this.aplicarPiso(data, cover, position);
+					let piso = this.aplicarPiso(data, cover, position);
+					if(next) next(piso)
 				} else {
 					// la imagen (fetch bas64) aun no cargo: reintento hasta que exista
 					setTimeout(aplicarCuandoEste, 100);
@@ -367,7 +368,8 @@ class SceneManager {
 			aplicarCuandoEste();
 			return this;
 		}
-		this.aplicarPiso(url, cover, position);
+		let piso = this.aplicarPiso(url, cover, position);
+		if(next) next(piso)
 		return this;
 	}
 	aplicarPiso(url, cover, position) {
@@ -542,8 +544,9 @@ class SceneManager {
 					return elementoFantasma(id, x, y);
 				}
 				let guardado = datos.elementos[id];
-				// no recreamos objetos que estan guardados en un inventario, ni enemigos destruidos
-				if (guardado && !config?.resucitar) {
+				// no recreamos objetos que estan guardados en un inventario, ni enemigos destruidos.
+				// solo al montar la escena: durante el juego (play) el codigo del editor crea en vivo
+				if (guardado && !config?.resucitar && estado() !== "play") {
 					if (guardado.propiedades?.["guardado-en"]) {
 						console.log('Error crear: ya existe el id:', id, " guardado en el inventario de: ", guardado.propiedades["guardado-en"])
 						return elementoFantasma(id, x, y);
@@ -877,6 +880,10 @@ let aliasProps = {
 					"flex";
 				return elemento;
 			},	
+			informacion(data) {
+				if(typeof data === "string") elemento.infoDescription = data;
+				return elemento;
+			},
 			interactuar(fn) {
 				if(!fn) {
 					errorRender("interactuar recibe una funcion como parametro")
@@ -1026,18 +1033,26 @@ let aliasProps = {
 				const x0 = elemento.x, y0 = elemento.y, z0 = elemento.z;
 				const xf = x0 + dir.dx * distancia;
 				const yf = y0 + dir.dy * distancia;
+				// noSaltarTipos: lista de tipos sobre los que no se puede saltar/caer
+				// (noSaltar("muro")). Se aplica incluso si no son solidos (ej. agua).
+				const tiposRestringidos = elemento.noSaltarTipos || [];
 				const ocupado = (cx, cy, soloAltos = false) =>
-					escenaActiva().elementos.some(
-						(o) =>
-							o !== elemento &&
-							o.propiedades("solido") &&
-							!o.propiedades("plano") &&
-							(!soloAltos || o.h >= 2) &&
-							window.physicsEngine.haySolapamiento(
-								{ x: cx, y: cy, z: z0, w: elemento.w, h: elemento.h, d: elemento.d },
-								o,
-							),
-					);
+					escenaActiva().elementos.some((o) => {
+						if (o === elemento) return false;
+						const solapa = window.physicsEngine.haySolapamiento(
+							{ x: cx, y: cy, z: z0, w: elemento.w, h: elemento.h, d: elemento.d },
+							o,
+						);
+						if (!solapa) return false;
+						const esSolido = o.propiedades("solido") && !o.propiedades("plano");
+						const esRestringido = tiposRestringidos.includes(o.tipo);
+						if (esRestringido) {
+							evento("salto:cancelado", { objeto: o, propiedad: "noSaltar" });
+						} else if (esSolido && (!soloAltos || o.h >= 2)) {
+							evento("salto:cancelado", { objeto: o, propiedad: "solido" });
+						}
+						return esRestringido || (esSolido && (!soloAltos || o.h >= 2));
+					});
 				// los obstaculos altos (h>=2) a mitad del camino no se pueden saltar
 				const hayAltoEnCamino = Array.from({ length: distancia - 1 }, (_, i) => i + 1).some(
 					(paso) => ocupado(x0 + dir.dx * paso, y0 + dir.dy * paso, true),
@@ -1077,6 +1092,12 @@ let aliasProps = {
 					if (elemento.animacion?.play) elemento.animacion.play();
 				};
 				requestAnimationFrame(step);
+				return elemento;
+			},
+			noSaltar(...tipos) {
+				// bloquea saltar/caer sobre estos tipos; encadenable y con varargs:
+				// empezarEn(13,12).noSaltar("agua","muro")
+				elemento.noSaltarTipos = (elemento.noSaltarTipos || []).concat(tipos);
 				return elemento;
 			},
 			seguir(config){
@@ -1135,6 +1156,7 @@ let aliasProps = {
 			},
 			pintar(imageAlias, config) {
 				if(!imageAlias) return elemento;
+				const aliasBase = imageAlias;
 				let url = "";
 				let newAlias = imageAlias
 				const hayVariante = imagenesImportadas.hasOwnProperty(
@@ -1303,30 +1325,42 @@ let aliasProps = {
 									f.style.background = "none";
 								});
 						} else {
-							if (!elemento.hasOwnProperty("media")) {
-								let img = document.createElement("img");
-								img.style.display = "block";
-								img.style.width = "100%";
-								img.style.height = "auto";
-								//img.style.marginTop = "-25px";
-								elemento.media = { objeto: img, type: "image" };
-								elemento.nodo
-									.querySelectorAll(".face")
-									.forEach(
-										(f) => (f.style.background = "none"),
-									);
-								elemento.nodo
-									.querySelector(".face-south")
-									.appendChild(img);
-								elemento.img = img;
+							// repintado con imagen estatica: limpiar el media previo
+							// (canvas de un gif, img de un plano o de otra pasada) antes
+							// de crear el <img> nuevo, o quedan sprites encimados y .src
+							// no surte sobre un <canvas>.
+							for (const m of [elemento.media?.objeto, elemento.img]) {
+								if (m?.playerGif?.reset) m.playerGif.reset();
+								if (m?.pause) m.pause();
+								m?.remove?.();
 							}
-							insertarImagenEnNodo(elemento.media.objeto, imageAlias)
+							elemento.media = null;
+							elemento.canvas = null;
+							elemento.img = null;
+							let img = document.createElement("img");
+							img.style.display = "block";
+							img.style.width = "100%";
+							img.style.height = "auto";
+							elemento.media = { objeto: img, type: "image" };
+							elemento.nodo
+								.querySelectorAll(".face")
+								.forEach(
+									(f) => (f.style.background = "none"),
+								);
+							elemento.nodo
+								.querySelector(".face-south")
+								.appendChild(img);
+							elemento.img = img;
+							insertarImagenEnNodo(img, imageAlias)
 						}
 					};
 					
 					updateGUI();
 					voltearMirada();
 					elemento.installed = true;
+					// repintados posteriores (piso/plano/insertarImagenEnNodo,
+					// character.js) usan el alias base, no el sufijo de orientacion
+					elemento.imagenAlias = aliasBase;
 				}
 				return elemento;
 			},
@@ -1391,6 +1425,11 @@ let aliasProps = {
 				elemento.baseAlPiso();
 				return elemento;
 			},
+			redondear(val){
+				elemento.propiedades("redondear", val)
+				elemento.media.objeto.style.borderRadius = val+"%"
+				return elemento
+			},
 			rotarX(val, updated) {
 				$styleTransform(elemento.nodo, "rotateX", { val });
 				elemento.propiedades("rotarX", val)
@@ -1420,6 +1459,18 @@ let aliasProps = {
 			solido(v) {
 				elemento.propiedades("solido", v || true);
 				return elemento;
+			},
+			
+			transicion(key, time){
+				if(key == "margenY") key = 'margin-top';
+				if(key == "margenX") key = 'margin-left';
+				let transition = String(elemento.media.objeto.style.transition);
+				if(!transition) transition = ` ${key} ${time}s ease-in-out`;
+				else{
+					transition += `, ${key} ${time}s ease-in-out`;
+				}
+				elemento.media.objeto.style.setProperty("transition", transition);
+				return elemento
 			},
 			transparencia(v) {
 				elemento.propiedades("transparencia", v);
@@ -1593,8 +1644,8 @@ let aliasProps = {
 			return res
 		}
 		// buscaremos el elemento que esta en esta posicion
-		if(z === undefined) z = 0
-		if(z === true || todos === true){
+		if(z === undefined) z = player().z
+		if(todos === true){
 			// buscaremos todos los que coincidan
 			return prepare(Array.from(this.elementos.filter(o => o.x == x && o.y == y && o.z == z)));
 		}
@@ -1638,7 +1689,7 @@ let aliasProps = {
 		if (window.actualizarUI) window.actualizarUI();
 	}
 	ocupada(x, y, z) {
-		if(!z) z = 1
+		if(!z) z = player().z
 		// retornara true o false si esta ocupada la casilla en las coordenadas que recibe
 		for(let elemento of escenaActiva().elementos) {
 			if (elemento.propiedades("guardado")===true) continue;
@@ -1779,6 +1830,8 @@ window.player = function (nuevo) {
 	if (!nuevo.animado && nuevo.animar) nuevo.animar();
 	const anterior = window.sceneManager.jugador;
 	if (anterior && anterior !== nuevo) anterior.esPlayer = false;
+	// "yo" es el jugador controlado; algunas escenas lo reasignan (neto/caballero)
+	if (window.yo === undefined) window.yo = nuevo;
 	nuevo.esPlayer = true;
 	window.sceneManager.jugador = nuevo;
 	window.sceneManager.idSeleccionado = nuevo.id;
@@ -2312,6 +2365,14 @@ function posicion (elemento){
 	return positions
 }
 
+function teletransportar(el, x, y, z) {
+		if (el.x === x && el.y === y && el.z === (z ?? el.z)) return;
+		el.x = x;
+		el.y = y;
+		el.z = z || el.z;
+		window.sceneManager?.actualizarTransformNodo(el);
+	}
+
 function superpuestos(obj1, obj2){
 	if(typeof obj1 === "string") {
 		obj1 = escenaActiva().elementos.find(o => o.id == obj1)
@@ -2344,6 +2405,11 @@ let nodoCursorRelatar = document.querySelector(".markdown [name=cursor]");
 let nodoTotalRelatar = document.querySelector(".markdown [name=total]");
 let contenidoRelatar = null;
 function relatar(textoMarkdown) {
+	if(estado() == "start"){
+		return setTimeout(() => {
+			relatar(textoMarkdown);
+		}, 400)
+	}
 	if (estado() == "relatando") {
 		if (contenidoRelatar[cursorRelatar]) {
 			nodoCursorRelatar.innerHTML = cursorRelatar + 1;
@@ -2507,7 +2573,7 @@ document.addEventListener("click", (e) => {
 	}
 });
 
-escuchar("s", ocultarRelatar, "relatando");
+escuchar("s", ()=>ocultarRelatar(), "relatando");
 
 escuchar(
 	"derecha",
@@ -2592,7 +2658,8 @@ function errorRender(...params) {
 		let div = document.createElement("div");
 		div.className = "p-1 text-md me-1 flex items-center bg-red-500 m-1 justify-between rounded-lg";
 		div.style.minWidth = '200px';
-		div.innerHTML = `<div class="px-3 error-text">${item}</div>`;
+		div.innerHTML = `<div class="px-3 error-text" style="word-break: break-word;"></div>`;
+		div.children[0].innerHTML = item
 		let close = document.createElement("button");
 		close.innerText = "X";
 		close.className = "bg-red-400 text-lg text-white p-1 ms-3 cursor-pointer rounded-full border-0 flex items-center justify-center";
@@ -2622,4 +2689,10 @@ function errorRender(...params) {
 		})
 	}
 	return nodos
+}
+
+
+
+function cambiarFondo(url, config = {}) {
+	escenaActiva().fondo("atras", url, config || {});
 }

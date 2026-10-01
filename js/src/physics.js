@@ -7,7 +7,7 @@ class PhysicsEngine {
     );
   }
 
-  intentarMover(obj, dx, dy, dz, useCoordination, empujar = true) {
+  intentarMover(obj, dx, dy, dz, useCoordination, empujar = true, ignorarTipo = null) {
     if (estado() === "pausa") {
       return false;
     }
@@ -22,7 +22,10 @@ class PhysicsEngine {
       return false;
     }
 
-    const colisiones = scene.elementos.filter(o => o.id !== obj.id && this.haySolapamiento(obj, o, targetX, targetY, targetZ));
+    // ignorarTipo: el objeto se desplaza libre dentro de su propio medio
+    // (ej. un pez que nada en agua solida: la ignora pero choca con lo demas)
+    const esIgnorable = (o) => ignorarTipo && o.tipo === ignorarTipo;
+    const colisiones = scene.elementos.filter(o => o.id !== obj.id && !esIgnorable(o) && this.haySolapamiento(obj, o, targetX, targetY, targetZ));
 
     colisiones.filter(o => !o.propiedades("solido")).forEach(con => {
       evento("colision", { objeto: obj, quien:obj, con });
@@ -194,8 +197,7 @@ class PhysicsEngine {
 }
 
 escuchar("colision", ({ objeto, con }) => {
-  console.log(con?.interaccion)
-  if (con?.interaccion) {
+  if (con?.interaccion && objeto.esPlayer) {
     ayuda("Presiona A/Usar para interactuar");
   }
 }, "play");

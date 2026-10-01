@@ -108,7 +108,7 @@ function paredHorizontal(x, y, w, imagen, z) {
 		imageMuro == "muro" &&
 		imagenesImportadas.hasOwnProperty("muro") == false
 	) {
-		usarImagen("muro", "games/images/muro.png");
+		usarImagen("muro", "/games/images/muro.png");
 	}
 	if (x === undefined) x = x || Math.floor(Math.random() * 14);
 	if (y === undefined) y = y || Math.floor(Math.random() * 14);
@@ -179,7 +179,7 @@ function paredVertical(x, y, d, imagen, z) {
 		imageMuro == "muro" &&
 		imagenesImportadas.hasOwnProperty("muro") == false
 	) {
-		usarImagen("muro", "games/images/muro.png");
+		usarImagen("muro", "/games/images/muro.png");
 	}
 	if (x === undefined) x = x || Math.floor(Math.random() * 14);
 	if (y === undefined) y = y || Math.floor(Math.random() * 14);

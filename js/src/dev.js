@@ -229,10 +229,19 @@ function installDevPanel() {
 				if (event.target.getAttribute("name") === "nueva") {
 					let name = document.querySelector("#name-escena").value;
 					if (!name) return;
-					return fetch(`/api/files/${name}`, {
+					return $fetch(`/api/file/${name}`, {
 						method: "POST",
 					})
 						.then((data) => {
+							if(localStorage.getItem("/api/files")){
+								let data = localStorage.getItem("/api/files");
+								data = JSON.parse(data);
+								// agregaremos la escena
+								data.data.push(name+".js");
+								data.time = Date.now();
+								localStorage.setItem("/api/files", JSON.stringify(data));
+							}
+							
 							location.reload();
 						});
 				}

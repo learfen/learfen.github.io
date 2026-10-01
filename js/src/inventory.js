@@ -208,7 +208,9 @@ async function usarInventario(user, items) {
 			// al importar un item restaurado (ya estaba guardado) NO lo volvemos a sacar del
 			// inventario destino: solo se limpia el clon temporal que se creo en la escena.
 			// (antes se llamaba a inventario.eliminar y se borraba el item recien guardado)
-			if(!modoImportar && objeto.propiedades("guardado")) eliminar = () => {
+			// solo cuando YA pertenece a un inventario (guardado-en): un item de escena
+			// con guardado + sin guardado-en (comida/llaves del editor) SI entra al inventario
+			if(!modoImportar && objeto.propiedades("guardado") && objeto.propiedades("guardado-en")) eliminar = () => {
 				user().inventario.eliminar(objeto);
 			}
 			// marcamos como guardado el objeto
@@ -456,10 +458,10 @@ escuchar(
 
     
 		if (opcion == "Info") {
-			if (objeto?.info) {
-				if (!Array.isArray(objeto.info)) objeto.info = [objeto.info];
+			if (objeto?.infoDescription) {
+				if (!Array.isArray(objeto.info)) objeto.infoDescription = [objeto.infoDescription];
 				let data = "";
-				for (let info of objeto.info) {
+				for (let info of objeto.infoDescription) {
 					if (info.split(" ").length === 1) {
 						// revisaremos si no existe una imagen con este alias
                         if(imagenesImportadasData[info]){
