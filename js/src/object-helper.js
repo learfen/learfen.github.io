@@ -266,7 +266,9 @@ function habitacionOculta(x, y, w, h, imagen, key) {
 	paredVertical(x + w, y + 1, h, imagen);
 
 	// crearemos un bloque para la puerta
-	let puerta = escenaActiva().agregar(x + 1, y + h + 1, 1, "puerta", {
+	// ponytail: sin id fijo; crearObjeto deduplica por id y todas las
+	// habitaciones se fusionaban con la primera puerta (solo salia una)
+	let puerta = escenaActiva().agregar(x + 1, y + h + 1, "puerta", {
 		z: 0,
 		w: 1,
 		h: 2,
