@@ -368,8 +368,8 @@ class SceneManager {
 			aplicarCuandoEste();
 			return this;
 		}
-		let piso = this.aplicarPiso(url, cover, position);
-		if(next) next(piso)
+		this.piso = this.aplicarPiso(url, cover, position);
+		if(next) next(this.piso)
 		return this;
 	}
 	aplicarPiso(url, cover, position) {
@@ -2119,7 +2119,8 @@ const cambiarPisoTextura = (alias) => {
 };
 
 function cambiarPiso(urlPiso, cover, position){
-	return escenaActiva().cambiarPiso(urlPiso,cover, position );
+	escenaActiva().cambiarPiso(urlPiso,cover, position );
+	return escenaActiva().piso;
 }
 
 

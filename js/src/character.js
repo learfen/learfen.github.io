@@ -100,7 +100,7 @@ function decir(elemento, time) {
 	}
 	elemento.preguntar = async function (pregunta, respuestas) {
 		estado("dialogo:preguntando");
-		elemento.decir(pregunta, time);
+		elemento.decir(pregunta, 240);
 		let first = true;
 		let index = 0;
 		if (!respuestas) respuestas = [];
@@ -137,9 +137,11 @@ function decir(elemento, time) {
 			dialogoPreguntando = (a) => {
 				elemento.cerrarDecir();
 				clearInterval(intervalDialog);
-				elemento.decir(a.texto, time);
+				elemento.decir(a.texto, 2);
+				estado("dialogo:preguntando:esperando");
 				esperarY(0.3, () => {
-					estado("play");
+					if(estado() === "dialogo:preguntando:esperando")
+						estado("play");
 				});
 				resolve(a);
 			};

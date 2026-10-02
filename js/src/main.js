@@ -90,7 +90,7 @@ function usarImagen(alias, url) {
 			const response = await fetch(url);
 
 			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}`);
+				throw new Error(`HTTP ${response.status}: ${url}`);
 			}
 
 			await cache.put(url, response.clone());

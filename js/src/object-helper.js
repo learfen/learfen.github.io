@@ -151,6 +151,9 @@ function paredHorizontal(x, y, w, imagen, z) {
 			});
 			return manager;
 		},
+		puertaTexto(texto) {
+			puerta.interactuarTexto = texto
+		},
 		llave(llaveId) {
 			puerta.propiedades("abierta", false);
 			puerta.propiedades("llave", llaveId);
@@ -228,6 +231,9 @@ function paredVertical(x, y, d, imagen, z) {
 			});
 			return manager;
 		},
+		puertaTexto(texto) {
+			puerta.interactuarTexto = texto
+		},
 		pared(){
 			return muro
 		},
@@ -241,7 +247,6 @@ function paredVertical(x, y, d, imagen, z) {
 			return manager;
 		},
 		interactuar(fn) {
-            console.log("interactuar con puerta:" , fn.toString())
 			puerta.interactuar(fn);
 			return manager;
 		},
@@ -249,7 +254,7 @@ function paredVertical(x, y, d, imagen, z) {
 	return manager;
 }
 
-function habitacionOculta(x, y, w, h, imagen, key) {
+function habitacionOculta(x, y, w, h, key, imagen) {
 	if (w < 2 || h < 2)
 		return alert("La habitacion debe ser de al menos 2x2 por las paredes");
 
@@ -291,9 +296,9 @@ function habitacionOculta(x, y, w, h, imagen, key) {
 	puerta.interactuar(async () => {
 		if (puerta.cerrada) {
 			if (player().items.find((item) => item.id == key)) {
-				return decir("Creo que tengo la llave");
+				return decir("Creo que tengo la llave",3);
 			} else {
-				return decir("Necesitas una llave");
+				return decir("Necesitas una llave",3);
 			}
 		}
 
@@ -335,4 +340,9 @@ function habitacionOculta(x, y, w, h, imagen, key) {
 		cubo: true,
 	});
 	hidden.nodo.style = "opacity:1 !important;";
+	return {
+		puertaTexto(texto) {
+			puerta.interactuarTexto = texto
+		}
+	}
 }
