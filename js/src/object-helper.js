@@ -31,7 +31,7 @@ function crearPuerta(x, y, z, key, imagenAlias, vertical) {
 
 	if(vertical){
 		let face = puerta.nodo.querySelector('.face-up')
-		face.style.background = 'url(/games/images/textura-madera.jpg)'
+		face.style.background = 'url('+domainMedias+'/textura-madera.jpg)'
 		face.style.width = '10px'
 		face.style.marginTop = '17px'
 		face.style.marginLeft = '-14px'
@@ -100,6 +100,15 @@ function crearPuerta(x, y, z, key, imagenAlias, vertical) {
     puerta.interactuar((info) => info.elemento.usar())
 	return puerta;
 }
+// .capa(n) de un grupo: pone la BASE del grupo en la capa n y conserva los
+// offsets internos, para que el techo siga encima de las paredes y no al mismo
+// nivel. off = z del elemento menos el z de la base del grupo.
+// ponytail: el orden no importa; .capa(3).puerta(...) y .puerta(...).capa(3)
+// dejan puerta y muro en la misma capa.
+function capaGrupo(grupo, n) {
+	for (const { el, off } of grupo) el.capa(n + off);
+}
+
 function paredHorizontal(x, y, w, imagen, z) {
 	z = z || 0;
 	w = w || 3;
@@ -126,13 +135,16 @@ function paredHorizontal(x, y, w, imagen, z) {
 		.imagen("repetir", "repetirX").imagen("tamano", "60px 40px");
 
 	let puerta;
+	// todo lo que crea este helper, para moverlo de capa en bloque
+	const grupo = [{ el: muro, off: 0 }];
 	let manager = {
 		puerta(x, key, imagenAlias) {
 			puerta = crearPuerta(muro.x + x, y, z, key, imagenAlias);
+			grupo.push({ el: puerta, off: 0 });
 			if (muro.x < puerta.x) {
 				muro.ancho(puerta.x - muro.x);
 
-				escenaActiva()
+				const resto = escenaActiva()
 					.agregar(muro.x + x + 1, y, imageMuro, {
 						z,
 						w: w - x - 1,
@@ -144,6 +156,7 @@ function paredHorizontal(x, y, w, imagen, z) {
 						cubo: true,
 					})
 					.imagen("repetir", "repetirX").imagen("tamano", "60px 40px");
+				grupo.push({ el: resto, off: 0 });
 			}
 			esperarY(0.5, () => {
 				//muro.margenY(-40)
@@ -161,6 +174,12 @@ function paredHorizontal(x, y, w, imagen, z) {
 		},
 		pared(){
 			return muro
+		},
+		capa(zNuevo) {
+			// z se actualiza para que una .puerta() posterior nazca en la capa nueva
+			z = zNuevo;
+			capaGrupo(grupo, zNuevo);
+			return manager;
 		},
 		imagenPuerta(imagenAlias) {
 			puerta.pintar(imagenAlias);
@@ -192,7 +211,7 @@ function paredVertical(x, y, d, imagen, z) {
 		y ,
 		imageMuro,
 		{
-			z: 0,
+			z,
 			w: 1,
 			h: 2,
 			d: d || 3,
@@ -203,15 +222,17 @@ function paredVertical(x, y, d, imagen, z) {
 		},
 	).imagen("repetir", "repetirX").imagen("tamano", "40px 60px");
 	let puerta;
+	const grupo = [{ el: muro, off: 0 }];
 	let manager = {
 		puerta(posicion, key, imagenAlias) {
 			puerta = crearPuerta(x, muro.y + posicion, z, key, imagenAlias, true);
+			grupo.push({ el: puerta, off: 0 });
 			const finMuro = y + d;
 			if (finMuro > puerta.y) {
 				muro.largo(posicion);
 				const inicio = puerta.y + 1;
 				if (inicio < finMuro) {
-					escenaActiva()
+					const resto = escenaActiva()
 						.agregar(x, inicio, imageMuro, {
 							z,
 							w: 1,
@@ -223,6 +244,7 @@ function paredVertical(x, y, d, imagen, z) {
 							cubo: true,
 						})
 						.imagen("repetir", "repetirX").imagen("tamano", "40px 60px");
+					grupo.push({ el: resto, off: 0 });
 				}
 			}
 			esperarY(0.5, () => {
@@ -236,6 +258,12 @@ function paredVertical(x, y, d, imagen, z) {
 		},
 		pared(){
 			return muro
+		},
+		capa(zNuevo) {
+			// z se actualiza para que una .puerta() posterior nazca en la capa nueva
+			z = zNuevo;
+			capaGrupo(grupo, zNuevo);
+			return manager;
 		},
 		llave(llaveId) {
 			puerta.propiedades("abierta", false);
@@ -254,6 +282,10 @@ function paredVertical(x, y, d, imagen, z) {
 	return manager;
 }
 
+function habitacion(x,y,w,h,key,imagen){
+	return habitacionOculta(x,y,w,h,key,imagen)
+}
+
 function habitacionOculta(x, y, w, h, key, imagen) {
 	if (w < 2 || h < 2)
 		return alert("La habitacion debe ser de al menos 2x2 por las paredes");
@@ -262,13 +294,13 @@ function habitacionOculta(x, y, w, h, key, imagen) {
 		usarImagen("puerta", "games/images/door-svgrepo-com.svg");
 	}
 
-	paredHorizontal(x, y, w + 1, imagen);
-
-	paredHorizontal(x + 2, y + h + 1, w - 1, imagen);
-
-	paredVertical(x, y + 1, h + 1, imagen);
-
-	paredVertical(x + w, y + 1, h, imagen);
+	// todo lo de la habitacion, con su offset sobre las paredes (base = 0)
+	const grupo = [
+		{ el: paredHorizontal(x, y, w + 1, imagen).pared(), off: 0 },
+		{ el: paredHorizontal(x + 2, y + h + 1, w - 1, imagen).pared(), off: 0 },
+		{ el: paredVertical(x, y + 1, h + 1, imagen).pared(), off: 0 },
+		{ el: paredVertical(x + w, y + 1, h, imagen).pared(), off: 0 },
+	];
 
 	// crearemos un bloque para la puerta
 	// ponytail: sin id fijo; crearObjeto deduplica por id y todas las
@@ -284,6 +316,7 @@ function habitacionOculta(x, y, w, h, key, imagen) {
 	});
 
 	puerta.pintar("puerta").margenY(-4).margenX(4);
+	grupo.push({ el: puerta, off: 0 });
 	//bloque.interactuar(() => {
 	puerta.animationOpen = false;
 	puerta.cerrada = !!key;
@@ -328,7 +361,8 @@ function habitacionOculta(x, y, w, h, key, imagen) {
 			cubo: true,
 		})
 		.plano();
-	techo.nodo.style.translate = "0px -20px -20px";
+	techo.nodo.style.translate = "0px -29px -20px";
+	techo.nodo.style.filter = "brightness(.85) hue-rotate(180deg)"
 
 	let hidden = escenaActiva().agregar(x, y + 1, "vacio", {
 		z: 1,
@@ -340,9 +374,26 @@ function habitacionOculta(x, y, w, h, key, imagen) {
 		cubo: true,
 	});
 	hidden.nodo.style = "opacity:1 !important;";
+	grupo.push({ el: techo, off: 2 });
+	grupo.push({ el: hidden, off: 1 });
 	return {
 		puertaTexto(texto) {
 			puerta.interactuarTexto = texto
-		}
+		},
+		capa(zNuevo) {
+			// la habitacion sube completa: paredes en zNuevo, oscuridad zNuevo+1,
+			// techo zNuevo+2, para no perder la habitacion por dentro
+			capaGrupo(grupo, zNuevo);
+			return this;
+		},
+		paredes() {
+			return grupo.filter((g) => g.off === 0).map((g) => g.el);
+		},
+		techo() {
+			return techo;
+		},
+		puerta() {
+			return puerta;
+		},
 	}
 }

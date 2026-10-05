@@ -237,6 +237,14 @@ imagenesBasicas()
 // Renderizado inicial de celdas del tablero (20x20)
 const gridEl = document.getElementById("grid");
 const gridWrap = document.querySelector(".grid-wrap");
+// ponytail: la camara la maneja sceneManager.actualizarCamara (transform
+// transicionado). Este objeto existia solo para reescribir perspective y
+// perspective-origin desde el jugador en cada paso; como no son transicionables
+// (Blink reconstruye capas -> celdas negras), eso reproyectaba la escena de
+// golpe y se veia como vibracion. updateFromPlayer queda como no-op para no
+// tocar los 4 llamadores. Si hace falta alterar la proyeccion a mano:
+//   gridWrap.style.perspective = "2400px";
+//   gridWrap.style.perspectiveOrigin = "50% 50%";
 const camera = {
 	x: 10,
 	y: 50,
@@ -254,28 +262,8 @@ const camera = {
 		camera.x = x;
 		camera.y = y;
 	},
-	updateFromPlayer() {
-		// en modo libre (cámara OFF) la perspectiva la fija actualizarCamara;
-		// volver a calcularla desde el player re-proyecta todo el escenario en
-		// cada paso y lo hace "vibrar"
-		if (window.sceneManager?.modoCamara === false) return;
-		let porcentaje = (20 / 100) * player().x * 25;
-		if (camera.x < porcentaje) {
-			for (let i = camera.x; i < porcentaje; i++) {
-				camera.updateX(i);
-			}
-		} else if (camera.x > porcentaje) {
-			for (let i = camera.x; i > porcentaje; i--) {
-				camera.updateX(i);
-			}
-		}
-		camera.updateY(player().y * 5);
-		camera.perspective((1 + player().y * 0.1) * 2000);
-	},
+	updateFromPlayer() {},
 };
-setTimeout(() => {
-	camera.updateX(10);
-}, 1000);
 if (gridEl) {
 	gridEl.innerHTML = "";
 	for (let i = 0; i < 400; i++) {
@@ -520,8 +508,12 @@ function moverOManiobrarAnimado(dx, dy, dz, orientacionDeseada, agarrando = fals
 		if (movido) {
 			actualizarUI(p.id);
 			const objsMirando = p.mirandoObjeto ? p.mirandoObjeto() : [];
+			if(window.selectedPosition)
 			document.getElementById("status").textContent =
-				`Avanzó hacia ${p.mirando()} (${p.x},${p.y},${p.z}). Objetos enfrente: ${objsMirando.length}`;
+				`Avanzó hacia ${p.mirando()} (${p.x},${p.y},${p.z}). Objetos enfrente: ${objsMirando.length}<br>`+
+				// celda seleccionada 
+				`Celda: ${window.selectedPosition.x}, ${window.selectedPosition.y}, ${window.selectedPosition.z}`
+				;
 			camera.updateFromPlayer();
 		}
 	} else {
@@ -612,7 +604,12 @@ function cambiarEscena(nuevaEscena, config) {
 	}
 	
 	localStorage.setItem(keyLocalstorageEscenaActiva, nuevaEscena);
-	location.href = "/";
+	// "/" NO sirve: la ruta raiz solo devuelve index.html si hay cookie httpOnly
+	// "token" valida (index.ts), y el login via Apps Script nunca la deja seteada
+	// -> el server caia a login.html y el cambio de escena parecia un logout.
+	// "/index.html" es estatico y ya trae su propio guardia (si no hay
+	// username llama logout()), que es la proteccion que realmente se quiere.
+	location.href = "/index.html";
 }
 
 function player(nuevo) {
@@ -863,9 +860,16 @@ function cargarGlobal() {
 			// la API devuelve {status, code}; code vacio => archivo inexistente
 			if (typeof res?.code !== "string" || !res.code) return;
 			// misma sintaxis amigable que las escenas
+			// "interactuar" se normaliza a un token antes de Expandirlo a async:
+			// con replaceAll en cadena el source que ya venia "interactuar( async"
+			// salia "interactuar( async  async" -> SyntaxError que mataba TODO el
+			// script global. El token hace la pasada idempotente.
 			const html = `try{${res.code
-				.replaceAll("interactuar (", "interactuar(")
-				.replaceAll("interactuar(", "interactuar( async ")
+				.replaceAll("interactuar ( async", "@INTERACTUAR@")
+				.replaceAll("interactuar( async", "@INTERACTUAR@")
+				.replaceAll("interactuar (", "@INTERACTUAR@")
+				.replaceAll("interactuar(", "@INTERACTUAR@")
+				.replaceAll("@INTERACTUAR@", "interactuar( async ")
 				.replaceAll(" si(", "if(")
 				.replaceAll(" si (", "if(")
 				.replaceAll(" sino (", "sino(")

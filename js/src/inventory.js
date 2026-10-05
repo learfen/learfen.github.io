@@ -502,7 +502,9 @@ escuchar(
 				return
 			}
 			
-			let celda = escenaActiva().en(x, y, true);
+			// mismo z que usara agregar() mas abajo (su default es 0 y objeto.z lo pisa)
+			const zSoltar = objeto.z ?? 0;
+			let celda = escenaActiva().en(x, y, zSoltar, true);
 			// validaos que la celda no este ocupada
 			if (Array.isArray(celda)) {
 				if(celda.length > 0){

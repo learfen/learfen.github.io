@@ -1,6 +1,11 @@
 
 let magneticListener;
 
+// Profundidad de la camara en modo juego. Fija a proposito: antes se
+// recalculaba desde la posicion del jugador en cada paso, lo que re-
+// proyectaba toda la escena de golpe y se veia como vibracion.
+const PERSPECTIVA_JUEGO = "2400px";
+
 function crearId(id , imageAlias){
 	if (!id) {
 		id =
@@ -42,7 +47,8 @@ class SceneManager {
 			const cell = cells.find(el => el.classList?.contains('cell') && el.parentElement?.id === 'grid');
 			if (cell) {
 				const idx = [...cell.parentNode.children].indexOf(cell);
-				window.selectedPosition = { x: idx % 20, y: Math.floor(idx / 20) };
+				window.selectedPosition = { x: idx % 20, y: Math.floor(idx / 20) , z: Math.floor(idx / 400) };
+				document.getElementById("status").textContent = `Celda: ${window.selectedPosition.x}, ${window.selectedPosition.y}, ${window.selectedPosition.z}`
 				document.querySelector('.cell.selected')?.classList.remove('selected')
 				cell.classList.add('selected')
 			}
@@ -154,13 +160,17 @@ class SceneManager {
 		this.gridWrap.style.transition = this.jugador?.deslizando
 			? `transform ${typeof INTERVALO_DESLIZAR_MS === "number" ? INTERVALO_DESLIZAR_MS : 300}ms linear`
 			: "";
+		// La proyeccion es un valor FIJO, no derivado del jugador: perspective y
+		// perspective-origin no son transicionables aqui (Blink reconstruye el
+		// arbol de capas y las celdas salen negras), asi que recalcularlos por
+		// paso reproyectaba la escena de golpe -> vibracion. Reasignar la misma
+		// constante no cambia el estilo computado. El seguimiento lo hace el
+		// transform de mas abajo, que si esta transicionado.
 		if (this.jugador) {
-			// replicar la camara 3D de main.js (camera.updateFromPlayer): sin esto,
-			// tras salir de libre la perspectiva quedaria en el default CSS (640px)
-			// y la vista de juego se deforma hasta que el jugador se mueve
-			const j = this.jugador;
-			this.gridWrap.style.perspective = `${Math.round((1 + j.y * 0.1) * 2000)}px`;
-			this.gridWrap.style.perspectiveOrigin = `${5 * j.x}% ${5 * j.y}%`;
+			// al salir de libre la perspectiva quedaria en el default CSS (640px)
+			// y la vista se deformaria hasta que el jugador se mueva
+			this.gridWrap.style.perspective = PERSPECTIVA_JUEGO;
+			this.gridWrap.style.perspectiveOrigin = "50% 50%";
 		} else {
 			this.gridWrap.style.perspective = this._devPersp || "";
 			this.gridWrap.style.perspectiveOrigin = this._devOrig || "";
@@ -283,7 +293,10 @@ class SceneManager {
 				obj.x + obj.w > this.jugador.x;
 			if (!solapaX) { obj.nodo.classList.remove("occluding"); return; }
 
-			const cubreAlturaZ = obj.z + obj.h >= this.jugador.z;
+			// > y no >=: un muro cuyo techo queda JUSTO en el plano de los pies del
+			// jugador (p.ej. paredHorizontal().capa(3) con h=2, jugador en z=5)
+			// esta por debajo de el y no lo tapa, asi que no debe ponerse transparente.
+			const cubreAlturaZ = obj.z + obj.h > this.jugador.z;
 			const cerca = obj.h >= dy * 2.0;
 			if (cubreAlturaZ && cerca) {
 				obj.nodo.classList.add("occluding");
@@ -422,8 +435,8 @@ class SceneManager {
 		const pos = {
 			// bloque gigante atras: w=20, d=1 en y=0
 			atras: {
-				nodo: `translate3d(600px, 5px, ${H * 20}px)`,
-				cara: `translate(-50%,-50%) rotateX(260deg) translateZ(30px)`,
+				nodo: `translate3d(600px, -10px, ${H * 20}px)`,
+				cara: `translate(-50%,-50%) rotateX(260deg) translateZ(10px)`,
 				w: 1200,
 				h: H * 40,
 			},
@@ -462,7 +475,7 @@ class SceneManager {
 		
 		if(config.hasOwnProperty("y")){
 			// si config es numero agregamos px sino agregamos como texto nomas
-			div.style.backgroundPositionY = `${config.y}%`;	
+			div.style.backgroundPositionY = `${config.y + 100}%`;	
 		}
 		return div;
 	}
@@ -678,6 +691,12 @@ class SceneManager {
 				}
 				elemento.z = z;
 				elemento.mover(elemento.x , elemento.y)
+				// si es piso, reaplicar la correccion de z (piso() la calcula
+				// una sola vez al crearse, con el z que tenia entonces)
+				if (propiedades.piso) {
+					elemento.nodo.style.marginTop =
+						(propiedades.margenY || 0) - z * 23 + "px";
+				}
 				return elemento;
 			},
 			guardarItem(tipo, id){
@@ -1124,6 +1143,19 @@ let aliasProps = {
 				}, "play");
 				return elemento;
 			},
+			moverRequiere(selector) {
+				// getter: moverRequiere() devuelve el valor actual
+				// ponytail: el valor vive en propiedades, NO en elemento, porque
+				// guardarlo en elemento pisaba el metodo al primer setter y la
+				// segunda llamada ".moverRequiere(...)" fallaba
+				if (selector === undefined) return propiedades.moverRequiere || [];
+				// "", [], null, false -> no requiere nada
+				const vacio = selector === "" || selector === null || selector === false;
+				propiedades.moverRequiere = vacio
+					? []
+					: (Array.isArray(selector) ? selector : [selector]).filter(Boolean);
+				return elemento;
+			},
 			noSolido() {
 				propiedades.solido = false;
 				return elemento;
@@ -1221,10 +1253,10 @@ let aliasProps = {
 						) {
 							let canvas = elemento["canvas"];
 							if (imageAlias !== elemento.imageInstalled) {
-								elemento.imageInstalled = imageAlias;
-								if (canvas !== undefined) {
-									canvas.remove();
-								}
+							elemento.imageInstalled = imageAlias;
+							// la pasada estatica deja elemento.canvas = null (scene.js:1370),
+							// asi que hay que comprobar null, no solo undefined
+							canvas?.remove();
 								// elemento instalado originalmente como <img> (sin config):
 								// la pasada gif crea un <canvas>; borrar el <img> viejo o
 								// quedan dos sprites visibles encimados
@@ -1373,16 +1405,62 @@ let aliasProps = {
 				// debajo de todo lo que no sea piso para que se pise "por encima".
 				elemento.nodo.style.zIndex =
 					"calc((var(--cy) + var(--d)) * 100 + var(--cz) * 10 + var(--cx) - 1000000)"
+				// elemento.media no existe si el alias no esta importado, y .objeto tampoco
+				// hasta que la imagen carga: sin guarda .piso() rompia la escena
 				if(w && d){
 					elemento.nodo.style.setProperty("--w", w);
 					elemento.nodo.style.setProperty("--d", d);
+					// el estado tambien: sin esto el piso queda en w/d = 1 y
+					// el calculo de colisiones y de la cara inferior usan 1x1
+					elemento.w = w;
+					elemento.d = d;
+					elemento.nodo.querySelectorAll(".face img").forEach((img) => {
+						img.style.width = "100%";
+						img.style.height = "100%";
+					});
 				}
+				if(elemento?.media?.objeto) {
+					esperarY(.5,() => {
+						elemento.media.objeto.style.marginTop = '20px'
+						elemento.media.objeto.style.border = "#444 solid 1px";
+						elemento.media.objeto.style.borderWidth = "0px 0px 19px 3px";
+					})
+				}
+				console.log(elemento)
+				// cada capa de z desplaza el piso ~23px en el grid rotado: sin
+				// correcting el margen el piso queda flotando sobre el suelo
+				const corracionZ = (elemento.z || 0) * 23;
+				elemento.nodo.style.marginTop = (propiedades.margenY || 0) - corracionZ + "px";
 				return elemento
 			},
+			/*
+			volumen(cantidad, imagen) {
+				// repite la textura de la cara visible del piso `cantidad` veces a
+				// lo ancho, como hacen las paredes. Sin imagen usa la del propio
+				// piso. ej: .piso(4,4).volumen(1,"t1") = 1 textura; =4 = 1 por celda.
+				const n = Math.max(1, Number(cantidad) || 1);
+				const alias = imagen || elemento.imagenAlias;
+				const cara = elemento.nodo.querySelector(".face-down"); // donde plano() pinta
+				if (!cara) return elemento;
+				const w = parseFloat(elemento.nodo.style.getPropertyValue("--w")) || elemento.w || 1;
+				// se marca antes de tocar el DOM: plano() corre en un setInterval y
+				// tiene que saber que no pinte su <img> encima de este fondo
+				propiedades.volumen = { cantidad: n, imagen: alias };
+				cara.style.backfaceVisibility = "visible";
+				cara.style.backgroundRepeat = "repeat";
+				cara.style.backgroundSize = w * 60 / n + "px auto";
+				cara.querySelector("img")?.remove();
+				insertarImagenEnNodo(cara, alias, "background");
+				return elemento;
+			},
+			*/
 			plano() {
 				elemento.propiedades("plano", true)
 				let tx = setInterval(() => {
 					if(!elemento.nodo) return ;
+					// .volumen() pinta una textura repetida en esa misma cara:
+					// este <img> la taparia. caso normal: .piso(..).volumen(..)
+					if(propiedades.volumen){ clearInterval(tx); return ; }
 					elemento.nodo.querySelector(".face img")?.remove();
 					// pintaremos la cara inferior del cubo
 					let img = document.createElement("img");
@@ -1427,7 +1505,7 @@ let aliasProps = {
 			},
 			redondear(val){
 				elemento.propiedades("redondear", val)
-				elemento.media.objeto.style.borderRadius = val+"%"
+				if (elemento?.media?.objeto) elemento.media.objeto.style.borderRadius = val+"%"
 				return elemento
 			},
 			rotarX(val, updated) {
@@ -1640,6 +1718,9 @@ let aliasProps = {
 
 	en(x,y,z, todos){
 		const prepare = res => {
+			// .find() devuelve undefined en una celda vacia: sin este guardia
+			// prepare(undefined) reventaba al asignar .buscar
+			if (!res) return res;
 			res.buscar = (selector) => escenaActiva().buscar(selector, res)
 			return res
 		}
@@ -1651,7 +1732,11 @@ let aliasProps = {
 		}
 		else{
 			// buscaremos el primero que coincida
-			return prepare(Array.from(this.elementos.find(o => o.x == x && o.y == y && o.z == z)));
+			// sin Array.from: .find() ya devuelve el elemento (o undefined si la
+			// celda esta vacia). Array.from() sobre un objeto sin length devolvia
+			// [] siempre, y sobre undefined lanzaba TypeError -> "Tirar" reventaba
+			// al soltar en una celda libre.
+			return prepare(this.elementos.find(o => o.x == x && o.y == y && o.z == z));
 		}
 	}
 
@@ -2118,7 +2203,7 @@ const cambiarPisoTextura = (alias) => {
 	})
 };
 
-function cambiarPiso(urlPiso, cover, position){
+function cambiarPiso(urlPiso, cover, position="center"){
 	escenaActiva().cambiarPiso(urlPiso,cover, position );
 	return escenaActiva().piso;
 }
@@ -2693,6 +2778,9 @@ function errorRender(...params) {
 }
 
 
+function fondo(url, config = {}) {
+	escenaActiva().fondo("atras", url, config || {});
+}
 
 function cambiarFondo(url, config = {}) {
 	escenaActiva().fondo("atras", url, config || {});

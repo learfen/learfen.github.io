@@ -5,7 +5,7 @@ const panel = `
             <button name="panel-levels">🔢<small>Escenas</small></button>
             <button name="panel-images">🗺️<small>Recursos</small></button>
             <button name="actorList">👥<small>Actores</small></button>
-            <button name="camaraPanel">📷<small>Camara</small></button>
+            <button onclick="toggleCamaraUI()">📷<small>Camara</small></button>
             <button name="tutoriales">⁉️<small>Tutoriales</small></button>
         </div>  
         <div class="actor-list panel p-1" name="actorList">
@@ -52,24 +52,35 @@ const panel = `
             <button class="btn" onclick="setZoom(1.0)">Zoom 1.0x</button>
         </div>
         
-        <div class="btn-row panel bg-gray-800 px-2 py-3 flex-wrap" id="tutoriales" name="tutoriales">
-			<h4>Actores</h4>
-            <button class="btn w-full p-1 flex items-center justify-center" onclick="mostrarTutorial('vidas');">Vidas</button>
-            <button class="btn w-full p-1 flex items-center justify-center" onclick="mostrarTutorial('colision');">Colision</button>
-            <button class="btn w-full p-1 flex items-center justify-center" onclick="mostrarTutorial('interaccion');">Interacción</button>
-            <button class="btn w-full p-1 flex items-center justify-center" onclick="mostrarTutorial('mensajes');">Mensajes y dialogos</button>
-            <button class="btn w-full p-1 flex items-center justify-center" onclick="mostrarTutorial('pescar');">Pescar</button>
-            <button class="btn w-full p-1 flex items-center justify-center" onclick="mostrarTutorial('inventario');">Inventario</button>
-			<button class="btn w-full p-1 flex items-center justify-center" onclick="mostrarTutorial('proyectil');">Disparar</button>
-			<button class="btn w-full p-1 flex items-center justify-center" onclick="mostrarTutorial('perseguir');">Seguir</button>
+        <div class="btn-row panel bg-gray-800 px-2 py-3 flex-wrap" style="max-width: 50vw" id="tutoriales" name="tutoriales">
+			<h4 class="w-full">Actores</h4>
+            <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('vidas');">Vidas</button>
+            <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('colision');">Colision</button>
+            <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('interaccion');">Interacción</button>
+            <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('mensajes');">Mensajes y dialogos</button>
+            <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('pescar');">Pescar</button>
+            <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('inventario');">Inventario</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('proyectil');">Disparar</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('perseguir');">Seguir</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('teletransportar');">Teletransportar</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('caer');">Caer/cambiar de nivel</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('posicionamiento');">Comprobar posición</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('pintar');">Cambiar imagen</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('animaciones');">Animaciones</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('npc');">NPC</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('objetos');">Objetos</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('bloques');">Bloques</button>
 			
 			
-			<h4>Escenarios</h4>
-            <button class="btn w-full p-1 flex items-center justify-center" onclick="mostrarTutorial('paredes');">Paredes</button>
-            <button class="btn w-full p-1 flex items-center justify-center" onclick="mostrarTutorial('lago');">Lago</button>
-            <button class="btn w-full p-1 flex items-center justify-center" onclick="mostrarTutorial('paredes');">Paredes</button>
-            <button class="btn w-full p-1 flex items-center justify-center" onclick="mostrarTutorial('paredes');">Paredes</button>
-            <button class="btn w-full p-1 flex items-center justify-center" onclick="mostrarTutorial('paredes');">Paredes</button>
+			<h4 class="w-full">Escenarios</h4>
+            <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('paredes');">Paredes</button>
+            <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('Habitacion');">Habitacion</button>
+            <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('lago');">Lago</button>
+            <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('piso');">Piso</button>
+            <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('suelo');">Piso escenario</button>
+            <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('fondo');">Fondo</button>
+            <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('niveles');">Nuevo nivel</button>
+			
 
         </div>
 
@@ -130,9 +141,17 @@ function installDevPanel() {
 			let url = event.target.src.split("/games")[1];
 			let codeInstallImage = "";
 			let alias = "";
-			let cut = codigo.split(`"/games${url}"`);
+			// busca el alias de ESTA url entre las usarImagen del codigo.
+			// ponytail: regex en vez de partir por indice; el indice tomaba la
+			// primera usarImagen del archivo y por eso insertaba otro alias.
+			const urlEscapada = url.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			const suya = codigo.match(
+				new RegExp(`usarImagen\\(\\s*"([^"]+)"\\s*,\\s*"\\/games${urlEscapada}"\\s*\\)`),
+			);
 			let importImage = false;
-			if (cut.length === 1) {
+			if (suya) {
+				alias = suya[1];
+			} else {
 				alias = prompt("Ingresa un alias para la imagen", "");
 				if (!alias) return errorRender("El alias no puede estar vacio");
 				codeInstallImage =
@@ -140,8 +159,6 @@ function installDevPanel() {
 						? ""
 						: `usarImagen("${alias}","/games${url}")\n`;
 				importImage = true;
-			} else {
-				alias = cut[0].split('usarImagen("')[1].split('"')[0];
 			}
 
 			if (
@@ -180,11 +197,12 @@ function installDevPanel() {
 					});
 					clearInterval(interval);
 				}, 50);
-
-				editor.setValue(codeInstallImage + codigo);
-			} else {
-				editor.setValue(codeInstallImage + codigo);
 			}
+
+			// el import se escribe siempre, se haya confirmado o no: si el alias
+			// es nuevo y el usuario dice "no", igual necesita usarImagen() para
+			// que el error de "No importaste la imagen" desaparezca.
+			editor.setValue(codeInstallImage + codigo);
 		}
 		if (event.target.parentNode?.classList.contains("tab")) {
 			// quitamos si existe algun butotn con tab
@@ -231,23 +249,28 @@ function installDevPanel() {
 					if (!name) return;
 					return $fetch(`/api/file/${name}`, {
 						method: "POST",
-					})
-						.then((data) => {
-							if(localStorage.getItem("/api/files")){
-								let data = localStorage.getItem("/api/files");
-								data = JSON.parse(data);
-								// agregaremos la escena
-								data.data.push(name+".js");
-								data.time = Date.now();
-								localStorage.setItem("/api/files", JSON.stringify(data));
-							}
-							
-							location.reload();
-						});
+					}).then((data) => {
+						if (localStorage.getItem("/api/files")) {
+							let data = localStorage.getItem("/api/files");
+							data = JSON.parse(data);
+							// agregaremos la escena
+							data.data.push(name + ".js");
+							data.time = Date.now();
+							localStorage.setItem(
+								"/api/files",
+								JSON.stringify(data),
+							);
+						}
+
+						location.reload();
+					});
 				}
 			}
 		}
-		if (event.target.closest?.("#myListScene") && event.target.hasAttribute("name")) {
+		if (
+			event.target.closest?.("#myListScene") &&
+			event.target.hasAttribute("name")
+		) {
 			cambiarEscena(event.target.getAttribute("name"));
 		}
 
@@ -260,7 +283,6 @@ function installDevPanel() {
 
 // En multijugador se muestra la interfaz de juego, no las herramientas de edición.
 if (new URLSearchParams(location.search).has("neto")) {
-
 	// modo pantalla completa
 	let fullScreen = document.querySelector("#fullScreen");
 	fullScreen?.addEventListener("click", () => {
@@ -301,23 +323,23 @@ if (new URLSearchParams(location.search).has("neto")) {
 	setTimeout(() => {
 		document.body.scrollTop = 0;
 		document.documentElement.scrollTop = 0;
-	}, 500)
+	}, 500);
 
 	setInterval(() => {
 		// body scroll Y = 0
 		document.body.scrollTop = 0;
-	}, 1000)
-}else{
+	}, 1000);
+} else {
 	installDevPanel();
 }
 function mostrarTutorial(select) {
-	let buttonActived = document.querySelector(".tab button.active")
-	buttonActived.click()
-    if(estado() !== "play") {
-        evento("s")
-    }
-    // mover el scroll de la pagina hasta el 0
-    window.scrollTo(0, 0);
+	let buttonActived = document.querySelector(".tab button.active");
+	buttonActived.click();
+	if (estado() !== "play") {
+		evento("s");
+	}
+	// mover el scroll de la pagina hasta el 0
+	window.scrollTo(0, 0);
 	let tutoriales = {
 		vidas: [
 			`
@@ -451,20 +473,20 @@ molino.interactuar(() => {
 })  
 `,
 		],
-        mensajes: [
-            `
-#### ¿Como hacer que el player o cualquier elemento diga algo?
+		mensajes: [
+			`
+#### ¿Como hacer que el player o cualquier elemento diga algo por 2 segundos?
 
 /code
-player().decir("hola")
+player().decir("hola", 2)
 `,
-`
+			`
 #### ¿Mensajes para guiar al jugador?
 /code
 ayuda("Este es un texto de ayuda")
 `,
-`
-#### Usando preguntar  
+			`
+#### Usando la funcion preguntar  
 preguntar( **actor** , **pregunta**, **respuestas** )
 
 - actor: sobre quien aparecera la pregunta
@@ -477,12 +499,19 @@ preguntar( **actor** , **pregunta**, **respuestas** )
 /code
 let respuesta = preguntar(player(),"¿Comida?", ["Si","No"])
 `,
-`
-#### Usando preguntar y el texto de la respuesta
+			`
+#### Usando un objeto para preguntar  
+Esta es una forma alternativa a usar la funcion preguntar
+
+/code
+let respuesta = player().preguntar("¿Comida?", ["Si","No"])
+`,
+			`
+#### El player presionara A cerca de la bola para interactuar, y se ejecutara la pregunta.
 escenaActiva().agregar(10,12,"bola").margenY(-30).escala(.8).solido()
 /code
     .interactuar(() => {
-        let respuesta = preguntar(player(),"¿Comida?", ["Si","No"])
+        let respuesta = player().preguntar("¿Comida?", ["Si","No"])
         if(respuesta.texto === 'Si'){
             player().decir("El metal no se come",2)
         }
@@ -490,11 +519,14 @@ escenaActiva().agregar(10,12,"bola").margenY(-30).escala(.8).solido()
     })
 
 `,
-`
-#### Usando preguntar y el indice de la respuesta
+			`
+#### Tal vez quieras utilizar la posicion(indice) de la respuesta en lugar del texto  
+
+0: Si  
+1: No  
+
 escenaActiva().agregar(10,12,"bola").margenY(-30).escala(.8).solido()  
-0:Si  
-1:No  
+
 /code
     .interactuar(() => {
         let respuesta = preguntar(player(),"¿Comida?", ["Si","No"])
@@ -503,17 +535,18 @@ escenaActiva().agregar(10,12,"bola").margenY(-30).escala(.8).solido()
         else player().cerrarDecir()
     })
 
-`
-        ],
-        pescar:[`
+`,
+		],
+		pescar: [
+			`
 #### ¿El player puede pescar?
 Necesitamos hacer 2 cosas
 
 - Importar las imagenes de la pescar
 - Crear la caña (siempre ponle id a la caña)
 - Crear el evento
-`,
-`
+		`,
+		`
 #### Importar las imagenes  
 Ve a escenas/global y pega este codigo, en pescar([ "**aqui agregas tus alias**" ])
 /code
@@ -526,62 +559,78 @@ escuchar("creado:player", () => {
     })
 })
 `,
-`
-#### Crear una caña
+			`
+#### Crear una caña, y un elemento tipo agua
 /code
 escenaActiva().agregar(10, 10, "caña", "caña-unica");
+escenaActiva().agregar(10, 12, "agua");
 `,
-`
+			`
 #### Pescando
 Una vez el player tenga una caña debera:
 - Abrir el inventario
 - Seleccionar la **caña**
 - Seleccionar **Usar**
-`
-        ],
-        paredes:[
-`
+`,
+		],
+		paredes: [
+			`
 #### Pared horizontal y vertical 
 - x,y : Coordenadas.  
-- tamaño : Cuantos espacios ocupa.  
+- largo : Cuantos espacios ocupa.  
 - Imagen: Alias de la imagen que usaremos para cada bloque de la pared.  
 **Ejemplos**  
-paredHorizontal( x , y , tamaño, imagen )
-paredVertical( x , y , tamaño, imagen )
+paredHorizontal( x , y , largo, imagen )
+paredVertical( x , y , largo, imagen )
 
 /code
 paredHorizontal(0,8,10, "muro")  
 `,
-`
-#### Pared horizontal con puerta
-En esta la pared horizontal el tamaño es 10, es decir, ocupan 10 bloques.  
-Agregaremos la puerta en el bloque 8 de la pared.  
-paredHorizontal(0,8,10, "muro")  
-/code
-    .puerta(8)
-    .interactuar((info) => info.elemento.usar())
-`,
-`
+			`
 #### Pared vertical con puerta
-En esta la pared vertical el tamaño es 10, es decir, ocupan 10 bloques.  
+En esta la pared vertical el largo es 10, es decir, ocupan 10 bloques.  
 Agregaremos la puerta en el bloque 8 de la pared, y ademas interactuar para que abra la puerta.  
 paredVertical(0,8,10, "muro")
 /code
     .puerta(4)
 `,
-`
+			`
+#### ¿Como agregar una puerta a una pared?
+En esta la pared horizontal el largo es 10, es decir, ocupan 10 bloques.  
+Agregaremos la puerta en el bloque 8 de la pared.  
+paredHorizontal(0,8,10, "muro")
+/code
+    .puerta(8)
+`,
+			`
+#### ¿Y si queremos que utilice una llave esa puerta?
+En esta la pared horizontal el largo es 10, es decir, ocupan 10 bloques.  
+Agregaremos la puerta en el bloque 8 de la pared.  
+
+- Creamos la llave con id "llave-patio" y hacemos que el player la pueda recoger  
+escenaActiva().agregar(0,8,"llave", **"llave-patio"**)
+
+- Usamos ese id de la llave para crear la puerta
+paredHorizontal(0,8,10, "muro")
+/code
+    .puerta(8)
+`,
+			`
 #### ¿Como hacer que la puerta use llave?  
-Usar la llave por id es util para cuando la llave estara en una escena y la puerta en otra
+Usar la llave por id es util para cuando la llave estara en una escena y la puerta en otra  
+
 1- Creamos la llave con id "llave-patio" y hacemos que el player la pueda recoger  
-escenaActiva().agregar(0,8,"llave", "llave-patio")  
-    .interactuar(({ elemento }) => player().inventario.guardar(elemento))
-2- Usamos ese id de la llave para crear la puerta  
+
+escenaActiva().agregar(0,8,"llave", "llave-patio").interactuar(({ elemento }) => player().inventario.guardar(elemento))  
+
+2- Usamos ese id de la llave para crear la puerta   
+
 paredVertical(0,8,10, "muro")  
 /code
-    .puerta(4, "llave-patio")
-`
-        ],
-        lago:[
+    .puerta(4).llave("llave-patio")
+`,
+		],
+		lago: [
 			`
 #### ¿Como podria hacer un lago con peces?
 - Creamos el agua donde se movera el pez
@@ -597,10 +646,10 @@ escenaActiva().agregar(6, 6, 'agua', { z: 0 }).transparencia(.8).expandir(4, 3).
 escenaActiva().agregar(7, 5, 'pez1', {z: -2}).escala(.4).aleatorio("agua").margenX(50)
 escenaActiva().agregar(7, 5, 'pez1', {z: -2}).escala(.4).aleatorio("agua").margenX(50)
 escenaActiva().agregar(7, 5, 'pez1', {z: -2}).escala(.4).aleatorio("agua").margenX(50)
-`
-        ],
+`,
+		],
 		inventario: [
-`
+			`
 #### ¿Como un objeto puede tener inventario?
 
 - Creamos un objeto con inventario y guardamos en la variable "cofre".  
@@ -610,7 +659,7 @@ let cofre = escenaActiva().agregar(1,3,"caja", { pausado:true }).solido().escala
 /code	
 .animar().usarInventario()
 `,
-`
+			`
 #### ¿Guardar en el inventario de un objeto?
 
 - Creamos una pocion
@@ -620,9 +669,9 @@ let pocion = escenaActiva().agregar(0,1,"pocion", "pocion-1").margenY(-50).escal
 
 /code
 cofre.inventario.guardar(pocion)
-`
+`,
 		],
-		inventario_opciones:[
+		inventario_opciones: [
 			`
 #### ¿Como crear la accion de "Usar" en el inventario?
 - Creamos una pocion
@@ -633,7 +682,7 @@ pocion.Usar = (con, objeto) => {
 	objeto.eliminar()	
 }
 `,
-`
+			`
 #### ¿Como asignar una accion a todos los objetos del mismo tipo?
 /code
 player().inventario.opciones('@pocion', {
@@ -643,7 +692,7 @@ player().inventario.opciones('@pocion', {
         }
     })
 `,
-`
+			`
 #### ¿Como usar objeto con el escenario?
 
 Solo pesca cuando usamos la caña frente a un bloque de agua
@@ -654,11 +703,10 @@ player().inventario.opciones('@caña', {
 			if(con.tipo === 'agua') pescar()
         }
     })
-`
-		]
-		,
+`,
+		],
 		proyectil: [
-`
+			`
 #### ¿El player lanza proyectil?  
 Impacto, **info** contiene datos del impacto:
 
@@ -677,7 +725,7 @@ player()
 		}
 	})
 `,
-`
+			`
 #### ¿El proyectil va recto o rápido?
 Por defecto **recto** avanza celda por celda. Con **modo:"dinamico"** ignora las celdas, vuela en línea recta hasta **distancia** y recién ahí dispara impacto/colisión como si entrara moviéndose normal
 
@@ -693,7 +741,7 @@ player()
 		}
 	})
 `,
-`
+			`
 #### ¿Como acomodar el proyectil?
 Tal vez, lo que lanzamos no se ve correctamente  
 
@@ -715,7 +763,7 @@ player()
 		}
 	})
 `,
-`
+			`
 #### ¿Un enemigo lanza proyectil?  
 **Si no agregaste .animar() no funcionará lanzar()**  
 Haremos que si el proyectil golpea al player resta una vida  
@@ -731,7 +779,7 @@ let mago = escenaActiva().agregar(9,9,"mago", {pausado:true, repetir:true})
             }
         })
 `,
-`
+			`
 #### El enemigo ya sabe lanzar un proyectil, pero...
 El player lanza presionando una tecla, pero queremos que el enemigo sea automatico, para lo que utilizaremos visión
 
@@ -741,11 +789,10 @@ El player lanza presionando una tecla, pero queremos que el enemigo sea automati
 vision( selector , accion )
 /code
 .vision("player", (info) => mago.disparar() )
-`
-
+`,
 		],
 		perseguir: [
-`
+			`
 #### ¿Como perseguir al player?
 
 - **selector**: el objeto que escucharemos, puedes poner id o @tipo
@@ -757,7 +804,7 @@ let lobo = escenaActiva().agregar(9,9,"lobo", {pausado:true, repetir:true})
 .vision("player", (info) => lobo.seguir() )
 `,
 
-`
+			`
 #### ¿Que hacer cuando alcance al player?
 **info.con: ** el objeto que fue golpeado.
 **info.objeto: ** quien persigue.  
@@ -770,7 +817,8 @@ lobo.seguir({
 			player().perderVida()
 	}
 })
-`,`
+`,
+			`
 #### ¿Y si queremos que el lobo empiece a perseguir solo cuando vea al player?
 
 - vision( selector , accion )  
@@ -783,11 +831,48 @@ let lobo = escenaActiva().agregar(9,9,"lobo", {pausado:true, repetir:true})
 	lobo.seguir()
 })
 `,
+		],
+		suelo: [
+			`
+### Agregar un piso/suelo
 
+Simplemente poner una imagen
+
+	/code
+	cambiarPiso("imagen")
+`,
+`
+### Tal vez la imagen es pequeña y queremos que se repita, para eso usaremos un porcentaje
+
+50% hara que la imagen se repita 2 veces por ejemplo
+
+	/code
+	cambiarPiso("imagen", 50)
+`
+		],
+		fondo: [
+			`
+### Agregar un fondo
+		
+	/code
+	cambiarFondo("imagen")
+`,
+`
+### Alto y posicion se pueden modificar
+
+	/code
+	cambiarFondo("imagen", { alto: 40, y: 30 })
+`
+		],
+		piso: [
+			`
+### Agregar un elemento como piso
+			
+	/code
+	escenaActiva().agregar(2,2,"imagen").piso()`
 		],
 	};
 	if (tutoriales.hasOwnProperty(select)) {
 		relatar(tutoriales[select]);
 	}
 }
-

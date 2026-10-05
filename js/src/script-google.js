@@ -1,6 +1,9 @@
 var GAS_URL =
 	"https://script.google.com/macros/s/AKfycbxK10HxoTZ9ftkAVopuPUJWqediU6tVJ3o6H0xojPBl9yks6ikWjG_7MH0shSfckONyBQ/exec";
 
+
+var domainMedias = "https://api.github.com/repos/learfen/learfen.github.io/contents/games/images";
+
 async function $fetch(url, options) {
 	if (url.search("/api") === -1) {
 		return fetch(url, options);
@@ -70,8 +73,7 @@ async function getImagesFromGithub() {
 			resolve(JSON.parse(localStorage.getItem("images")));
 		});
 	}
-	const url =
-		"https://api.github.com/repos/learfen/learfen.github.io/contents/games/images";
+	const url = domainMedias;
 
 	const options = {
 		method: "get",

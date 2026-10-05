@@ -27,6 +27,33 @@ class PhysicsEngine {
     const esIgnorable = (o) => ignorarTipo && o.tipo === ignorarTipo;
     const colisiones = scene.elementos.filter(o => o.id !== obj.id && !esIgnorable(o) && this.haySolapamiento(obj, o, targetX, targetY, targetZ));
 
+    // moverRequiere: solo se mueve si al destino tiene debajo algo que
+    // coincida con el selector (@tipo o id). vacio/null/false = sin requisito.
+    // el apoyo es lo que este inmediatamente debajo: su tope superior debe
+    // caer justo en la base del que se mueve (piso con h=1 bajo un actor en
+    // z+1 -> el actor pisa el piso; si el piso quedara dos capas mas abajo
+    // seria otra superficie y el actor estaria flotando)
+    const requisitos = obj.propiedades("moverRequiere") || [];
+    if (requisitos.length > 0) {
+      const base = targetZ;
+      const apoyo = scene.elementos.some((o) => {
+        if (o.id === obj.id || esIgnorable(o)) return false;
+        // "@piso" matchea el tipo "piso" y tambien a lo marcado con
+        // .piso(), que deja tipo = alias de imagen ("piso2", "teja", ...)
+        const matchea = requisitos.some((sel) => {
+          if (!sel.startsWith("@")) return o.id === sel;
+          const t = sel.slice(1);
+          return o.tipo === t || (t === "piso" && o.propiedades("piso"));
+        });
+        if (!matchea) return false;
+        // solapa en planta y su techo queda justo bajo los pies
+        if (!(targetX < o.x + o.w && targetX + obj.w > o.x &&
+              targetY < o.y + o.d && targetY + obj.d > o.y)) return false;
+        return o.z + o.h === base;
+      });
+      if (!apoyo) return false;
+    }
+
     colisiones.filter(o => !o.propiedades("solido")).forEach(con => {
       evento("colision", { objeto: obj, quien:obj, con });
     });
@@ -94,6 +121,7 @@ class PhysicsEngine {
       elem.x = ex; elem.y = ey; elem.z = ez;
       scene.actualizarTransformNodo(elem);
       window.neto?.cambiar?.(elem);
+      this.caer(elem); // empujado fuera del piso: cae hasta el apoyo de abajo
     }
 
     obj.x = targetX; obj.y = targetY; obj.z = targetZ;
@@ -103,6 +131,32 @@ class PhysicsEngine {
     evento("mover", obj)
     evento("mover:"+obj.id, { origen: () => obj, x: obj.x, y: obj.y, z: obj.z});
     return true;
+  }
+
+  // Que algo lo frene al caer: lo solido y lo marcado .piso() (que no es
+  // solido pero igual es suelo). Un plano suelto no aguanta a nadie.
+  frenaLaCaida(a, targetZ) {
+    return window.sceneManager.elementos.some(
+      (o) =>
+        o.id !== a.id &&
+        (o.propiedades("solido") || o.propiedades("piso")) &&
+        this.haySolapamiento(a, o, a.x, a.y, targetZ),
+    );
+  }
+
+  // Un objeto empujado puede quedar sin piso debajo. Cae capa por capa
+  // (un evento "mover" por capa, para que los demas lo vean bajar) hasta
+  // el primer apoyo, con z=0 como fondo: nunca se hunde mas alla.
+  caer(a) {
+    if (a.enElAire) return;
+    const scene = window.sceneManager;
+    while (a.z > 0 && !this.frenaLaCaida(a, a.z - 1)) {
+      a.z--;
+      scene.actualizarTransformNodo(a);
+      window.neto?.cambiar?.(a);
+      evento("mover", a);
+      evento("mover:" + a.id, { origen: () => a, x: a.x, y: a.y, z: a.z });
+    }
   }
 
   // Arrastra hacia el jugador los sólidos que quedan detrás del movimiento.
@@ -182,6 +236,7 @@ class PhysicsEngine {
         c.x += dx; c.y += dy; c.z += dz;
         scene.actualizarTransformNodo(c);
         window.neto?.cambiar?.(c);
+        this.caer(c); // arrastrado/empujado fuera del piso: cae al apoyo de abajo
       }
     };
     retroceder(empujando);
@@ -198,7 +253,7 @@ class PhysicsEngine {
 
 escuchar("colision", ({ objeto, con }) => {
   if (con?.interaccion && objeto.esPlayer) {
-    ayuda("Presiona A/Usar para interactuar." + (con?.interactuarTexto ? ("\n<b>"+con?.interactuarTexto) : "</b>" ) );
+    ayuda("Presiona A/Usar para interactuar." + (con?.interactuarTexto ? ("<br><b>"+con?.interactuarTexto) : "</b>" ) );
   }
 }, "play");
 
