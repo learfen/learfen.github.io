@@ -5,7 +5,7 @@
 	<meta charset="UTF-8">
 	<title>Gamemaker 2.0</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-	<link rel="stylesheet" href="styles.css?d=16-14-01-10-2026">
+	<link rel="stylesheet" href="styles.css?d=04-10-26-06-20-2026">
 </head>
 
 <body>
@@ -124,25 +124,33 @@
 
 	<div id="toast-container" class="fixed top-0 end-0 z-[1000]"></div>
 
-  <script src="/js/src/script-google.js?d=21-06-01-10-2026"></script>
-	<script src="/js/marked.umd.js?d=21-06-01-10-2026"></script>
-	<script src="/js/gif.lib.js?d=21-06-01-10-2026"></script>
-	<script src="/js/gif.frames.js?d=21-06-01-10-2026"></script>
-	<script src="/js/src/object-helper.js?d=21-06-01-10-2026"></script>
-	<script src="/js/src/events.js?d=21-06-01-10-2026"></script>
-	<script src="/js/src/scene.js?d=21-06-01-10-2026"></script>
-	<script src="/js/src/physics.js?d=21-06-01-10-2026"></script>
-	<script src="/js/src/character.js?d=21-06-01-10-2026"></script>
-	<script src="/js/src/inventory.js?d=21-06-01-10-2026"></script>
-	<script src="/js/procedural.js?d=21-06-01-10-2026"></script>
-	<script src="/js/src/main.js?d=21-06-01-10-2026"></script>
-	<script src="/js/src/neto.js?d=21-06-01-10-2026"></script>
-	<script src="/js/src/dev.js?d=21-06-01-10-2026"></script>
-	<script src="/js/loader.min.js?d=21-06-01-10-2026"></script>
+  <script src="/js/src/script-google.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/marked.umd.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/gif.lib.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/gif.frames.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/object-helper.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/events.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/scene.js?d=05-10-26-06-20-2026"></script>
+	<script src="/js/src/physics.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/character.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/inventory.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/procedural.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/main.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/neto.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/dev.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/loader.min.js?d=04-10-26-06-20-2026"></script>
 	<script>
 
-		function logout() {
-			localStorage.clear()
+		async function logout() {
+			localStorage.clear();
+			sessionStorage.clear();
+			// localStorage.clear() NO toca el Cache Storage: la cache "imagenes-v1"
+			// de main.js seguia viva con los blobs de las escenas al cerrar sesion.
+			try {
+				if (window.caches) for (const nombre of await caches.keys()) await caches.delete(nombre);
+			} catch (error) {
+				console.warn("No se pudo limpiar el cache de imagenes", error);
+			}
 			// limpiar las cookies
 			document.cookie.split(";").forEach(function (c) { document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); });
 			location.href = "/login.html"
@@ -248,8 +256,12 @@
 			const imagenesImportadasCodigo = [...codigo.matchAll(/usarImagen\(\s*"([^"]+)"/g)].map(m => m[1]);
 			// un alias base es valido si existe importado tal cual o con variantes
 			// direccionales ("lobo" existe si se importaron lobo-abajo/derecha/...)
+			// ponytail: el codigo es la fuente de verdad. sin el match exacto aqui,
+			// insertar usarImagen() no saca el error: imagenesImportadas es el
+			// registro en runtime y va con retraso, asi que daba falso positivo.
 			const existeImagen = (key) =>
 				imagenesImportadas.hasOwnProperty(key) ||
+				imagenesImportadasCodigo.includes(key) ||
 				imagenesImportadasCodigo.some(k => k.startsWith(key + "-"));
 			for (let key of imagenesUsadasCodigo) {
 				if (!existeImagen(key)) {
