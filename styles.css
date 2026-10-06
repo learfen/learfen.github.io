@@ -356,10 +356,11 @@
 
 * {
 	box-sizing: border-box;
+}
+body,html,p {
 	margin: 0;
 	padding: 0;
 }
-
 body {
 	font-family:
 		system-ui,
@@ -470,18 +471,23 @@ h1 {
 	/* width */
 	.w-100{
 		width: 100%;
+		max-width: 100%;
 	}
 	.w-full{
 		width: 100%;
+		max-width: 100%;
 	}
 	.w-50{
-		width: 50%;
+		width: 48%;
+		max-width: 48%;
 	}
 	.w-33{
-		width: 33.333333%;
+		width: 31.333333%;
+		max-width: 31.333333%;
 	}
 	.w-25{
-		width: 25%;
+		width: 23%;
+		max-width: 23%;
 	}
 	.h-full{
 		height: 100%;
@@ -1292,8 +1298,10 @@ h1 {
 	transform-style: preserve-3d;
 	/* ponytail: solo transform se interpola. Animar perspective/perspective-origin
 	   (propiedades separadas) hace que Blink reproyecte y reconstruya el árbol de
-	   capas en cada frame → celdas negras al moverte en Chrome/Edge. */
-	transition: transform 1s linear;
+	   capas en cada frame → celdas negras al moverte en Chrome/Edge.
+	   0.3s = lo que tarda .block.player en su paso: si la camara tardara mas
+	   (1s) el bloque llegaria antes y se arrastraria sobre el piso. */
+	transition: transform 0.3s linear;
 	will-change: transform;
 	perspective: 640px;
 	perspective-origin: 50% 50%;
@@ -1554,6 +1562,7 @@ respeta la entrada suave definida por transition del .block
 	color: #e5e5e5;
 	font-size: 12px;
 	cursor: pointer;
+	box-sizing: border-box;
 }
 .btn:hover {
 	background: #2a2a2a;
@@ -1879,7 +1888,7 @@ respeta la entrada suave definida por transition del .block
 	text-align: center;
 	background-size: cover;
 	font-size: 14px;
-	position: fixed;
+	position: absolute;
 	transform: none;
 	z-index: 2147483647;
 	pointer-events: none;
@@ -2278,4 +2287,36 @@ body:has(#dev-panel) {
     background-color: rgba(255, 255, 255, 0.5);
     text-shadow: 2px 2px 2px black;
   }
+}
+
+
+
+/* LOADER DE IMAGENES: oculta la escena hasta que todos los sprites (incluidas
+   las variantes de direccion) terminan de descargarse */
+.asset-loader {
+	position: absolute;
+	top:50px;
+	inset: 0;
+	z-index: 1;
+	background: rgba(0, 0, 0, 0.85);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.asset-loader-box {
+	text-align: center;
+	color: #fff;
+	font-family: sans-serif;
+}
+.asset-loader-spinner {
+	width: 48px;
+	height: 48px;
+	margin: 0 auto 12px;
+	border: 5px solid rgba(255, 255, 255, 0.2);
+	border-top-color: #4fc3f7;
+	border-radius: 50%;
+	animation: asset-loader-spin 0.8s linear infinite;
+}
+@keyframes asset-loader-spin {
+	to { transform: rotate(360deg); }
 }
