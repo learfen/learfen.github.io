@@ -52,7 +52,7 @@ const panel = `
             <button class="btn" onclick="setZoom(1.0)">Zoom 1.0x</button>
         </div>
         
-        <div class="btn-row panel bg-gray-800 px-2 py-3 flex flex-wrap" style="min-width: 60vw;overflow-y:auto;max-height:80vh" id="tutoriales" name="tutoriales">
+        <div class="btn-row panel bg-gray-800 px-2 py-3 flex flex-wrap" style="max-width: 60vw;overflow-y:auto;max-height:80vh" id="tutoriales" name="tutoriales">
 			<h4 class="w-full">Actores</h4>
             <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('vidas');">Vidas</button>
             <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('colision');">Colision</button>
