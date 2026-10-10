@@ -1253,6 +1253,91 @@ function animar(obj) {
 			}
 		});
 	};
+	obj.en = (selector) => {
+		if(typeof selector === 'string'){
+			let items = escenaActiva().buscar(selector)
+			for(let item of items){
+				if(item.x === obj.x && item.y === obj.y && item.z === obj.z){
+					return true
+				}
+				// evaluamos cuando el objeto fue expandido o es un piso
+				for(let k = 0; k < item.d; k++){
+					for(let i = 0; i < item.w; i++){
+						for(let j = 0; j < item.h; j++){
+							if(item.x + i === obj.x && item.y + j === obj.y && item.z + k === obj.z){
+								return true
+							}			
+						}
+					}
+				}
+			}
+		}
+		if(item.x === obj.x && item.y === obj.y && item.z === obj.z){
+			return true
+		}
+		// evaluamos cuando el objeto fue expandido o es un piso
+		for(let k = 0; k < item.d; k++){
+			for(let i = 0; i < item.w; i++){
+				for(let j = 0; j < item.h; j++){
+					if(item.x + i === obj.x && item.y + j === obj.y && item.z + k === obj.z){
+						return true
+					}			
+				}
+			}
+		}
+	}
+	obj.adelante = (pos) => {
+		let vista = obj.mirando()
+		let { x, y, z } = obj
+		if (vista == "arriba") y = obj.y - 1;
+		if (vista == "abajo") y = obj.y + 1;
+		if (vista == "derecha") x = obj.x + 1;
+		if (vista == "izquierda") x = obj.x - 1;
+		if(pos) {
+			return (pos.x === x && pos.y === y && pos.z === z)
+		}
+		return { x, y, z }
+	}
+	obj.agregarAdelante = (imagen, props) => {
+		let { x , y , z } = obj.adelante()
+		return escenaActiva().agregar(x, y, imagen, {z, ...props})
+	}
+	obj.clonarEn = (x,y,z) => {
+		if(z === undefined) z=obj.z
+		// exportar() reutiliza los objetos anidados de propiedades: el 2º JSON lo
+		// despega para que el clon no comparta NADA con el original
+		const cfg = JSON.parse(JSON.stringify(obj.exportar()))
+		// identidad/runtime que no se heredan: id (crearId genera uno nuevo),
+		// esPlayer (clonaria el jugador) y estado de vuelo/salto/inventario
+		for (const k of [
+			"id", "esPlayer", "installed", "positionPrev", "destruible",
+			"enElAire", "ocupado", "deslizando", "moviendose", "ultimaPosicionVista",
+			"guardado", "guardado-en", "refInventario",
+		]) delete cfg[k]
+		cfg.z = z
+		// orientacion: exportar() pisa la real con la de propiedades (default "abajo")
+		if (obj.orientacion) cfg.orientacion = obj.orientacion
+		// pausado/repetir del gif viven en el config original, no en exportar()
+		const gif = obj.media?.config
+		if (gif) {
+			if ("pausado" in gif) cfg.pausado = gif.pausado
+			if ("repetir" in gif) cfg.repetir = gif.repetir
+		}
+		const clon = escenaActiva().agregar(x, y, obj.imagenAlias, cfg)
+		// efectos visuales que crearObjeto no reaplica (mismo listado que neto.crearRemoto)
+		for (const k of ["margenX", "margenY", "redondear", "rotarX", "rotarY", "rotarZ", "transparencia"]) {
+			const v = clon.propiedades(k)
+			if (v !== undefined) clon[k](v)
+		}
+		// piso: propiedades.piso no llega por config (es default) y hay que
+		// re-hundir el z-index del nodo, o el clon tapa a quien lo pisa
+		if (obj.propiedades("piso")) clon.piso(clon.w, clon.d)
+		if (clon.propiedades("visible") === false) clon.ocultar()
+		// la etiqueta (corazones de vidas, etc.) solo esta en los datos
+		if (clon.propiedades("estado-visual")) clon.info({}, "label")
+		clon.animar()
+		return clon
+	}
 	obj.visionRecta = function (selector, action, distancia) {
 		if (!distancia) distancia = 2;
 		obj.visionConfig = { selector, distancia, tipo: "recta" };

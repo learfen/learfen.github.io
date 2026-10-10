@@ -328,8 +328,13 @@ function habitacionOculta(x, y, w, h, key, imagen) {
 	// podemos personalizar el texto que aparece
 	puerta.interactuar(async () => {
 		if (puerta.cerrada) {
-			if (player().items.find((item) => item.id == key)) {
-				return decir("Creo que tengo la llave",3);
+			// player().items no existe (array vacio); el inventario real vive en
+			// player().propiedades("items") como usa crearPuerta. Y al encontrar
+			// la llave hay que desbloquear: antes solo se hablaba y nunca abria.
+			if (player().propiedades("items").find((item) => item.id == key)) {
+				puerta.cerrada = false;
+				decir("Creo que tengo la llave",3);
+				await esperar(1);
 			} else {
 				return decir("Necesitas una llave",3);
 			}

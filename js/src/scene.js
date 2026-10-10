@@ -205,12 +205,84 @@ class SceneManager {
 		const translateX = vpWidth / 2 - px;
 		const translateY = vpHeight / 2 - proyectadoY;
 		let x = translateX - 50
-		if(x > 0) x = -10
-		if(x < -790) x = -790
 		let y = translateY
-		if(y < -754) y = -750
+		// recortar a que la malla siga cubriendo el visor, no a numeros fijos:
+		// los fijos cortaban el scroll antes de llegar a la ultima fila ni a
+		// las columnas 0/19
+		const b = this.limitesMalla();
+		x = Math.min(Math.max(x, b.xMin), b.xMax);
+		y = Math.min(Math.max(y, b.yMin), b.yMax);
 		this.gridWrap.style.transform = `scale(${this.zoom}) translate3d(${x}px, ${y}px, 0px)`;
 		this.actualizarOclusion();
+	}
+
+	// Rango de translate en el que la malla proyectada sigue cubriendo el
+	// visor (sus bordes caen justo dentro: ni se recorta ni se ve vacio).
+	// La malla se desplaza rigida con el translate, asi que (malla - wrap) no
+	// cambia ni en medio de la transicion: se mide una vez y se cachea por
+	// tamano de visor + zoom. Si la malla quedara mas chica que el visor
+	// (xMin > xMax) el clamp la fija al borde, que es lo esperado.
+	limitesMalla() {
+		const gw = this.gridWrap;
+		const vp = this.cameraViewport.getBoundingClientRect();
+		const clave = `${Math.round(vp.width)}x${Math.round(vp.height)}|${this.zoom}`;
+		if (this._limClave !== clave) {
+			const g = this.grid.getBoundingClientRect();
+			const w = gw.getBoundingClientRect();
+			// escala con la que esta renderizada AHORA la malla: puede ser la
+			// anterior si this.zoom acaba de cambiar, y sin dividir por ella la
+			// medida sale mal
+			const cs = getComputedStyle(gw).transform;
+			const m = cs && cs !== "none" ? new DOMMatrixReadOnly(cs) : new DOMMatrixReadOnly();
+			const zx = m.a || 1, zy = m.d || 1;
+			const z = this.zoom;
+			// geometria propia de la malla, ajena al transform del wrap
+			const qx = (g.left - w.left) / zx;
+			const qy = (g.top - w.top) / zy;
+			const wL = g.width / zx;
+			const hL = g.height / zy;
+			const ox = gw.offsetWidth / 2, oy = gw.offsetHeight / 2;
+			// la malla en pantalla para un translate t es: a + z*t
+			const ax = vp.left + gw.offsetLeft + (1 - z) * ox + z * qx;
+			const ay = vp.top + gw.offsetTop + (1 - z) * oy + z * qy;
+			// cuanto suben las paredes de fondo por encima del borde superior
+			// de la malla (unidades locales, ya sin la escala renderizada)
+			let subidaPared = 0;
+			for (const pared of this.grid.querySelectorAll(".fondo-pared")) {
+				const r = pared.getBoundingClientRect();
+				if (r.height > 0) subidaPared = Math.max(subidaPared, (g.top - r.top) / zy);
+			}
+			this._limBase = {
+				xMin: (vp.right - ax - wL * z) / z,
+				xMax: (vp.left - ax) / z,
+				yMin: (vp.bottom - ay - hL * z) / z,
+				yMax: (vp.top - ay) / z,
+				hL,
+				subidaPared,
+			};
+			this._limClave = clave;
+		}
+		const b = this._limBase;
+		// contenido elevado que sobresale del plano (paredes + objetos con z>0
+		// en las filas traseras): la camara puede subir mas alla del borde
+		// superior para mostrarlo. hL = altura proyectada de la malla; cada z
+		// de alto sube z/1200 de esa altura. Solo las filas traseras cuentan:
+		// un objeto alto al frente no llega al borde superior y solo abriria
+		// vacio.
+		let maxZTrasero = 0;
+		for (const e of this.elementos) {
+			if (e.y > 2) continue;
+			const alto = (e.z || 0) + (e.h || 1);
+			if (alto > maxZTrasero) maxZTrasero = alto;
+		}
+		const subida = Math.max(b.subidaPared, (b.hL * maxZTrasero * 40) / 1200);
+		this._lim = {
+			xMin: b.xMin,
+			xMax: b.xMax,
+			yMin: b.yMin,
+			yMax: b.yMax + subida,
+		};
+		return this._lim;
 	}
 
 	actualizarOclusion() {
@@ -2006,9 +2078,10 @@ function resetJuego() {
 	saltarGuardadoAlSalir = true;
 	// congela las escrituras: el juego en marcha no re-crea "datos" antes del reload
 	saltarEscribirMemoria = true;
-	localStorage.removeItem("datos");
 	// la escena vive en el backend por sala: sin esto el reload revive el estado viejo
 	if (window.red) red("ws:reset");
+	localStorage.removeItem("datos");
+	location.reload();
 	fetch("/api/refresh")
 		.then((r) => {
 			if (r.ok) {
@@ -2699,10 +2772,10 @@ let listeners = {
 }
 function mostrar(variable, position) {
 	if (!barInfo) {
-		barInfo = document.querySelector("#bar-info");
+		barInfo = document.querySelector("#barInfo");
 		if(!barInfo) {
 			barInfo = document.createElement("div");
-			barInfo.id = "bar-info";
+			barInfo.id = "barInfo";
 			document.body.appendChild(barInfo);
 		}
 		return setTimeout(() => mostrar(variable, position), 500);

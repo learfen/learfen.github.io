@@ -63,7 +63,9 @@ const panel = `
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('proyectil');">Disparar</button>
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('perseguir');">Seguir</button>
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('teletransportar');">Teletransportar</button>
+			<!--
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('caer');">Caer/cambiar de nivel</button>
+			-->
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('posicionamiento');">Comprobar posición</button>
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('pintar');">Cambiar imagen</button>
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('animaciones');">Animaciones</button>
@@ -71,6 +73,9 @@ const panel = `
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('objetos');">Objetos</button>
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('bloques');">Bloques</button>
 			
+			<h4 class="w-full">Controles</h4>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('repetir');">Repetir/contar</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('eventos');">Eventos</button>
 			
 			<h4 class="w-full">Escenarios</h4>
             <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('paredes');">Paredes</button>
@@ -499,19 +504,12 @@ preguntar( **actor** , **pregunta**, **respuestas** )
 /code
 let respuesta = preguntar(player(),"¿Comida?", ["Si","No"])
 `,
-			`
-#### Usando un objeto para preguntar  
-Esta es una forma alternativa a usar la funcion preguntar
-
-/code
-let respuesta = player().preguntar("¿Comida?", ["Si","No"])
-`,
-			`
+`
 #### El player presionara A cerca de la bola para interactuar, y se ejecutara la pregunta.
 escenaActiva().agregar(10,12,"bola").margenY(-30).escala(.8).solido()
 /code
     .interactuar(() => {
-        let respuesta = player().preguntar("¿Comida?", ["Si","No"])
+        let respuesta = preguntar(player(),"¿Comida?", ["Si","No"])
         if(respuesta.texto === 'Si'){
             player().decir("El metal no se come",2)
         }
@@ -832,6 +830,81 @@ let lobo = escenaActiva().agregar(9,9,"lobo", {pausado:true, repetir:true})
 })
 `,
 		],
+		teletransportar: [
+			`
+#### Teletransportar elemento o el player
+teletransportar(el, x, y, z)
+
+- **el**: el objeto que se movera
+- **x**: la posicion en x
+- **y**: la posicion en y
+- **z**: la posicion en z
+
+player()
+/code
+teletransportar(player(), 5, 5, 5)
+`
+		],
+		caer: [
+			`
+#### Caer un piso
+El player solo puede caer solo mientras z > 0, es decir, cae hacia z = 0
+`
+		],
+		posicionamiento: [
+`
+#### Saber las coordenadas de un objeto
+
+const casa = escenaActiva().agregar(2,2,"casa")
+
+let posicionDeCasa = {
+	x: casa.x,
+	y: casa.y,
+	z: casa.z
+}
+`,
+`
+#### Podemos saber si un objeto esta dentro de un objeto o en una celda especifica
+
+.en( selector )  // true o false
+
+Selectores  
+
+- **@tipo**: @agua
+- **id**: rio
+- **{x,y,z}**: {x: 5, y: 5, z: 5} o un objeto
+
+
+/code
+escuchar("mover:player", () => {
+	if(player().en("@arbusto")){
+		player().decir("estoy en el arbusto", 5)
+	}
+})
+
+`,
+`
+#### Saber las coordenadas de un objeto
+
+Podemos obtener las coordenadas delante del player (hacia donde esta mirando).
+
+let posicion = player().adelante() // { x, y , z }
+
+`
+,
+`
+#### Insertar frente al objeto
+
+Podemos agregar delante del player (hacia donde esta mirando).
+
+let posicion = player().agregarAdelante( imagen , propiedades ) // { x, y , z }
+
+`
+,
+`
+#### Saber las coordenadas de un objeto
+`
+		],
 		suelo: [
 			`
 ### Agregar un piso/suelo
@@ -870,6 +943,57 @@ Simplemente poner una imagen
 			
 	/code
 	escenaActiva().agregar(2,2,"imagen").piso()`
+		],
+		repetir: [
+			`
+### ¿Como crear una repeticion?
+
+**Advertencia no uses este codigo porque no se detendra nunca.**
+
+	let contador = 0
+	repeticion(() => {
+		contador = contador + 1
+	})
+`,
+			`
+### ¿Como detener una repeticion?
+
+Obtenemos un objeto repetición con la accion para detener.
+
+/code
+let contador = 0
+let repeticion = repeticion((repeticion) => {
+	contador = contador + 1
+	player().decir("repeticion "+contador, 5)
+
+	if(contador == 2) repeticion.detener()
+
+})
+`,
+`
+### ¿Como repetir una cantidad de veces especificas?
+
+.veces(cantidad)
+
+/code
+let contador = 0
+let repeticion = repeticion((repeticion) => {
+	contador = contador + 1
+	player().decir("repeticion "+contador, 5)
+}).veces(2)
+
+`,
+`
+### ¿Como repetir cada x segundos?
+
+.cada(segundos)
+
+/code
+repetir((repeticion) => {
+	player().decir("repeticion", 1)
+}).cada(2)
+
+`
 		],
 	};
 	if (tutoriales.hasOwnProperty(select)) {
