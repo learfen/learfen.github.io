@@ -1184,6 +1184,7 @@ function animar(obj) {
 							obj.ultimaPosicionVista = { x: info.x, y: info.y, z: info.z };
 							return action({
 								origen: obj,
+								elemento:obj,
 								objeto: undefined,
 								x: rango.x,
 								y: rango.y,
@@ -1239,6 +1240,7 @@ function animar(obj) {
 						obj.ultimaPosicionVista = { x: info.x, y: info.y, z: info.z };
 						return action({
 							origen: obj,
+							elemento:obj,
 							objeto: undefined,
 							x: rango.x,
 							y: rango.y,
@@ -1253,7 +1255,12 @@ function animar(obj) {
 			}
 		});
 	};
-	obj.en = (selector) => {
+	obj.en = (selector,y,z) => {
+		if(y){
+			let x = selector
+			z = z || obj.z
+			return (obj.x == x && obj.y == y && obj.z == z)
+		}
 		if(typeof selector === 'string'){
 			let items = escenaActiva().buscar(selector)
 			for(let item of items){
@@ -1271,9 +1278,6 @@ function animar(obj) {
 					}
 				}
 			}
-		}
-		if(item.x === obj.x && item.y === obj.y && item.z === obj.z){
-			return true
 		}
 		// evaluamos cuando el objeto fue expandido o es un piso
 		for(let k = 0; k < item.d; k++){
@@ -1325,7 +1329,7 @@ function animar(obj) {
 		}
 		const clon = escenaActiva().agregar(x, y, obj.imagenAlias, cfg)
 		// efectos visuales que crearObjeto no reaplica (mismo listado que neto.crearRemoto)
-		for (const k of ["margenX", "margenY", "redondear", "rotarX", "rotarY", "rotarZ", "transparencia"]) {
+		for (const k of ["margenX", "margenY", "px", "redondear", "rotarX", "rotarY", "rotarZ", "transparencia"]) {
 			const v = clon.propiedades(k)
 			if (v !== undefined) clon[k](v)
 		}
@@ -1404,7 +1408,7 @@ function animar(obj) {
 		);
 		return obj;
 	};
-	obj.mirandoObjeto = function () {
+	obj.mirandoUnObjeto = function (selector) {
 		const dirMap = {
 			arriba: { dx: 0, dy: -1 },
 			abajo: { dx: 0, dy: 1 },
@@ -1415,7 +1419,7 @@ function animar(obj) {
 		const targetX = this.x + dir.dx;
 		const targetY = this.y + dir.dy;
 
-		return window.sceneManager.elementos.filter(
+		let res =  window.sceneManager.elementos.filter(
 			(o) =>
 				o.id !== this.id &&
 				window.physicsEngine.haySolapamiento(
@@ -1426,6 +1430,47 @@ function animar(obj) {
 					this.z,
 				),
 		);
+		if(selector){
+			if(selector.startsWith("@")) {
+				selector = selector.slice(1)
+				res = res.filter((o) =>o.tipo === selector)
+			} else 
+				res = res.filter((o) => o.id === selector)
+		}
+		if(res.length > 0 )
+			return res[0]
+		return {}
+	};
+	obj.mirandoObjeto = function (selector) {
+		const dirMap = {
+			arriba: { dx: 0, dy: -1 },
+			abajo: { dx: 0, dy: 1 },
+			izquierda: { dx: -1, dy: 0 },
+			derecha: { dx: 1, dy: 0 },
+		};
+		const dir = dirMap[this.orientacion] || { dx: 0, dy: 0 };
+		const targetX = this.x + dir.dx;
+		const targetY = this.y + dir.dy;
+
+		let res =  window.sceneManager.elementos.filter(
+			(o) =>
+				o.id !== this.id &&
+				window.physicsEngine.haySolapamiento(
+					this,
+					o,
+					targetX,
+					targetY,
+					this.z,
+				),
+		);
+		if(selector){
+			if(selector.startsWith("@")) {
+				selector = selector.slice(1)
+				res = res.some((o) =>o.tipo == selector)
+			} else 
+				res = res.some((o) => o.id == selector)
+		}
+		return res
 	};
 
 	obj.dejarDeSeguir = () => {

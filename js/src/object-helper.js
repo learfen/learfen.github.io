@@ -1,7 +1,9 @@
-function crearPuerta(x, y, z, key, imagenAlias, vertical) {
-    imagenAlias = imagenAlias || "puerta";
+function crearPuerta(x, y, z, key, config) {
+	let imagenAlias = config?.imagen || "puerta";
+	let vertical = config?.vertical || false;
 	if (!z) z = 0;
 	let puerta = escenaActiva().agregar(x, y, imagenAlias, undefined, {
+		...config,
 		z,
 		w: 1,
 		h: vertical ? 3 : 2,
@@ -9,9 +11,11 @@ function crearPuerta(x, y, z, key, imagenAlias, vertical) {
 		solido: true,
 		tipo: "puerta",
 		cubo: false,
+		repetir:false,
+		pausado:true
 	}).solido().animar()
-	puerta.pintar(imagenAlias);
-	puerta.nodo.querySelector("img").style.translate = "5px -20px";
+	//puerta.pintar(imagenAlias);
+	let gif = puerta.media.objeto.tagName !== "IMG" ;
 	//bloque.interactuar(() => {
 	puerta.animationOpen = false;
 	puerta.vertical = !!vertical;
@@ -22,12 +26,16 @@ function crearPuerta(x, y, z, key, imagenAlias, vertical) {
 		puerta.propiedades("abierta", false);
 		puerta.propiedades("llave", keyId);
 	}
-	puerta.media.objeto.parentNode.style.transition =
-		"transform 0.5s ease-in-out";
-	puerta.media.objeto.parentNode.style.transformOrigin = "left";
-	puerta.media.objeto.parentNode.style.transform = vertical
-		? "translate(-50%, -60%) rotateY(90deg) translateZ(calc(var(--w) * 32px / 2))"
-		: "translate(-50%, -60%) rotateX(-90deg) translateZ(calc(var(--d) * 32px / 2))";
+	puerta.media.objeto.style.marginTop = "0px"
+	if(!gif){
+		puerta.media.objeto.style.translate = "5px -20px";
+		puerta.media.objeto.parentNode.style.transition =
+			"transform 0.5s ease-in-out";
+		puerta.media.objeto.parentNode.style.transformOrigin = "left";
+		puerta.media.objeto.parentNode.style.transform = vertical
+			? "translate(-50%, -60%) rotateY(90deg) translateZ(calc(var(--w) * 32px / 2))"
+			: "translate(-50%, -60%) rotateX(-90deg) translateZ(calc(var(--d) * 32px / 2))";
+	}
 
 	if(vertical){
 		let face = puerta.nodo.querySelector('.face-up')
@@ -66,23 +74,30 @@ function crearPuerta(x, y, z, key, imagenAlias, vertical) {
 		}
 
 		puerta.animationOpen = !puerta.animationOpen;
+		
 		if (puerta.animationOpen) {
-            try {
-                if(hidden) hidden.nodo.remove();
-                if(techo) techo.nodo.classList.toggle("occluding-force");
-            } catch (error) {
-                
-            }
+			try {
+				if(hidden) hidden.nodo.remove();
+				if(techo) techo.nodo.classList.toggle("occluding-force");
+			} catch (error) {
+				
+			}
 			// efecto de abrir puerta
-			setTransform(puerta.media.objeto.parentNode, "rotateY", "60deg");
+			if(gif)
+				puerta.animacion.play(.5)
+			else 
+				setTransform(puerta.media.objeto.parentNode, "rotateY", "60deg");
 			puerta.noSolido();
 		} else {
 			try{
-                if(techo) techo.nodo.classList.toggle("occluding-force");
-            } catch (error) {
-                
-            }
-			setTransform(puerta.media.objeto.parentNode, "rotateY", vertical ? "90deg" : "0deg");
+				if(techo) techo.nodo.classList.toggle("occluding-force");
+			} catch (error) {
+				
+			}
+			if(gif)
+				puerta.animacion.playReverso(.5)
+			else 
+				setTransform(puerta.media.objeto.parentNode, "rotateY", vertical ? "90deg" : "0deg");
 			puerta.solido();
 		}
 		// abrir/cerrar de puerta visible para ambos jugadores (neto)
@@ -107,6 +122,24 @@ function crearPuerta(x, y, z, key, imagenAlias, vertical) {
 // dejan puerta y muro en la misma capa.
 function capaGrupo(grupo, n) {
 	for (const { el, off } of grupo) el.capa(n + off);
+}
+
+const soloFrenteMuro = (muros, puerta) => {
+	for(let muro of muros){
+		muro.nodo.querySelectorAll('.face').forEach((f) => {
+			if(!f.classList.contains('face-south')) f.style.backgroundImage = 'none'
+		})
+	}
+	// sin .puerta() no hay sprite que ajustar: la pared se usa sola
+	if(puerta){
+		puerta.media.objeto.style.translate = String(puerta.media.objeto.style.translate).replace('-20px', '-10px')
+	}
+}
+
+const noBordesMuro = (muros) => {
+	for(let muro of muros){
+		muro.nodo.classList.add('cubo-style-no-shadow')
+	}
 }
 
 function paredHorizontal(x, y, w, imagen, z) {
@@ -137,9 +170,24 @@ function paredHorizontal(x, y, w, imagen, z) {
 	let puerta;
 	// todo lo que crea este helper, para moverlo de capa en bloque
 	const grupo = [{ el: muro, off: 0 }];
+	let muros = [muro]
 	let manager = {
-		puerta(x, key, imagenAlias) {
-			puerta = crearPuerta(muro.x + x, y, z, key, imagenAlias);
+		soloFrente(){
+			soloFrenteMuro(muros, puerta)
+			return manager
+		},
+		noBordes(){
+			noBordesMuro(muros)
+			return manager
+		},
+
+		puerta(x, key, config) {
+			try {			
+				puerta = crearPuerta(muro.x + x, y, z, key, config);
+			} catch (error) {
+				errorRender("Error al crear puerta:"+error.message)
+				return manager
+			}
 			grupo.push({ el: puerta, off: 0 });
 			if (muro.x < puerta.x) {
 				muro.ancho(puerta.x - muro.x);
@@ -157,10 +205,11 @@ function paredHorizontal(x, y, w, imagen, z) {
 					})
 					.imagen("repetir", "repetirX").imagen("tamano", "60px 40px");
 				grupo.push({ el: resto, off: 0 });
+				muros.push(resto)
 			}
-			esperarY(0.5, () => {
+			esperarY(1, () => {
 				//muro.margenY(-40)
-				puerta.nodo.style.marginTop = "30px";
+				puerta.nodo.style.marginTop = "0px";
 			});
 			return manager;
 		},
@@ -179,10 +228,6 @@ function paredHorizontal(x, y, w, imagen, z) {
 			// z se actualiza para que una .puerta() posterior nazca en la capa nueva
 			z = zNuevo;
 			capaGrupo(grupo, zNuevo);
-			return manager;
-		},
-		imagenPuerta(imagenAlias) {
-			puerta.pintar(imagenAlias);
 			return manager;
 		},
 		interactuar(fn) {
@@ -223,9 +268,19 @@ function paredVertical(x, y, d, imagen, z) {
 	).imagen("repetir", "repetirX").imagen("tamano", "40px 60px");
 	let puerta;
 	const grupo = [{ el: muro, off: 0 }];
+	let muros = [muro]
 	let manager = {
-		puerta(posicion, key, imagenAlias) {
-			puerta = crearPuerta(x, muro.y + posicion, z, key, imagenAlias, true);
+		soloFrente(){
+			soloFrenteMuro(muros, puerta)
+			return manager
+		},
+		noBordes(){
+			noBordesMuro(muros)
+			return manager
+		},
+		puerta(posicion, key, config) {
+			if(!posicion) return puerta;
+			puerta = crearPuerta(x, muro.y + posicion, z, key, {...config , vertical:true});
 			grupo.push({ el: puerta, off: 0 });
 			const finMuro = y + d;
 			if (finMuro > puerta.y) {
@@ -244,6 +299,7 @@ function paredVertical(x, y, d, imagen, z) {
 							cubo: true,
 						})
 						.imagen("repetir", "repetirX").imagen("tamano", "40px 60px");
+					muros.push(resto)
 					grupo.push({ el: resto, off: 0 });
 				}
 			}
@@ -287,6 +343,8 @@ function habitacion(x,y,w,h,key,imagen){
 }
 
 function habitacionOculta(x, y, w, h, key, imagen) {
+	// sizeY opcional: sin el, la habitacion es cuadrada (w x w)
+	if (h === undefined || h === null) h = w;
 	if (w < 2 || h < 2)
 		return alert("La habitacion debe ser de al menos 2x2 por las paredes");
 

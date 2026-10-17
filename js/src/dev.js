@@ -2,11 +2,11 @@ const panel = `
     <div class="dev-panel-content" >
         <div class="tab">
             <button name="play">▶️</button>
-            <button name="panel-levels">🔢<small>Escenas</small></button>
-            <button name="panel-images">🗺️<small>Recursos</small></button>
-            <button name="actorList">👥<small>Actores</small></button>
+            <button name="panel-levels">🔢<small onclick="this.parentNode.click()">Escenas</small></button>
+            <button name="panel-images">🗺️<small onclick="this.parentNode.click()">Recursos</small></button>
+            <button name="actorList">👥<small onclick="this.parentNode.click()">Actores</small></button>
             <button onclick="toggleCamaraUI()">📷<small>Camara</small></button>
-            <button name="tutoriales">⁉️<small>Tutoriales</small></button>
+            <button name="tutoriales">⁉️<small onclick="this.parentNode.click()">Tutoriales</small></button>
         </div>  
         <div class="actor-list panel p-1" name="actorList">
             <div class="w-full flex justify-between">
@@ -76,6 +76,13 @@ const panel = `
 			<h4 class="w-full">Controles</h4>
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('repetir');">Repetir/contar</button>
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('eventos');">Eventos</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('esperar');">Esperar</button>
+
+			<h4 class="w-full">Estilos</h4>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('escala');">Agrandar/encoger</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('margen');">Centrar</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('filtros');">Filtros</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('rotar');">Rotar</button>
 			
 			<h4 class="w-full">Escenarios</h4>
             <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('paredes');">Paredes</button>
@@ -276,7 +283,9 @@ function installDevPanel() {
 			event.target.closest?.("#myListScene") &&
 			event.target.hasAttribute("name")
 		) {
-			cambiarEscena(event.target.getAttribute("name"));
+			// abrir en pestaña (editar) sin cambiar de escena ni recargar;
+			// para ponerla en marcha está el ▶ de la barra de pestañas
+			abrirPestana(event.target.getAttribute("name"));
 		}
 
 		if (event.target.id === "name-escena") {
@@ -873,7 +882,6 @@ Selectores
 - **@tipo**: @agua
 - **id**: rio
 - **{x,y,z}**: {x: 5, y: 5, z: 5} o un objeto
-
 
 /code
 escuchar("mover:player", () => {

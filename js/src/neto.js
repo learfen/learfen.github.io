@@ -35,7 +35,7 @@
 	// Serializa el estado visible de un elemento: geometría + propiedades.
 	const PROPS_NO_SERIALIZAR = new Set([
 		"solido", "peso", "fuerza", "orientacion", "tipo", "imagenAlias", "escena",
-		"esPlayer", "animadoImagen", "piso", "vidas", "animado", "escala", "margenX",
+		"esPlayer", "animadoImagen", "piso", "vidas", "animado", "escala", "px", "margenX",
 		"margenY", "abierta", "items", "interactuarFunction", "guardado", "guardado-en",
 		"estado-visual", "colisionable", "interactuando"
 	]);
@@ -60,6 +60,7 @@
 			esPlayer: !!el.esPlayer,
 			cubo: !!el.cubo,
 			escala: el.propiedades("escala") || undefined,
+			px: el.propiedades("px") || undefined,
 			margenX: el.propiedades("margenX") || undefined,
 			margenY: el.propiedades("margenY") || undefined,
 			orientacion: el.orientacion || "derecha",
@@ -89,7 +90,7 @@
 	}
 
 	neto.poseer = (elemento, rolSala) => {
-		neto.posesiones[rolSala] = elemento;
+		neto.posesiones[rolSala || 1] = elemento;
 		actualizarPosesiones();
 		return elemento;
 	};
@@ -355,6 +356,7 @@
 			if (d.orientacion && el.orientacion !== d.orientacion) el.orientar(d.orientacion);
 			if (d.solido !== undefined) el.propiedades("solido", !!d.solido);
 			if (d.escala !== undefined && el.propiedades("escala") !== d.escala) el.escala(d.escala);
+			if (d.px !== undefined) el.px(d.px.w, d.px.h);
 			if (d.margenX !== undefined) el.margenX(d.margenX);
 			if (d.margenY !== undefined) el.margenY(d.margenY);
 			aplicarEstado(d, el);
@@ -389,6 +391,7 @@
 				repetir: true
 			});
 			if (d.escala) el.escala(d.escala);
+			if (d.px !== undefined) el.px(d.px.w, d.px.h);
 			if (d.margenY !== undefined) el.margenY(d.margenY);
 			if (d.margenX !== undefined) el.margenX(d.margenX);
 			if (d.orientacion) el.orientar(d.orientacion);

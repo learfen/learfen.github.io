@@ -49,6 +49,16 @@ class EventBus {
         this.ejecutarCanal("colision:player", datos);
       }
     }
+
+    // Eventos de movimiento con alias por tipo (escuchar("mover:@golem", ...))
+    // y acceso al elemento en el payload, igual que en colision.
+    // physics emite "mover:<id>" con { origen:()=>obj, x, y, z }.
+    if (canal.startsWith("mover:") && datos) {
+      const obj = (typeof datos.origen === "function" ? datos.origen() : null) || datos.elemento || datos.objeto;
+      if (obj && obj.tipo) {
+        this.ejecutarCanal(`mover:@${obj.tipo}`, { ...datos, elemento: obj, objeto: obj, elemento: obj });
+      }
+    }
   }
 
   ejecutarCanal(canal, datos) {

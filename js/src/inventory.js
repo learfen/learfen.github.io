@@ -113,25 +113,27 @@ async function usarInventario(user, items) {
 			inventario.menu().opciones = inventario.menu().opcionesDefault;
 			return user();
 		},
-		eliminar(selector) {
-			// busca igual que buscar(): "id" o "@tipo"; elimina UN solo item
-			let objetivo = null;
-			if (typeof selector === "string" && selector[0] === "@") {
-				let tipo = selector.replace("@", "");
-				for (let i of user().propiedades("items")) {
-					if (i.tipo === tipo) { objetivo = i; break; }
-				}
-			} else {
-				let id = typeof selector === "object" ? selector.id : selector;
-				objetivo = user().propiedades("items").find((i) => i.id === id);
+		eliminar(selector, n = 1) {
+			// selector: "id" o "@tipo"; n = cuantos borrar (default 1)
+			let tipo =
+				typeof selector === "string" && selector[0] === "@"
+					? selector.replace("@", "")
+					: null;
+			let id = tipo ? null : typeof selector === "object" ? selector.id : selector;
+			let items = user().propiedades("items");
+			let borrados = [];
+			for (let i of items) {
+				if (borrados.length >= n) break;
+				if (tipo ? i.tipo === tipo : i.id === id) borrados.push(i);
 			}
-			if (!objetivo) return user();
+			if (!borrados.length) return user();
 			let button = inventario.querySelector(`.focus`);
 			if (button) {
 				button.remove();
 			}
-			evento("inventario:eliminar", { objeto: objetivo, ref: user });
-			user().propiedades("items", user().propiedades("items").filter((i) => i !== objetivo));
+			for (let objetivo of borrados)
+				evento("inventario:eliminar", { objeto: objetivo, ref: user });
+			user().propiedades("items", items.filter((i) => !borrados.includes(i)));
 			return user();
 		},
 		existeTipo(item) {
@@ -311,6 +313,7 @@ function createDialogInventario(cols, rows) {
 			menu.abierto = true;
 
 			if (selected) {
+				
 				if (!opciones) {
 					opciones = menu.opciones;
 					const itemOptions =
@@ -341,6 +344,11 @@ function createDialogInventario(cols, rows) {
                 menu.nodo.style.left = x2 + "px";
                 menu.nodo.style.top = y2 + "px";
 				let options = [...opciones];
+				if(opcionesInventarioGlobal[selected.objeto()?.id]) {
+					for(let key of Object.keys(opcionesInventarioGlobal[selected.objeto()?.id])) {
+						options.push(key);
+					}
+				}
 				if (selected.objeto()?.info) options.push("Info");
 				let textos = [];
 				for (let opcion of options) {
@@ -441,20 +449,47 @@ escuchar(
 		// enviamos al receptor el objeto y que este lo maneje
 		let objetoInteraccion = player().mirandoObjeto();
 		if(Array.isArray(objetoInteraccion) && objetoInteraccion.length > 0) objetoInteraccion = objetoInteraccion[0];
-		console.log({opcionesData:player().inventario?.opcionesData})
+		
 		if (
-			player().inventario?.opcionesData.hasOwnProperty(
+			inventarioSeleccionado.inventario?.opcionesData.hasOwnProperty(
 				"@" + objeto.tipo,
 			)
 		) {
             
-            if(typeof player().inventario.opcionesData["@" + objeto.tipo][opcion] === "function"){
-                player().inventario.opcionesData["@" + objeto.tipo][opcion](
+            if(typeof inventarioSeleccionado.inventario.opcionesData["@" + objeto.tipo][opcion] === "function"){
+                inventarioSeleccionado.inventario.opcionesData["@" + objeto.tipo][opcion](
 					objetoInteraccion,
 					objeto
                 );
             }
-        }
+        } 
+		if (
+			inventarioSeleccionado.inventario?.opcionesData.hasOwnProperty(
+				objeto.id,
+			)
+		) {
+            
+            if(typeof inventarioSeleccionado.inventario.opcionesData[objeto.id][opcion] === "function"){
+                inventarioSeleccionado.inventario.opcionesData[objeto.id][opcion](
+					objetoInteraccion,
+					objeto
+                );
+            }
+        } 
+		
+		
+		if (
+			opcionesInventarioGlobal.hasOwnProperty(objeto.id)
+		) {
+            
+            if(typeof opcionesInventarioGlobal[objeto.id][opcion] === "function"){
+                opcionesInventarioGlobal[objeto.id][opcion](
+					objetoInteraccion,
+					objeto
+                );
+            }
+			inventarioSeleccionado.menu().cerrar();
+        } 
 
     
 		if (opcion == "Info") {

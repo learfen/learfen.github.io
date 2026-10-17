@@ -2,7 +2,8 @@ var GAS_URL =
 	"https://script.google.com/macros/s/AKfycbxK10HxoTZ9ftkAVopuPUJWqediU6tVJ3o6H0xojPBl9yks6ikWjG_7MH0shSfckONyBQ/exec";
 
 
-var domainMedias = "https://api.github.com/repos/learfen/learfen.github.io/contents/games/images";
+var domainMedias = "/games/images";
+//var domainMedias = "https://api.github.com/repos/learfen/learfen.github.io/contents/games/images";
 
 async function $fetch(url, options) {
 	if (url.search("/api") === -1) {
@@ -73,7 +74,7 @@ async function getImagesFromGithub() {
 			resolve(JSON.parse(localStorage.getItem("images")));
 		});
 	}
-	const url = domainMedias;
+	let url = domainMedias;
 
 	const options = {
 		method: "get",
@@ -82,11 +83,18 @@ async function getImagesFromGithub() {
 		},
 		muteHttpExceptions: true,
 	};
-
+	console.log("getImagesFromGithub")
 	try {
-		let response = await fetch(url, options);
+
+		if(url.search("http") === -1){
+			url = domainMedias+"/index.html"
+		}
+		console.log("medias " , {url})
+
+		let response = await fetch(url+"?d=1", options);
 		console.log(response);
 		const data = await response.text();
+		console.log('images:',data);
 		if (response.status === 200) {
 			const files = JSON.parse(data);
 
@@ -100,15 +108,23 @@ async function getImagesFromGithub() {
 				".svg",
 			];
 
-			const result = files
-				.filter(
-					(file) =>
-						file.type === "file" &&
+			const result = Array.from( new Set(files
+				.filter((file) =>{
+					if(typeof file == 'string'){
+						return validExtensions.some((ext) =>
+							file.toLowerCase().endsWith(ext),
+						)
+					}else {
+						return (file.type === "file" &&
 						validExtensions.some((ext) =>
 							file.name.toLowerCase().endsWith(ext),
-						),
-				)
-				.map((file) => file.name);
+						))
+					}
+				})
+				.map((file) => {
+					if(typeof file == 'string') return file
+					return file.name
+				}).sort() ) );
 
             // guardamos en localStorage
             localStorage.setItem("images", JSON.stringify(result));

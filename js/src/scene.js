@@ -5,6 +5,7 @@ let magneticListener;
 // recalculaba desde la posicion del jugador en cada paso, lo que re-
 // proyectaba toda la escena de golpe y se veia como vibracion.
 const PERSPECTIVA_JUEGO = "2400px";
+const opcionesInventarioGlobal = {}
 
 function crearId(id , imageAlias){
 	if (!id) {
@@ -414,6 +415,15 @@ class SceneManager {
 			...config,
 		});
 	}
+	agregarDelante(imagen, id, config){
+		let { x , y , z } = player().adelante();
+		if(id === undefined) return this.agregar(x, y, imagen, {z});
+		if(typeof id === 'string'){
+			if(config === undefined ) return this.agregar(x, y, imagen, {z, id});
+			return this.agregar(x, y, imagen, {z, id, ...config});	
+		}
+		return this.agregar(x, y, imagen, {z, ...id});
+	}
 	agregarEnInfo(contenedor, aliasImage, col) {
 		// si no existe la imagen
 		if (!imagenesImportadas[aliasImage]) {
@@ -626,7 +636,12 @@ class SceneManager {
 				// ids destruidos de forma compartida (neto/backend): no se recrean
 				if (window.neto?.eliminados?.has?.(id) && !config?.resucitar) {
 					console.log('Error crear: id destruido en el backend:', id)
+					if(config?.opciones){
+						opcionesInventarioGlobal[id] = config.opciones
+					}
 					return elementoFantasma(id, x, y);
+				}else{
+					opcionesInventarioGlobal[id] = config.opciones
 				}
 				let guardado = datos.elementos[id];
 				// no recreamos objetos que estan guardados en un inventario, ni enemigos destruidos.
@@ -720,6 +735,12 @@ class SceneManager {
 				elemento.w = w;
 				return elemento.baseAlPiso();
 			},
+			largo(d) {
+				elemento.nodo.style.setProperty("--d", d);
+				propiedades.profundidad = d
+				elemento.d = d;
+				return elemento.baseAlPiso();
+			},
 			animar() {
 				propiedades.animar = true
 				propiedades.animado = true
@@ -738,7 +759,11 @@ class SceneManager {
 					return elemento;
 				}
 				let imgH;
-				if (media.tagName === "IMG") {
+				if (propiedades.px) {
+					// tamano fijo en px: la altura real del sprite ya no depende
+					// del aspect de cada media/variante
+					imgH = propiedades.px.h;
+				} else if (media.tagName === "IMG") {
 					const w = (parseFloat(elemento.nodo.style.getPropertyValue("--w")) || 1) * 60;
 					imgH = w * media.naturalHeight / media.naturalWidth;
 				} else {
@@ -748,8 +773,9 @@ class SceneManager {
 					if (!imgH) return elemento;
 				}
 				// margenY manual del usuario tiene prioridad sobre la alineacion automatica
-				if (typeof propiedades.margenY === "number") {
-					media.style.marginTop = propiedades.margenY + "px";
+				const margenYManual = margenEn(propiedades.margenY, elemento.orientacion);
+				if (typeof margenYManual === "number") {
+					media.style.marginTop = margenYManual + "px";
 				} else {
 					media.style.marginTop = (faceH - imgH) + "px";
 				}
@@ -767,7 +793,7 @@ class SceneManager {
 				// una sola vez al crearse, con el z que tenia entonces)
 				if (propiedades.piso) {
 					elemento.nodo.style.marginTop =
-						(propiedades.margenY || 0) - z * 23 + "px";
+						(margenEn(propiedades.margenY, elemento.orientacion) || 0) - z * 23 + "px";
 				}
 				return elemento;
 			},
@@ -797,11 +823,11 @@ class SceneManager {
 				let dx = setInterval(() => {
 					if(!(elemento?.media?.objeto || elemento.nodo)) return ;
 					if(elemento?.media && elemento?.media?.objeto){
-						elemento.media.objeto.style.transform = elemento.media.objeto.style.transform + ` scale(${n}) `;
+						aplicarEscalaMedia(elemento);
 					} else {
 						let nodo = elemento.nodo.querySelector('img')
 						if(nodo)
-							nodo.style.transform = elemento.nodo.querySelector('img')?.style.transform + ` scale(${n}) `
+							nodo.style.scale = n
 					}
 					clearInterval(dx)
 				}, 50)
@@ -809,6 +835,24 @@ class SceneManager {
 				window.neto?.cambiar?.(elemento)
 
 				return elemento
+			},
+			voltearHorizontal(v) {
+				// espeja el sprite (img o canvas del gif) en X; sin argumento alterna
+				elemento.propiedades(
+					"voltearH",
+					v === undefined ? !elemento.propiedades("voltearH") : !!v,
+				);
+				aplicarEscalaMedia(elemento);
+				return elemento;
+			},
+			voltearVertical(v) {
+				// voltea el sprite (img o canvas del gif) en Y; sin argumento alterna
+				elemento.propiedades(
+					"voltearV",
+					v === undefined ? !elemento.propiedades("voltearV") : !!v,
+				);
+				aplicarEscalaMedia(elemento);
+				return elemento;
 			},
 			eliminar() {
 				escenaActiva().eliminarObjeto(elemento.id);
@@ -834,6 +878,15 @@ class SceneManager {
 				if (h !== undefined) elemento.h = h;
 				escenaActiva().actualizarTransformNodo(elemento);
 				return elemento;
+			},
+			expandirHorizontal(n) {
+				// solo ancho (--w); conserva fondo y altura y re-alinea el
+				// sprite (baseAlPiso) para no requerir margenY a mano
+				return elemento.expandir(n, elemento.d, elemento.h).baseAlPiso();
+			},
+			expandirVertical(n) {
+				// solo altura (--h); conserva ancho y fondo y re-alinea el sprite
+				return elemento.expandir(elemento.w, elemento.d, n).baseAlPiso();
 			},
 			exportar(){	
 				let el = JSON.stringify(elemento)
@@ -1054,23 +1107,39 @@ let aliasProps = {
 				return elemento
 			},
 			margenY(n) {
-				if(elemento?.media && elemento?.media?.objeto){
-					elemento.media.objeto.style.marginTop = n + "px";
-				} else{
-					elemento.nodo.style.marginTop = n + "px";
-				}
 				propiedades.margenY = n
+				const v = margenEn(n, elemento.orientacion)
+				if(elemento?.media && elemento?.media?.objeto){
+					elemento.media.objeto.style.marginTop = (v ?? -10) + "px";
+				} else{
+					elemento.nodo.style.marginTop = (v ?? -10) + "px";
+				}
 				window.neto?.cambiar?.(elemento)
 				return elemento;
 			},
 			margenX(n) {
+				propiedades.margenX = n
+				const v = margenEn(n, elemento.orientacion)
 				if(elemento?.media && elemento?.media?.objeto){
-					elemento.media.objeto.style.marginLeft = n + "px";
+					elemento.media.objeto.style.marginLeft = (v ?? -20) + "px";
 				} else {
-					elemento.nodo.style.marginLeft = n + "px";
+					elemento.nodo.style.marginLeft = (v ?? -20) + "px";
 				}
-					propiedades.margenX = n
 				window.neto?.cambiar?.(elemento)
+				return elemento;
+			},
+			px(w, h) {
+				// fija el tamano renderizado del sprite (img/canvas) en px exactos:
+				// pintar lo reaplica, asi no cambia al pasar de <img> a <canvas>,
+				// entre variantes de gif de distinto tamano, ni al mover el objeto
+				if (typeof w === "object") { h = w.h; w = w.w; }
+				propiedades.px = { w, h };
+				const m = elemento?.media?.objeto;
+				if (m) {
+					m.style.width = w + "px";
+					m.style.height = h + "px";
+				}
+				window.neto?.cambiar?.(elemento);
 				return elemento;
 			},
 			material(material){
@@ -1342,7 +1411,12 @@ let aliasProps = {
 									config,
 									type: "canvas",
 								};
-								elemento.nodo.appendChild(canvas);
+								// dentro de .face-south (igual que el <img> de la rama
+								// estatica): el .block es 0x0, asi que un canvas hijo suyo
+								// no puede usar width:100% y sale a tamano nativo
+								elemento.nodo
+									.querySelector(".face-south")
+									.appendChild(canvas);
 							}
 							
 							const installCanvasGifPlayer = () => {
@@ -1412,16 +1486,21 @@ let aliasProps = {
 									return canvas.playerGif.playReverso();
 								}
 							};
-							canvas.style.marginLeft = (propiedades?.margenX || "-20") +"px";
-							canvas.style.marginTop = (propiedades?.margenY || "-10") +"px";
+							// mismo encuadre que la rama <img> de mas abajo: sin esto el
+							// canvas del gif sale a su tamano nativo (display:inline), mas
+							// grande que la celda, y los margenes/escala que el usuario
+							// ajusto sobre el <img> dejan de centrarlo al empezar a seguir
+							canvas.style.display = "block";
+							canvas.style.width = propiedades.px ? propiedades.px.w + "px" : "100%";
+							canvas.style.height = propiedades.px ? propiedades.px.h + "px" : "auto";
+							canvas.style.marginLeft = (margenEn(propiedades?.margenX, elemento.orientacion) ?? "-20") +"px";
+							canvas.style.marginTop = (margenEn(propiedades?.margenY, elemento.orientacion) ?? "-10") +"px";
 							if(propiedades.hasOwnProperty("animadoImagen")){
 								if(propiedades.animadoImagen.hasOwnProperty(elemento.orientacion)){
 									canvas.style.translate = `${ propiedades.animadoImagen[elemento.orientacion]?.x || 0 }px ${ propiedades.animadoImagen[elemento.orientacion].y || 0 }px ${ propiedades.animadoImagen[elemento.orientacion].z || 0 }px`
 								}
-								if(propiedades.hasOwnProperty("escala")){
-									canvas.style.scale = propiedades.escala
-								}
 							} 
+							aplicarEscalaMedia(elemento);
 							elemento.canvas = canvas;
 							elemento.nodo
 								.querySelectorAll(".face")
@@ -1443,9 +1522,12 @@ let aliasProps = {
 							elemento.img = null;
 							let img = document.createElement("img");
 							img.style.display = "block";
-							img.style.width = "100%";
-							img.style.height = "auto";
+							img.style.width = propiedades.px ? propiedades.px.w + "px" : "100%";
+							img.style.height = propiedades.px ? propiedades.px.h + "px" : "auto";
+							img.style.marginLeft = (margenEn(propiedades?.margenX, elemento.orientacion) ?? "-20") +"px";
+							img.style.marginTop = (margenEn(propiedades?.margenY, elemento.orientacion) ?? "-10") +"px";
 							elemento.media = { objeto: img, type: "image" };
+							aplicarEscalaMedia(elemento);
 							elemento.nodo
 								.querySelectorAll(".face")
 								.forEach(
@@ -1458,7 +1540,6 @@ let aliasProps = {
 							insertarImagenEnNodo(img, imageAlias)
 						}
 					};
-					
 					updateGUI();
 					voltearMirada();
 					elemento.installed = true;
@@ -1468,7 +1549,9 @@ let aliasProps = {
 				}
 				return elemento;
 			},
-			piso(w,d) {
+
+			piso(w,d, sombra) {
+				if(sombra === undefined) sombra = true
 				elemento.noSolido()
 				elemento.plano()
 				elemento.propiedades("piso", true)
@@ -1491,7 +1574,7 @@ let aliasProps = {
 						img.style.height = "100%";
 					});
 				}
-				if(elemento?.media?.objeto) {
+				if(elemento?.media?.objeto && sombra) {
 					esperarY(.5,() => {
 						elemento.media.objeto.style.marginTop = '20px'
 						elemento.media.objeto.style.border = "#444 solid 1px";
@@ -1502,7 +1585,7 @@ let aliasProps = {
 				// cada capa de z desplaza el piso ~23px en el grid rotado: sin
 				// correcting el margen el piso queda flotando sobre el suelo
 				const corracionZ = (elemento.z || 0) * 23;
-				elemento.nodo.style.marginTop = (propiedades.margenY || 0) - corracionZ + "px";
+				elemento.nodo.style.marginTop = (margenEn(propiedades.margenY, elemento.orientacion) || 0) - corracionZ + "px";
 				return elemento
 			},
 			/*
@@ -1637,6 +1720,14 @@ let aliasProps = {
 					elemento.propiedades("items", [])
 				}
 				convertirEnAlmacen(() => elemento);
+				return elemento
+			},
+			opciones(accionName, accion){
+				console.log('opciones registro')
+				if(!opcionesInventarioGlobal.hasOwnProperty(elemento.id)){
+					opcionesInventarioGlobal[elemento.id] = {}
+				}
+				opcionesInventarioGlobal[elemento.id][accionName] = accion
 				return elemento
 			},
 			vision(){
@@ -1921,6 +2012,10 @@ window.sceneManager = new SceneManager();
 	
 	@elemento.expandir(x,y),
 	
+	@elemento.expandirHorizontal(cantidad:number),
+	
+	@elemento.expandirVertical(cantidad:number),
+	
 	@elemento.exportar(),
 	
 	@elemento.filtro(color|blur|grayscale|invert|opacity|saturate, value),
@@ -1937,9 +2032,11 @@ window.sceneManager = new SceneManager();
 	
 	@elemento.magnetico(true|false),
 	
-	@elemento.margenY(cantidad:number),
+	@elemento.margenY(cantidad:number | {izquierda?,arriba?,derecha?,abajo?}),
 	
-	@elemento.margenX(cantidad:number),
+	@elemento.margenX(cantidad:number | {izquierda?,arriba?,derecha?,abajo?}),
+	
+	@elemento.px(w:number, h:number),
 	
 	@elemento.material(n),
 	
@@ -1970,6 +2067,10 @@ window.sceneManager = new SceneManager();
 	@elemento.rotarY(grados:number),
 	
 	@elemento.rotarZ(grados:number),
+	
+	@elemento.voltearHorizontal(true|false),
+
+	@elemento.voltearVertical(true|false),
 	
 	@elemento.solido(true|false),
 	
@@ -2283,6 +2384,23 @@ function cambiarPiso(urlPiso, cover, position="center"){
 
 
 
+// margenX/margenY aceptan un numero (igual para todas las orientaciones) o un
+// objeto { izquierda, arriba, derecha, abajo } que se resuelve segun la
+// orientacion con la que se pinta el sprite
+const margenEn = (valor, orientacion) =>
+	(valor && typeof valor === "object" ? valor[orientacion] : valor);
+
+// escala + volteos (voltearHorizontal/voltearVertical) del sprite (img o canvas):
+// un solo style.scale para todo, si cada uno escribia lo suyo se pisaban
+const aplicarEscalaMedia = (el) => {
+	const im = el?.media?.objeto;
+	if (!im) return;
+	const esc = el.propiedades("escala") || 1;
+	const sx = el.propiedades("voltearH") ? -1 : 1;
+	const sy = el.propiedades("voltearV") ? -1 : 1;
+	im.style.scale = esc * sx + " " + esc * sy;
+};
+
 const $styleTransform = (elemento, transformProp, value) => {
 
 	const units = {
@@ -2300,7 +2418,7 @@ const $styleTransform = (elemento, transformProp, value) => {
 		}
 	}
 	let nodo = elemento.querySelector('img')
-	if(!nodo) nodo = elemento.querySelector('canva')
+	if(!nodo) nodo = elemento.querySelector('canvas')
 
 	if (!nodo) return;
 

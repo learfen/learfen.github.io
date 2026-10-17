@@ -635,11 +635,11 @@ function crearJugadorUI(x,y, image, config) {
 	if (window.sceneManager?.jugador) return window.sceneManager.jugador;
 	window.sceneManager.jugador = window.sceneManager
 		.agregar(x || 10, y || 10, image, "player", {
-			tipo: "player",
 			esPlayer: true,
 			orientacion: "abajo",
 			fuerza:2,
 			...config,
+			tipo: "player",
 		})
 		.margenX(-18)
 		.margenY(-15)
@@ -850,35 +850,47 @@ function cargarGlobal() {
 		document.body.appendChild(script);
 		globalListos = true;
 	};
-	const cache = localStorage.getItem("file:global");
-	if (localStorage.getItem(keyLocalstorageEscenaActiva) !== "global" && cache) {
-		inyectar(cache);
+	// misma sintaxis amigable que las escenas. "interactuar" se normaliza a un
+	// token antes de expandirlo a async: con replaceAll en cadena un source que
+	// ya venia "interactuar( async" salia "interactuar( async  async" ->
+	// SyntaxError. El token hace la pasada idempotente. Se corre SOLO al
+	// inyectar (ejecucion); el cache guarda el fuente EN BRUTO.
+	const parsear = (src) => `try{${src
+		.replaceAll("interactuar ( async", "@INTERACTUAR@")
+		.replaceAll("interactuar( async", "@INTERACTUAR@")
+		.replaceAll("interactuar (", "@INTERACTUAR@")
+		.replaceAll("interactuar(", "@INTERACTUAR@")
+		.replaceAll("@INTERACTUAR@", "interactuar( async ")
+		.replaceAll(" si(", "if(")
+		.replaceAll(" si (", "if(")
+		.replaceAll(" sino (", "sino(")
+		.replaceAll(" sino(", "else if(")
+		.replaceAll(" sino{", "else{")
+		.replaceAll(" sino {", "else{")};
+		} catch(error){ console.log(error); }`;
+	let cache = localStorage.getItem("file:global");
+	// version vieja: guardaba el codigo YA envuelto en try{...}catch (parseado).
+	// Se descarta para releer el fuente en bruto de GAS, si no el editor lo
+	// vuelve a parsear y "interactuar( async " -> "interactuar( async  async".
+	/*
+	if (cache && cache.startsWith("try{")) {
+		localStorage.removeItem("file:global");
+		cache = null;
+	}*/
+	if (cache) {
+		console.log("global.js: Request cache")
+		inyectar(parsear(cache));
 		return;
 	}
+	console.log("global.js: Request http")
 	return $fetch("/api/file/global.js")
 		.then((res) => {
+			console.log('res global.js')
+			console.log(res)
 			// la API devuelve {status, code}; code vacio => archivo inexistente
 			if (typeof res?.code !== "string" || !res.code) return;
-			// misma sintaxis amigable que las escenas
-			// "interactuar" se normaliza a un token antes de Expandirlo a async:
-			// con replaceAll en cadena el source que ya venia "interactuar( async"
-			// salia "interactuar( async  async" -> SyntaxError que mataba TODO el
-			// script global. El token hace la pasada idempotente.
-			const html = `try{${res.code
-				.replaceAll("interactuar ( async", "@INTERACTUAR@")
-				.replaceAll("interactuar( async", "@INTERACTUAR@")
-				.replaceAll("interactuar (", "@INTERACTUAR@")
-				.replaceAll("interactuar(", "@INTERACTUAR@")
-				.replaceAll("@INTERACTUAR@", "interactuar( async ")
-				.replaceAll(" si(", "if(")
-				.replaceAll(" si (", "if(")
-				.replaceAll(" sino (", "sino(")
-				.replaceAll(" sino(", "else if(")
-				.replaceAll(" sino{", "else{")
-				.replaceAll(" sino {", "else{")};
-				} catch(error){ console.log(error); }`;
-			localStorage.setItem("file:global", html);
-			inyectar(html);
+			localStorage.setItem("file:global", res.code);
+			inyectar(parsear(res.code));
 		})
 		.catch(() => {});
 }
@@ -971,6 +983,9 @@ function repetir(accion) {
 		}
 	}
 	let manager = {
+		index(){
+			return n
+		},
 		cada(segundos) {
 			clearInterval(interval);
 			fn(interval)
@@ -993,7 +1008,7 @@ function repetir(accion) {
 			return manager
 		}
 	};
-	let interval = setInterval(() => {
+	interval = setInterval(() => {
 		fn();
 	}, n * 1000);
 	return manager
