@@ -102,7 +102,7 @@
 
 	<div id="code-container">
 		<div class="flex justify-between w-full p-1 ms-1/4 shadow-md mb-1 bg-gray-200 rounded-lg">
-			<div class="text-sm p-1" style="border:1px white solid;border-radius:10px" id="fileName"></div>
+			<div class="text-sm flex items-center gap-1 flex-wrap p-1" id="fileName"></div>
 		</div>
 		<div id="editor1" class="editor-container"></div>
 	</div>
@@ -187,7 +187,10 @@
 			}
 			if (escenaSeleccionada) {
 				await cargarGlobal()
-				openFile(escenaSeleccionada)
+				// abrir la escena en una pestaña y ponerla en marcha
+				if (await abrirPestana(escenaSeleccionada)) {
+					evaluarEscena(pestanas.get(escenaSeleccionada).model.getValue())
+				}
 			}
 		}
 
@@ -207,6 +210,7 @@
 		});
 		require(["vs/editor/editor.main"], function (ev) {
 			//require(["/editor/editor.main"], function (ev) {
+			window.monaco = monaco; // accesible fuera del callback (pestañas)
 			editorOpen = () => {
 				editor = monaco.editor.create(
 					document.getElementById("editor1"),
@@ -530,90 +534,209 @@
 		}
 
 
-		// Cargar archivo del usuario desde GAS
-		const openFile = async (fileName) => {
-			if(!fileName) return ;
-			if (!editor) {
-				await new Promise((resolve) => {
-					let x = setInterval(() => {
-						if (typeof editorOpen === 'function') {
-							clearInterval(x);
-							resolve();
-						}
-					}, 10);
-				});
+		// ===== pestañas de código =========================================
+		// Cada pestaña guarda su propio model de Monaco y su último código
+		// guardado: se editan varios archivos sin recargar ni pisar buffers.
+		const pestanas = new Map(); // nombre -> { model, guardado }
+		let pestanaActiva = null;
+
+		const nombreLimpio = (fileName) => String(fileName).replace(/\.js$/, "");
+
+		async function esperarEditor() {
+			if (editor) return editor;
+			await new Promise((resolve) => {
+				const x = setInterval(() => {
+					if (typeof editorOpen === "function") {
+						clearInterval(x);
+						resolve();
+					}
+				}, 10);
+			});
+			if (!editor) editorOpen();
+			return editor;
+		}
+
+		async function cargarCodigo(fileName) {
+			// Responsabilidad única: devolver el código EN BRUTO de un archivo
+			// (cache local > API > plantilla por defecto). No toca el editor.
+			const key = "file:" + nombreLimpio(fileName);
+			let code = localStorage.getItem(key);
+			if (!code) {
+				const res = await $fetch(`/api/file/${fileName}`);
+				if (res?.status !== "success") return null;
+				code = res.code || "";
 			}
+			if (!code) {
+				code = fileName === "menu"
+					? String(menuDefault)
+							.replaceAll("\t\t", "\t")
+							.replaceAll("\t\t", "\t")
+							.replace("menuDefault", "juego")
+					: String(juegoDefault).replace("juegoDefault", "juego");
+			}
+			// cacheamos desde la primera apertura: solo el guardar viaja a Google
+			localStorage.setItem(key, code);
+			return code;
+		}
 
-			editorOpen();
+		function parsearEscena(code) {
+			// "interactuar" se normaliza a un token antes de expandirlo a async:
+			// el token hace la pasada idempotente (un source que ya venia
+			// "interactuar( async" no termina en "async async").
+			return code
+				.replaceAll("interactuar ( async", "@INTERACTUAR@")
+				.replaceAll("interactuar( async", "@INTERACTUAR@")
+				.replaceAll("interactuar (", "@INTERACTUAR@")
+				.replaceAll("interactuar(", "@INTERACTUAR@")
+				.replaceAll("@INTERACTUAR@", "interactuar( async ")
+				.replaceAll("function juego  (", "function juego(")
+				.replaceAll("function juego (", "function juego(")
+				.replaceAll("function juego(", "async function juego(")
+				.replaceAll(" preguntar (", " preguntar(")
+				.replaceAll(" preguntar(", " await preguntar(")
+				.replaceAll(" si(", "if(")
+				.replaceAll(" si (", "if(")
+				.replaceAll(" sino (", "sino(")
+				.replaceAll(" sino(", "else if(")
+				.replaceAll(" sino{", "else{")
+				.replaceAll(" sino {", "else{");
+		}
 
-			toastManager().push("Cargando archivo...");
-			console.log('abiendo archivo', fileName)
-			const nodoFileName = document.querySelector("#fileName");
-			nodoFileName.innerHTML = `Cargando(${fileName}) ... `;
+		function evaluarEscena(code) {
+			// inyecta el código de la escena como <script> para ponerla en marcha
+			if (!code || code.indexOf("function juego") === -1) return false;
 			try {
-				let result = {status:"success", code : localStorage.getItem("file:"+fileName.replace('.js',''))}
-				if(!result.code)
-					result = await $fetch(`/api/file/${fileName}`);
-				
-				if (result.status === "success") {
-					try {
-						pushChanges = false;
-					fileOpen = fileName;
-					codeDataText = result.code || "";
-					if(!codeDataText){
-						// si es menu
-						if(fileName == "menu") codeDataText = String(menuDefault)
-							// eliminaremos los tabs duplicados para que se vea bien 
-							.replaceAll('\t\t','\t')
-							.replaceAll('		','	')
-							// reemplazaremos el nombre de la funcion
-							.replace('menuDefault','juego')
-						else {
-							codeDataText = String(juegoDefault).replace('juegoDefault','juego')
-						}
-					}
-					// cacheamos desde la primera apertura: solo el guardar viaja a Google
-					localStorage.setItem("file:"+fileName.replace('.js',''), codeDataText)
-					editor.setValue(codeDataText);
+				const script = document.createElement("script");
+				script.innerHTML = parsearEscena(code);
+				document.body.appendChild(script);
+				return true;
+			} catch (error) {
+				console.log("Error al procesar el archivo:", error);
+				toastManager().push("Error al procesar el archivo");
+				return false;
+			}
+		}
 
-					// evaluar la escena: sin esto `juego` no existe y la pantalla queda vacia
-					if (codeDataText.indexOf("function juego") !== -1) {
-						let script = document.createElement("script")
-						let parsed = codeDataText
-							.replaceAll("interactuar (", "interactuar(")
-							.replaceAll("interactuar(", "interactuar( async ")
-							.replaceAll("function juego  (", "function juego(")
-							.replaceAll("function juego (", "function juego(")
-							.replaceAll("function juego(", "async function juego(")
-							.replaceAll(" preguntar (", " preguntar(")
-							.replaceAll(" preguntar(", " await preguntar(")
-							.replaceAll(" si(", "if(")
-							.replaceAll(" si (", "if(")
-							.replaceAll(" sino (", "sino(")
-							.replaceAll(" sino(", "else if(")
-							.replaceAll(" sino{", "else{")
-							.replaceAll(" sino {", "else{");
-						script.innerHTML = parsed
-						document.body.appendChild(script)
-					}
+		function flushearGuardado() {
+			// si hay un guardado en cola (debounce) lo ejecuta ya: cambiar de
+			// pestaña no debe perder lo tecleado en la anterior.
+			if (!guardarTimer) return;
+			clearTimeout(guardarTimer);
+			guardarTimer = null;
+			guardarCambios();
+		}
 
-					toastManager().push("Archivo cargado correctamente");
-					nodoFileName.innerHTML = fileName;
-					} catch (error) {
-						console.log("Error al procesar el archivo:", error);
-						toastManager().push("Error al procesar el archivo");
-					}
-					return true;
-				} else {
+		function renderPestanas() {
+			const nodo = document.querySelector("#fileName");
+			if (!nodo) return;
+			nodo.innerHTML = "";
+			for (const nombre of pestanas.keys()) {
+				const activa = nombre === pestanaActiva;
+				const tab = document.createElement("span");
+				tab.className =
+					"flex items-center gap-0.5 px-1 rounded " +
+					(activa
+						? "bg-slate-700 text-white"
+						: "bg-slate-400 text-slate-900 hover:bg-slate-500");
+				const btnNombre = document.createElement("button");
+				btnNombre.type = "button";
+				btnNombre.className = "text-sm whitespace-nowrap";
+				btnNombre.textContent = nombre;
+				btnNombre.title = activa ? `${nombre} (activo)` : nombre;
+				btnNombre.addEventListener("click", () => activarPestana(nombre));
+				const btnCerrar = document.createElement("button");
+				btnCerrar.type = "button";
+				btnCerrar.className = "text-xs px-1";
+				btnCerrar.textContent = "×";
+				btnCerrar.title = "Cerrar pestaña";
+				btnCerrar.addEventListener("click", (e) => {
+					e.stopPropagation();
+					cerrarPestana(nombre);
+				});
+				tab.append(btnNombre, btnCerrar);
+				nodo.appendChild(tab);
+			}
+			// ejecutar = cambiar de escena y recargar (la única forma de poner en
+			// marcha otra escena de momento); abrir una pestaña NO recarga.
+			const btnRun = document.createElement("button");
+			btnRun.type = "button";
+			btnRun.className = "px-2 py-0.5 rounded text-sm bg-slate-600 text-white hover:bg-slate-500 disabled:opacity-50";
+			btnRun.textContent = "▶";
+			btnRun.title = "Ejecutar la pestaña activa (recarga la escena)";
+			btnRun.disabled = !pestanaActiva;
+			btnRun.addEventListener("click", () => {
+				if (pestanaActiva) cambiarEscena(pestanaActiva);
+			});
+			nodo.appendChild(btnRun);
+		}
+
+		function activarPestana(fileName) {
+			if (!pestanas.has(fileName) || pestanaActiva === fileName) return;
+			flushearGuardado(); // no perder lo escrito en la pestaña anterior
+			const p = pestanas.get(fileName);
+			pestanaActiva = fileName;
+			fileOpen = fileName; // a quién apunta el guardado automático
+			codeDataText = p.model.getValue();
+			stateChanges.code = p.guardado; // baseline "sin cambios" por archivo
+			pushChanges = true; // el contenido ya vive en el model: sin setValue
+			editor.setModel(p.model);
+			revisionCodigo();
+			revisionImagenes();
+			renderPestanas();
+		}
+
+		function cerrarPestana(fileName) {
+			const p = pestanas.get(fileName);
+			if (!p) return;
+			const eraActiva = pestanaActiva === fileName;
+			if (eraActiva) flushearGuardado();
+			pestanas.delete(fileName);
+			if (eraActiva) {
+				pestanaActiva = null;
+				const siguiente = [...pestanas.keys()].pop();
+				// mover el editor a OTRO model antes de soltar el viejo; si no
+				// queda ninguna pestaña se limpia el model del editor
+				if (siguiente) activarPestana(siguiente);
+				else {
+					fileOpen = "";
+					codeDataText = "";
+					stateChanges.code = "";
+					if (editor) editor.setModel(null);
+				}
+			}
+			p.model.dispose(); // ya con el editor apuntando a otro model
+			renderPestanas();
+		}
+
+		async function abrirPestana(fileName) {
+			if (!fileName) return false;
+			await esperarEditor();
+			if (!pestanas.has(fileName)) {
+				toastManager().push("Cargando archivo...");
+				let code = null;
+				try {
+					code = await cargarCodigo(fileName);
+				} catch (error) {
+					console.log("Error al abrir archivo:", error);
+					toastManager().push("Error al conectar con Google Apps Script");
+					return false;
+				}
+				if (code === null) {
 					toastManager().push("No se encontró el archivo.");
 					return false;
 				}
-			} catch (error) {
-				console.log("Error al abrir archivo:", error);
-				toastManager().push("Error al conectar con Google Apps Script");
-				return false;
+				pestanas.set(fileName, {
+					model: monaco.editor.createModel(code, "javascript"),
+					guardado: code,
+				});
+				toastManager().push("Archivo cargado correctamente");
 			}
-		};
+			activarPestana(fileName);
+			return true;
+		}
+
+		// nombre histórico de la api pública: abrir un archivo = abrir su pestaña
+		const openFile = abrirPestana;
 
 		// Guardar archivo en GAS (debounce: un unico timer que se reinicia al escribir)
 		const updateChanges = (config) => {
@@ -633,6 +756,8 @@
 			const toast = toastManager().push('Guardando código...');
 			const newCodeDataText = useEditor.getValue();
 			stateChanges.code = newCodeDataText;
+			// baseline por archivo: al volver a la pestaña se compara contra esto
+			if (pestanas.has(fileOpen)) pestanas.get(fileOpen).guardado = newCodeDataText;
 
 			$fetch("/api/file", {
 				body: JSON.stringify({
