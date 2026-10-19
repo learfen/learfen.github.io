@@ -557,15 +557,16 @@
 		}
 
 		async function cargarCodigo(fileName) {
-			// Responsabilidad única: devolver el código EN BRUTO de un archivo
-			// (cache local > API > plantilla por defecto). No toca el editor.
+			// Responsabilidad única: devolver el código EN BRUTO de un archivo.
+			// ?test -> solo la copia local (carga instantánea, sin nube).
+			// sin ?test -> nube; si falla, no hay archivo (igual que antes).
 			const key = "file:" + nombreLimpio(fileName);
-			let code = localStorage.getItem(key);
-			if (!code) {
-				const res = await $fetch(`/api/file/${fileName}`);
-				if (res?.status !== "success") return null;
-				code = res.code || "";
+			if (new URLSearchParams(location.search).has("test")) {
+				return localStorage.getItem(key);
 			}
+			const res = await $fetch(`/api/file/${fileName}`);
+			if (res?.status !== "success") return null;
+			let code = res.code || "";
 			if (!code) {
 				code = fileName === "menu"
 					? String(menuDefault)
@@ -574,7 +575,7 @@
 							.replace("menuDefault", "juego")
 					: String(juegoDefault).replace("juegoDefault", "juego");
 			}
-			// cacheamos desde la primera apertura: solo el guardar viaja a Google
+			// cacheamos: la copia local alimenta el modo ?test
 			localStorage.setItem(key, code);
 			return code;
 		}
@@ -753,12 +754,31 @@
 		};
 
 		const guardarCambios = (config) => {
-			const toast = toastManager().push('Guardando código...');
 			const newCodeDataText = useEditor.getValue();
 			stateChanges.code = newCodeDataText;
 			// baseline por archivo: al volver a la pestaña se compara contra esto
 			if (pestanas.has(fileOpen)) pestanas.get(fileOpen).guardado = newCodeDataText;
+			// siempre dejamos la copia local: el modo ?test carga de acá (rápido)
+			localStorage.setItem("file:"+fileOpen.replace('.js',''), newCodeDataText);
 
+			// ?test: guardado local nada más, no toca la nube
+			if (new URLSearchParams(location.search).has("test")) {
+				const t = toastManager().push('Guardado local (?test)');
+				if (typeof config?.next === "function") config.next();
+				setTimeout(() => t.remove(), 2000);
+				return;
+			}
+
+			// sin token la nube va a rechazar: avisamos claro y no esperamos el timeout
+			if (!tokenActual()) {
+				errorRender("No se pudo guardar: no hay token de sesión");
+				const t = toastManager().push('No se pudo guardar: no hay token de sesión');
+				t.style.background = "tomato";
+				setTimeout(() => t.remove(), 3000);
+				return;
+			}
+
+			const toast = toastManager().push('Guardando código...');
 			$fetch("/api/file", {
 				body: JSON.stringify({
 					fileName: fileOpen,
@@ -766,12 +786,8 @@
 				})
 			})
 				.then((data) => {
-					// primero actualizamos el local; si no, la recarga de
-					// config.next() mata la escritura y queda el codigo viejo.
-					// openFile lee la clave SIN .js, por eso la normalizamos
-					localStorage.setItem("file:"+fileOpen.replace('.js',''), newCodeDataText)
 					toast.innerHTML = '¡Guardado completo!';
-					if (typeof config.next === "function") config.next();
+					if (typeof config?.next === "function") config.next();
 					setTimeout(() => toast.remove(), 2000);
 				})
 				.catch((error) => {
