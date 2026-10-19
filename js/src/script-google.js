@@ -5,6 +5,11 @@ var GAS_URL =
 var domainMedias = "/games/images";
 //var domainMedias = "https://api.github.com/repos/learfen/learfen.github.io/contents/games/images";
 
+function tokenActual() {
+	const t = localStorage.getItem("token");
+	return t && t !== "undefined" ? t : null;
+}
+
 async function $fetch(url, options) {
 	if (url.search("/api") === -1) {
 		return fetch(url, options);
@@ -35,11 +40,12 @@ async function $fetch(url, options) {
 	}
 	
     console.log(action, optionsRequest);
-	if (
-		localStorage.getItem("token") != "undefined" &&
-		localStorage.getItem("token")
-	) {
-		action += "&token=" + localStorage.getItem("token");
+	const token = tokenActual();
+	if (token) {
+		action += "&token=" + token;
+	} else if (!/^(login|register)$/.test(params[0]) && typeof errorRender === "function") {
+		// sin token la nube rechaza: avisamos en vez de fallar en silencio
+		errorRender("No hay token de sesión: volvé a iniciar sesión");
 	}
     
     const urlExec = GAS_URL + action;

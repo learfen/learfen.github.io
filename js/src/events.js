@@ -56,7 +56,15 @@ class EventBus {
     if (canal.startsWith("mover:") && datos) {
       const obj = (typeof datos.origen === "function" ? datos.origen() : null) || datos.elemento || datos.objeto;
       if (obj && obj.tipo) {
-        this.ejecutarCanal(`mover:@${obj.tipo}`, { ...datos, elemento: obj, objeto: obj, elemento: obj });
+        this.ejecutarCanal(`mover:@${obj.tipo}`, { ...datos, elemento: obj, objeto: obj });
+      }
+    }
+
+    // Eventos de orientacion con alias por tipo (escuchar("orientar:@golem", ...))
+    if (canal.startsWith("orientar:") && datos) {
+      const obj = datos.elemento || datos.objeto || (typeof datos.origen === "function" ? datos.origen() : null);
+      if (obj && obj.tipo) {
+        this.ejecutarCanal(`orientar:@${obj.tipo}`, { ...datos, elemento: obj, objeto: obj });
       }
     }
   }

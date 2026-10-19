@@ -650,7 +650,7 @@ function estadoAnimado(elemento) {
 				esperar(0.5, () =>
 					elemento
 						.referenciaEstado()
-						.children[0].classList.add("bg-blue-200"),
+						.children[0].classList.add("bg-blue-500"),
 				);
 			}
 		}
@@ -1011,10 +1011,10 @@ escuchar(
 	"arriba",
 	() => {
 		if (!optionsOpenMenu?.nodo) return;
-		const item = optionsOpenMenu.nodo.querySelector(".bg-blue-200");
+		const item = optionsOpenMenu.nodo.querySelector(".bg-blue-500");
 		if (item && item?.previousElementSibling) {
-			item.previousElementSibling.classList.add("bg-blue-200");
-			item.classList.remove("bg-blue-200");
+			item.previousElementSibling.classList.add("bg-blue-500");
+			item.classList.remove("bg-blue-500");
 		}
 	},
 	"menu-info:abierto",
@@ -1024,10 +1024,10 @@ escuchar(
 	"abajo",
 	() => {
 		if (!optionsOpenMenu?.nodo) return;
-		const item = optionsOpenMenu.nodo.querySelector(".bg-blue-200");
+		const item = optionsOpenMenu.nodo.querySelector(".bg-blue-500");
 		if (item && item?.nextElementSibling) {
-			item.nextElementSibling.classList.add("bg-blue-200");
-			item.classList.remove("bg-blue-200");
+			item.nextElementSibling.classList.add("bg-blue-500");
+			item.classList.remove("bg-blue-500");
 		}
 	},
 	"menu-info:abierto",
@@ -1038,7 +1038,7 @@ escuchar(
 	() => {
 		if (!optionsOpenMenu?.nodo) return;
 		if (interaccionStandBy) return;
-		const item = optionsOpenMenu.nodo.querySelector(".bg-blue-200");
+		const item = optionsOpenMenu.nodo.querySelector(".bg-blue-500");
 		if (item) {
 			optionsOpenMenu.actions[item.getAttribute("name")]();
 		}

@@ -26,7 +26,7 @@ function crearPuerta(x, y, z, key, config) {
 		puerta.propiedades("abierta", false);
 		puerta.propiedades("llave", keyId);
 	}
-	puerta.media.objeto.style.marginTop = "0px"
+	//puerta.media.objeto.style.marginTop = "0px"
 	if(!gif){
 		puerta.media.objeto.style.translate = "5px -20px";
 		puerta.media.objeto.parentNode.style.transition =
@@ -43,6 +43,8 @@ function crearPuerta(x, y, z, key, config) {
 		face.style.width = '10px'
 		face.style.marginTop = '17px'
 		face.style.marginLeft = '-14px'
+	}else{
+		puerta.media.objeto.parentNode.style.marginLeft = '14px'
 	}
 	// podemos personalizar el texto que aparece
 	puerta.abrir = (info) => {
@@ -85,9 +87,13 @@ function crearPuerta(x, y, z, key, config) {
 			// efecto de abrir puerta
 			if(gif)
 				puerta.animacion.play(.5)
-			else 
-				setTransform(puerta.media.objeto.parentNode, "rotateY", "60deg");
+			else {
+				setTransform(puerta.media.objeto.parentNode, "rotateY", "184deg");
+			}
 			puerta.noSolido();
+			if(!vertical){
+				puerta.nodo.style.marginLeft = '-18px'
+			}
 		} else {
 			try{
 				if(techo) techo.nodo.classList.toggle("occluding-force");
@@ -99,6 +105,9 @@ function crearPuerta(x, y, z, key, config) {
 			else 
 				setTransform(puerta.media.objeto.parentNode, "rotateY", vertical ? "90deg" : "0deg");
 			puerta.solido();
+			if(!vertical){
+				puerta.nodo.style.marginLeft = '0px'
+			}
 		}
 		// abrir/cerrar de puerta visible para ambos jugadores (neto)
 		evento(puerta.animationOpen ? "puerta:abrir" : "puerta:cerrar", {
@@ -124,10 +133,59 @@ function capaGrupo(grupo, n) {
 	for (const { el, off } of grupo) el.capa(n + off);
 }
 
-const soloFrenteMuro = (muros, puerta) => {
+function rotarBase64(base64Original, grados, callback) {
+  const img = new Image();
+  img.src = base64Original;
+
+  img.onload = function () {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Convertir grados a radianes
+    const radianes = (grados * Math.PI) / 180;
+
+    // Calcular las nuevas dimensiones del canvas (intercambia ancho por alto en giros de 90 o 270)
+    if (grados === 90 || grados === 270 || grados === -90) {
+      canvas.width = img.height;
+      canvas.height = img.width;
+    } else {
+      canvas.width = img.width;
+      canvas.height = img.height;
+    }
+
+    // Mover el origen del canvas al centro para poder rotar desde ahí
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(radianes);
+
+    // Dibujar la imagen centrada en el nuevo origen
+    ctx.drawImage(img, -img.width / 2, -img.height / 2);
+
+    // Exportar la nueva imagen rotada a Base64
+    const base64Rotada = canvas.toDataURL("image/png");
+    
+    // Devolver el resultado mediante el callback
+    callback(base64Rotada);
+  };
+}
+
+
+const soloFrenteMuro = (muros, puerta, vertical, imagen) => {
+	// la textura va en la cara lateral del muro: face-south en las paredes
+	// horizontales (mira al jugador) y face-east en las verticales (el lateral
+	// largo del bloque)
+	const caras = vertical ? ["face-west"] : ["face-south"];
 	for(let muro of muros){
 		muro.nodo.querySelectorAll('.face').forEach((f) => {
-			if(!f.classList.contains('face-south')) f.style.backgroundImage = 'none'
+			if(!caras.some((c) => f.classList.contains(c))) f.style.backgroundImage = 'none'
+			else{
+				if(vertical && imagen){
+					rotarBase64(imagenesImportadasData[imagen], 90, function(nuevaImagenBase64) {
+						f.style.backgroundImage = `url(${nuevaImagenBase64})`;
+						f.style.backgroundRepeat = "repeat-y";
+						f.style.marginLeft = '10px'
+					});	
+				}
+			}
 		})
 	}
 	// sin .puerta() no hay sprite que ajustar: la pared se usa sola
@@ -173,7 +231,7 @@ function paredHorizontal(x, y, w, imagen, z) {
 	let muros = [muro]
 	let manager = {
 		soloFrente(){
-			soloFrenteMuro(muros, puerta)
+			soloFrenteMuro(muros, puerta, false, imagen)
 			return manager
 		},
 		noBordes(){
@@ -271,7 +329,7 @@ function paredVertical(x, y, d, imagen, z) {
 	let muros = [muro]
 	let manager = {
 		soloFrente(){
-			soloFrenteMuro(muros, puerta)
+			soloFrenteMuro(muros, puerta, true, imagen)
 			return manager
 		},
 		noBordes(){
@@ -403,7 +461,7 @@ function habitacionOculta(x, y, w, h, key, imagen) {
 			hidden.nodo.remove();
 			techo.nodo.classList.toggle("occluding-force");
 			// efecto de abrir puerta
-			setTransform(puerta.media.objeto.parentNode, "rotateY", "60deg");
+			setTransform(puerta.media.objeto.parentNode, "rotateY", "184deg");
 			puerta.noSolido();
 		} else {
 			techo.nodo.classList.toggle("occluding-force");

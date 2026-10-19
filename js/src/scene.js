@@ -640,7 +640,10 @@ class SceneManager {
 						opcionesInventarioGlobal[id] = config.opciones
 					}
 					return elementoFantasma(id, x, y);
-				}else{
+				}else if(config?.opciones){
+					// sin opciones no se registra la clave: un undefined aqui hace
+					// que hasOwnProperty() pase y luego opcionesInventarioGlobal[id]
+					// [opcion] reviente al guardar/usar ese item
 					opcionesInventarioGlobal[id] = config.opciones
 				}
 				let guardado = datos.elementos[id];
@@ -1734,6 +1737,23 @@ let aliasProps = {
 				return elemento
 			},
 		};
+		// evento "orientar": se dispara al cambiar la orientacion, sin importar
+		// quien la asigne (orientar(), seguir(), vision(), player, red, ...).
+		// "orientar:@tipo" lo deriva eventBus.emitir, igual que colision/mover.
+		let orientacionActual = elemento.orientacion;
+		Object.defineProperty(elemento, "orientacion", {
+			enumerable: true,
+			configurable: true,
+			get() { return orientacionActual; },
+			set(v) {
+				if (v === orientacionActual) return;
+				const anterior = orientacionActual;
+				orientacionActual = v;
+				const info = { elemento, objeto: elemento, origen: () => elemento, orientacion: v, anterior };
+				evento("orientar", info);
+				evento("orientar:" + elemento.id, info);
+			},
+		});
 		if(config?.escala){
 			elemento.escala(config.escala)
 		}

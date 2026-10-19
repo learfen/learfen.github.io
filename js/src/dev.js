@@ -53,6 +53,13 @@ const panel = `
         </div>
         
         <div class="btn-row panel bg-gray-800 px-2 py-3 flex flex-wrap" style="max-width: 60vw;overflow-y:auto;max-height:80vh" id="tutoriales" name="tutoriales">
+			<div class="w-full">
+			<div class="flex">
+				Buscar:<input type="search" placeholder="Buscar" id="search-tutoriales" class="input" onchange="buscarEnTutoriales">
+				<button id="buscar-tutoriales" onclick="buscarEnTutoriales">🔎</button>
+				</div>
+				<div id="tutoriales-result-find"></div>
+			</div>
 			<h4 class="w-full">Actores</h4>
             <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('vidas');">Vidas</button>
             <button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('colision');">Colision</button>
@@ -77,6 +84,7 @@ const panel = `
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('repetir');">Repetir/contar</button>
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('eventos');">Eventos</button>
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('esperar');">Esperar</button>
+			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('ubicacion');">Ubicación</button>
 
 			<h4 class="w-full">Estilos</h4>
 			<button class="btn p-1 w-50 flex items-center justify-center" onclick="mostrarTutorial('escala');">Agrandar/encoger</button>
@@ -346,15 +354,9 @@ if (new URLSearchParams(location.search).has("neto")) {
 } else {
 	installDevPanel();
 }
-function mostrarTutorial(select) {
-	let buttonActived = document.querySelector(".tab button.active");
-	buttonActived.click();
-	if (estado() !== "play") {
-		evento("s");
-	}
-	// mover el scroll de la pagina hasta el 0
-	window.scrollTo(0, 0);
-	let tutoriales = {
+
+
+	let tutorialesContent = {
 		vidas: [
 			`
 #### ¿A quien podemos ponerle vidas?
@@ -1003,8 +1005,135 @@ repetir((repeticion) => {
 
 `
 		],
+		eventos:[
+`
+### ¿Como saber cuando suceden cosas?
+Los eventos nos permiten saber que hace el usuario o que sucede en el juego.
+`,
+`
+### ¿Como saber cuando se presiona una tecla?
+
+/code
+escuchar("a", () => {
+	player().decir("presionaste a", 1)
+})
+`,
+`
+### ¿Como saber cuando colisionaron 2 objetos?
+
+selector = id o @tipo
+escuchar("colision:"+selector , accion )
+
+// quien colisiono
+// con que colisiono
+// elemento que colisiono ( es lo mismo que quien)
+
+/code
+escuchar("colision:player", ( {quien, con, elemento} ) => {
+	
+})
+`,
+`
+### ¿Como saber cuando se mueve un objeto?
+
+/code
+escuchar("mover:player", () => {
+	player().decir("acabo de moverme", 1)
+})
+`,
+		],
+
+escalar: [
+
+`
+### ¿Como escalar un objeto?
+Cambia visualmente el tamaño pero sigue ocupando solo 1 espacio
+
+/code
+escalar("player", 2)
+`,
+`
+### Escalar y expandir son 2 acciones diferentes
+
+/code
+escenaActiva(2,2,"imagen").expandir(2,2)
+`
+
+],
+esperar:[
+
+`
+### ¿Como esperar?
+
+esperarY( segundos , accion )
+
+/code
+player().decir("esperando 1 segundo",1)
+esperarY(1, () => {
+	player().decir("ya paso 1 segundo",1)
+})
+
+`
+],
+ubicacion:[
+`
+### ¿Como saber si el player o cualquier objeto esta en una ubicación(x,y) ?
+/code
+if(player().en(2,2)){
+	player().decir("estoy en el inicio",1)
+}
+`,
+`
+### ¿Como saber si el player o cualquier objeto esta sobre un objeto?
+
+/code
+if(player().en("@agua")){
+	player().decir("estoy en agua",1)
+}
+`
+]		
 	};
-	if (tutoriales.hasOwnProperty(select)) {
-		relatar(tutoriales[select]);
+
+function mostrarTutorial(select) {
+	let buttonActived = document.querySelector(".tab button.active");
+	buttonActived.click();
+	if (estado() !== "play") {
+		evento("s");
+	}
+	// mover el scroll de la pagina hasta el 0
+	window.scrollTo(0, 0);
+
+	if (tutorialesContent.hasOwnProperty(select)) {
+		relatar(tutorialesContent[select]);
 	}
 }
+
+function buscarEnTutoriales(){
+	let text = document.querySelector('#search-tutoriales').value.toLowerCase();
+	let res = []
+	for(let tutorialText in tutorialesContent){
+		let data = tutorialesContent[tutorialText];
+		console.log(String(data))
+		if(String(data).toLowerCase().includes(text)) {
+			res.push(tutorialText);
+		}
+	}
+	console.log(res)
+	relatarTutoriales(res);
+}
+
+function relatarTutoriales(posibles){
+	// creamos el html con botones para que abra el tutorial que es 
+	let html = "";
+	for(let i = 0; i < posibles.length; i++){
+		html += `<button onclick="mostrarTutorial('${posibles[i]}')">${posibles[i]}</button>`;
+	}
+	console.log(html)
+	document.querySelector('#tutoriales-result-find').innerHTML = html;
+}
+
+document.addEventListener("click", (ev) => {
+	if(ev.target?.id === 'buscar-tutoriales'){
+		buscarEnTutoriales(ev);
+	}
+})

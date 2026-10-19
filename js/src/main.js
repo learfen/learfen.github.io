@@ -914,6 +914,8 @@ const iniciarJuego = () => {
 					// init (imagenesPesca, inventario, los escuchar) nunca corre
 					if(player() && globalListos) {
 						evento("creado:player", { nuevo:true, elemento: player() });
+						
+					    player().px(40,50).margenY(-30).margenX(5)
 						clearInterval(xPlayer);
 					}
 				}, 100);

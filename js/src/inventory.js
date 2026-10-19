@@ -139,6 +139,9 @@ async function usarInventario(user, items) {
 		existeTipo(item) {
 			return user().propiedades("items").some((i) => i.tipo == item);
 		},
+		contar(tipo){
+			return user().propiedades("items").filter((i) => i.tipo == tipo.slice(1)).length
+		},
 		existeId(id) {
 			return user().propiedades("items").some((i) => i.id == id);
 		},
@@ -488,7 +491,7 @@ escuchar(
 					objeto
                 );
             }
-			inventarioSeleccionado.menu().cerrar();
+			inventarioSeleccionado().menu().cerrar();
         } 
 
     
