@@ -1515,6 +1515,9 @@ respeta la entrada suave definida por transition del .block
 	padding: 1px 6px;
 	border-radius: 4px;
 	display: none;
+	&.inventario-menu{	
+		margin-top: 45px;
+	}
 	&.show {
 		display: flex;
 		translate:0px 0px 20px ;
@@ -1522,6 +1525,18 @@ respeta la entrada suave definida por transition del .block
 	.vidas{
 		font-size: 5px;
 	}
+}
+
+/* menu de opciones (guardar/recuperar): botones uno debajo del otro */
+.block-label.options {
+	flex-direction: column;
+	align-items: stretch;
+	gap: 2px;
+}
+
+/* mientras el menu esta abierto, el bloque sube por encima del resto */
+.block.menu-abierto {
+	z-index: 10000 !important;
 }
 
 .block.non-solid .face {
