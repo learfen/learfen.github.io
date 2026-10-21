@@ -1,23 +1,22 @@
-
 let magneticListener;
 
 // Profundidad de la camara en modo juego. Fija a proposito: antes se
 // recalculaba desde la posicion del jugador en cada paso, lo que re-
 // proyectaba toda la escena de golpe y se veia como vibracion.
 const PERSPECTIVA_JUEGO = "2400px";
-const opcionesInventarioGlobal = {}
+const opcionesInventarioGlobal = {};
 
-function crearId(id , imageAlias){
+function crearId(id, imageAlias) {
 	if (!id) {
 		id =
 			imageAlias +
 			`-c-${semilla() ? idFromSeed() : Math.random().toString(36).substr(2, 9)}`;
 	}
 	// id solo puede contener letras, numeros y guiones
-	if(id.match(/[^a-zA-Z0-9-]/g)){
-		id = id.replace(/[^a-zA-Z0-9-]/g, '');
+	if (id.match(/[^a-zA-Z0-9-]/g)) {
+		id = id.replace(/[^a-zA-Z0-9-]/g, "");
 	}
-	return id
+	return id;
 }
 
 class SceneManager {
@@ -31,7 +30,7 @@ class SceneManager {
 		this.idSeleccionado = null;
 		this.modoCamara = true;
 		this.elementos = [];
-		evento("scene:created", true)
+		evento("scene:created", true);
 
 		// respaldo de seleccion por click: el hit-test del 3D proyectado es
 		// impreciso (el click a veces cae en el overlay y no llega al bloque),
@@ -42,25 +41,49 @@ class SceneManager {
 			if (new URLSearchParams(location.search).has("neto")) return;
 			// si se hizo click en algun bloque, no hacer nada
 			if (e.target.closest?.(".block")) return;
-			if (e.target.closest?.("button, a, input, select, textarea, .actor-chip, .barInfo")) return;
+			if (
+				e.target.closest?.(
+					"button, a, input, select, textarea, .actor-chip, .barInfo",
+				)
+			)
+				return;
 			// buscar cell en el stack 3D del punto clickado
 			const cells = document.elementsFromPoint(e.clientX, e.clientY);
-			const cell = cells.find(el => el.classList?.contains('cell') && el.parentElement?.id === 'grid');
+			const cell = cells.find(
+				(el) =>
+					el.classList?.contains("cell") &&
+					el.parentElement?.id === "grid",
+			);
 			if (cell) {
 				const idx = [...cell.parentNode.children].indexOf(cell);
-				window.selectedPosition = { x: idx % 20, y: Math.floor(idx / 20) , z: Math.floor(idx / 400) };
-				document.getElementById("status").textContent = `Celda: ${window.selectedPosition.x}, ${window.selectedPosition.y}, ${window.selectedPosition.z}`
-				document.querySelector('.cell.selected')?.classList.remove('selected')
-				cell.classList.add('selected')
+				window.selectedPosition = {
+					x: idx % 20,
+					y: Math.floor(idx / 20),
+					z: Math.floor(idx / 400),
+				};
+				document.getElementById("status").textContent =
+					`Celda: ${window.selectedPosition.x}, ${window.selectedPosition.y}, ${window.selectedPosition.z}`;
+				document
+					.querySelector(".cell.selected")
+					?.classList.remove("selected");
+				cell.classList.add("selected");
 			}
-			const x = e.clientX, y = e.clientY;
-			let mejor = null, mejorD = 50;
+			const x = e.clientX,
+				y = e.clientY;
+			let mejor = null,
+				mejorD = 50;
 			for (const o of this.elementos) {
 				if (!o.nodo) continue;
 				if (o.propiedades("visible") === false) continue;
 				const r = o.nodo.getBoundingClientRect();
-				const d = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2));
-				if (d < mejorD) { mejorD = d; mejor = o; }
+				const d = Math.hypot(
+					x - (r.left + r.width / 2),
+					y - (r.top + r.height / 2),
+				);
+				if (d < mejorD) {
+					mejorD = d;
+					mejor = o;
+				}
 			}
 			if (mejor) this.seleccionarObjeto(mejor.id);
 		});
@@ -134,10 +157,12 @@ class SceneManager {
 				const gw = this.gridWrap;
 				gw.style.transform = `scale(1) translate3d(0px, 0px, 0px)`;
 				const g = this.grid.getBoundingClientRect();
-				const s = Math.min(vp.width / g.width, vp.height / g.height) * 0.92;
+				const s =
+					Math.min(vp.width / g.width, vp.height / g.height) * 0.92;
 				const vpx = vp.left + vp.width / 2;
 				const vpy = vp.top + vp.height / 2;
-				let tx = 0, ty = 0;
+				let tx = 0,
+					ty = 0;
 				for (let i = 0; i < 6; i++) {
 					gw.style.transform = `translate3d(${tx}px, ${ty}px, 0px) scale(${s})`;
 					const g2 = this.grid.getBoundingClientRect();
@@ -205,8 +230,8 @@ class SceneManager {
 
 		const translateX = vpWidth / 2 - px;
 		const translateY = vpHeight / 2 - proyectadoY;
-		let x = translateX - 50
-		let y = translateY
+		let x = translateX - 50;
+		let y = translateY;
 		// recortar a que la malla siga cubriendo el visor, no a numeros fijos:
 		// los fijos cortaban el scroll antes de llegar a la ultima fila ni a
 		// las columnas 0/19
@@ -234,15 +259,20 @@ class SceneManager {
 			// anterior si this.zoom acaba de cambiar, y sin dividir por ella la
 			// medida sale mal
 			const cs = getComputedStyle(gw).transform;
-			const m = cs && cs !== "none" ? new DOMMatrixReadOnly(cs) : new DOMMatrixReadOnly();
-			const zx = m.a || 1, zy = m.d || 1;
+			const m =
+				cs && cs !== "none"
+					? new DOMMatrixReadOnly(cs)
+					: new DOMMatrixReadOnly();
+			const zx = m.a || 1,
+				zy = m.d || 1;
 			const z = this.zoom;
 			// geometria propia de la malla, ajena al transform del wrap
 			const qx = (g.left - w.left) / zx;
 			const qy = (g.top - w.top) / zy;
 			const wL = g.width / zx;
 			const hL = g.height / zy;
-			const ox = gw.offsetWidth / 2, oy = gw.offsetHeight / 2;
+			const ox = gw.offsetWidth / 2,
+				oy = gw.offsetHeight / 2;
 			// la malla en pantalla para un translate t es: a + z*t
 			const ax = vp.left + gw.offsetLeft + (1 - z) * ox + z * qx;
 			const ay = vp.top + gw.offsetTop + (1 - z) * oy + z * qy;
@@ -251,7 +281,8 @@ class SceneManager {
 			let subidaPared = 0;
 			for (const pared of this.grid.querySelectorAll(".fondo-pared")) {
 				const r = pared.getBoundingClientRect();
-				if (r.height > 0) subidaPared = Math.max(subidaPared, (g.top - r.top) / zy);
+				if (r.height > 0)
+					subidaPared = Math.max(subidaPared, (g.top - r.top) / zy);
 			}
 			this._limBase = {
 				xMin: (vp.right - ax - wL * z) / z,
@@ -276,7 +307,10 @@ class SceneManager {
 			const alto = (e.z || 0) + (e.h || 1);
 			if (alto > maxZTrasero) maxZTrasero = alto;
 		}
-		const subida = Math.max(b.subidaPared, (b.hL * maxZTrasero * 40) / 1200);
+		const subida = Math.max(
+			b.subidaPared,
+			(b.hL * maxZTrasero * 40) / 1200,
+		);
 		this._lim = {
 			xMin: b.xMin,
 			xMax: b.xMax,
@@ -309,26 +343,19 @@ class SceneManager {
 				// parte visible tocara al player.
 				const cos45 = Math.cos(Math.PI / 4);
 				const sin45 = Math.sin(Math.PI / 4);
-				const proyectado = (y, z) =>
-					(y - 600) * cos45 - z * sin45;
+				const proyectado = (y, z) => (y - 600) * cos45 - z * sin45;
 				// centro de camara en espacio proyectado
 				const cpx = (centro.x + centro.w / 2) * 60;
 				const Pc = proyectado(
 					(centro.y + centro.d / 2) * 60,
-					(centro.z + centro.h / 2) * 40
+					(centro.z + centro.h / 2) * 40,
 				);
 				// rango X del objeto
 				const xMin = obj.x * 60;
 				const xMax = (obj.x + obj.w) * 60;
 				// rango proyectado del objeto (a partir de sus esquinas)
-				const Pmax = proyectado(
-					(obj.y + obj.d) * 60,
-					obj.z * 40
-				);
-				const Pmin = proyectado(
-					obj.y * 60,
-					(obj.z + obj.h) * 40
-				);
+				const Pmax = proyectado((obj.y + obj.d) * 60, obj.z * 40);
+				const Pmin = proyectado(obj.y * 60, (obj.z + obj.h) * 40);
 				const fuera =
 					xMax < cpx - cW / 2 - margen ||
 					xMin > cpx + cW / 2 + margen ||
@@ -345,8 +372,7 @@ class SceneManager {
 					obj.nodo.classList.remove("off-screen");
 					if (obj.animacion && obj._gifFueraYa) {
 						obj._gifFueraYa = false;
-						if (!obj._gifPausadoPorConfig)
-							obj.animacion.play();
+						if (!obj._gifPausadoPorConfig) obj.animacion.play();
 					}
 				}
 			} else {
@@ -360,11 +386,18 @@ class SceneManager {
 			}
 
 			const dy = obj.y - this.jugador.y;
-			if (dy <= 0) { obj.nodo.classList.remove("occluding"); return; }
+			if (dy <= 0) {
+				obj.nodo.classList.remove("occluding");
+				return;
+			}
 
-			const solapaX = obj.x < this.jugador.x + this.jugador.w &&
+			const solapaX =
+				obj.x < this.jugador.x + this.jugador.w &&
 				obj.x + obj.w > this.jugador.x;
-			if (!solapaX) { obj.nodo.classList.remove("occluding"); return; }
+			if (!solapaX) {
+				obj.nodo.classList.remove("occluding");
+				return;
+			}
 
 			// > y no >=: un muro cuyo techo queda JUSTO en el plano de los pies del
 			// jugador (p.ej. paredHorizontal().capa(3) con h=2, jugador en z=5)
@@ -378,13 +411,13 @@ class SceneManager {
 			}
 		});
 	}
-	
+
 	actualizarTransformNodo(obj) {
 		if (!obj.nodo) return;
 		obj.nodo.style.setProperty("--cx", obj.x);
 		obj.nodo.style.setProperty("--cy", obj.y);
 		obj.nodo.style.setProperty("--cz", obj.z);
-		
+
 		return;
 		const lbl = obj.nodo.querySelector(".block-label");
 		if (lbl) {
@@ -394,9 +427,9 @@ class SceneManager {
 				: `${obj.tipo} #${obj.id} (P:${obj.peso})`;
 		}
 	}
-	buscar(selector, items){
-		if(!items) items = this.elementos;
-		if(selector.startsWith("@")){
+	buscar(selector, items) {
+		if (!items) items = this.elementos;
+		if (selector.startsWith("@")) {
 			selector = selector.replace("@", "");
 			return items.filter((o) => o.tipo === selector);
 		}
@@ -408,26 +441,31 @@ class SceneManager {
 			w: 1,
 			h: 1,
 			d: 1,
-			ocupado:false,
+			ocupado: false,
 			solido: true,
 			fuerza: 1,
 			peso: 10,
 			...config,
 		});
 	}
-	agregarDelante(imagen, id, config){
-		let { x , y , z } = player().adelante();
-		if(id === undefined) return this.agregar(x, y, imagen, {z});
-		if(typeof id === 'string'){
-			if(config === undefined ) return this.agregar(x, y, imagen, {z, id});
-			return this.agregar(x, y, imagen, {z, id, ...config});	
+	agregarDelante(imagen, id, config) {
+		let { x, y, z } = player().adelante();
+		if (id === undefined) return this.agregar(x, y, imagen, { z });
+		if (typeof id === "string") {
+			if (config === undefined)
+				return this.agregar(x, y, imagen, { z, id });
+			return this.agregar(x, y, imagen, { z, id, ...config });
 		}
-		return this.agregar(x, y, imagen, {z, ...id});
+		return this.agregar(x, y, imagen, { z, ...id });
 	}
 	agregarEnInfo(contenedor, aliasImage, col) {
 		// si no existe la imagen
 		if (!imagenesImportadas[aliasImage]) {
-			errorRender("No existe la imagen " + aliasImage+ " debes importarla en el boton [imagenes] ");
+			errorRender(
+				"No existe la imagen " +
+					aliasImage +
+					" debes importarla en el boton [imagenes] ",
+			);
 			return;
 		}
 		let div = document.querySelector("#" + contenedor);
@@ -454,7 +492,7 @@ class SceneManager {
 				const data = imagenesImportadasData[alias];
 				if (data) {
 					let piso = this.aplicarPiso(data, cover, position);
-					if(next) next(piso)
+					if (next) next(piso);
 				} else {
 					// la imagen (fetch bas64) aun no cargo: reintento hasta que exista
 					setTimeout(aplicarCuandoEste, 100);
@@ -464,12 +502,12 @@ class SceneManager {
 			return this;
 		}
 		this.piso = this.aplicarPiso(url, cover, position);
-		if(next) next(this.piso)
+		if (next) next(this.piso);
 		return this;
 	}
 	aplicarPiso(url, cover, position) {
 		let fondo = this.gridWrap.querySelector(":scope > .piso");
-		if(!fondo){
+		if (!fondo) {
 			fondo = document.createElement("div");
 			fondo.className = "piso";
 			this.gridWrap.appendChild(fondo);
@@ -483,27 +521,30 @@ class SceneManager {
 		let configPiso = {
 			repetir(n) {
 				let x = setInterval(() => {
-					if(fondo){
-						if(n === true) fondo.style.backgroundRepeat = "repeat";
-						if(n === false) fondo.style.backgroundRepeat = "no-repeat";
-						if(n === 'x') fondo.style.backgroundRepeat = "repeat-x";
-						if(n === 'y') fondo.style.backgroundRepeat = "repeat-y";
+					if (fondo) {
+						if (n === true) fondo.style.backgroundRepeat = "repeat";
+						if (n === false)
+							fondo.style.backgroundRepeat = "no-repeat";
+						if (n === "x")
+							fondo.style.backgroundRepeat = "repeat-x";
+						if (n === "y")
+							fondo.style.backgroundRepeat = "repeat-y";
 						clearInterval(x);
 					}
-				}, 10)
+				}, 10);
 				return configPiso;
 			},
-			cubrir(){
+			cubrir() {
 				let x = setInterval(() => {
-					if(fondo){
+					if (fondo) {
 						fondo.style.backgroundSize = "cover";
 						clearInterval(x);
 					}
-				}, 10)
-				return configPiso
-			}
-		}
-		return configPiso
+				}, 10);
+				return configPiso;
+			},
+		};
+		return configPiso;
 	}
 
 	/*
@@ -554,22 +595,20 @@ class SceneManager {
 		div.style.height = p.h + "px";
 		div.style.backgroundImage = `url('${url}')`;
 		div.style.transform = `${p.nodo} ${p.cara}`;
-		
-		if(config.hasOwnProperty("y")){
+
+		if (config.hasOwnProperty("y")) {
 			// si config es numero agregamos px sino agregamos como texto nomas
-			div.style.backgroundPositionY = `${config.y + 100}%`;	
+			div.style.backgroundPositionY = `${config.y + 100}%`;
 		}
 		return div;
 	}
 
-	
-
 	cargarJSON(jsonStr) {
-//this.limpiarEscena();
-//const datos = JSON.parse(jsonStr);
-//datos.forEach((d) =>
-//	this.crearObjeto(d.x, d.y, d.imagenAlias, d.id, d),
-//);
+		//this.limpiarEscena();
+		//const datos = JSON.parse(jsonStr);
+		//datos.forEach((d) =>
+		//	this.crearObjeto(d.x, d.y, d.imagenAlias, d.id, d),
+		//);
 	}
 
 	crearNodoHTML(obj) {
@@ -625,6 +664,9 @@ class SceneManager {
 		this.grid.appendChild(el);
 		return el;
 	}
+	contar(tipo) {
+		return this.elementos.filter((i) => i.tipo == tipo.slice(1)).length
+	}
 	crearObjeto(x, y, imageAlias, id, config) {
 		if (id && typeof id === "object") {
 			config = { ...id };
@@ -635,46 +677,55 @@ class SceneManager {
 			try {
 				// ids destruidos de forma compartida (neto/backend): no se recrean
 				if (window.neto?.eliminados?.has?.(id) && !config?.resucitar) {
-					console.log('Error crear: id destruido en el backend:', id)
-					if(config?.opciones){
-						opcionesInventarioGlobal[id] = config.opciones
+					console.log("Error crear: id destruido en el backend:", id);
+					if (config?.opciones) {
+						opcionesInventarioGlobal[id] = config.opciones;
 					}
 					return elementoFantasma(id, x, y);
-				}else if(config?.opciones){
+				} else if (config?.opciones) {
 					// sin opciones no se registra la clave: un undefined aqui hace
 					// que hasOwnProperty() pase y luego opcionesInventarioGlobal[id]
 					// [opcion] reviente al guardar/usar ese item
-					opcionesInventarioGlobal[id] = config.opciones
+					opcionesInventarioGlobal[id] = config.opciones;
 				}
 				let guardado = datos.elementos[id];
 				// no recreamos objetos que estan guardados en un inventario, ni enemigos destruidos.
 				// solo al montar la escena: durante el juego (play) el codigo del editor crea en vivo
 				if (guardado && !config?.resucitar && estado() !== "play") {
 					if (guardado.propiedades?.["guardado-en"]) {
-						console.log('Error crear: ya existe el id:', id, " guardado en el inventario de: ", guardado.propiedades["guardado-en"])
+						console.log(
+							"Error crear: ya existe el id:",
+							id,
+							" guardado en el inventario de: ",
+							guardado.propiedades["guardado-en"],
+						);
 						return elementoFantasma(id, x, y);
 					}
-					if (guardado.destruido && (!guardado.escena || guardado.escena == escenaActiva().name)) {
-						console.log('Error crear: el id fue eliminado:', id)
+					if (
+						guardado.destruido &&
+						(!guardado.escena ||
+							guardado.escena == escenaActiva().name)
+					) {
+						console.log("Error crear: el id fue eliminado:", id);
 						return elementoFantasma(id, x, y);
 					}
 				}
 			} catch (error) {
-				console.log('Datos corruptos o no existen')
+				console.log("Datos corruptos o no existen");
 			}
 
-			try{
+			try {
 				let el = escenaActiva().elementos.find((i) => id == i.id);
 				if (el) {
-					console.log('Error crear: ya existe el id:', id)
+					console.log("Error crear: ya existe el id:", id);
 					return el;
 				}
 			} catch (error) {
-				console.log('Error al buscar id en elementos')
+				console.log("Error al buscar id en elementos");
 			}
 		}
-		id = crearId(id, imageAlias)
-		
+		id = crearId(id, imageAlias);
+
 		let propiedades = {
 			cubo: config?.cubo || false,
 			solido: config?.solido !== undefined ? config.solido : true,
@@ -692,9 +743,9 @@ class SceneManager {
 			escena: config?.escena || "principal",
 			esPlayer: config?.esPlayer || false,
 			animadoImagen: config?.animadoImagen || {},
-			interactuando:false,
+			interactuando: false,
 			items: [],
-			piso:false,
+			piso: false,
 			vidas: config?.vidas || 1,
 			"2d": false,
 		};
@@ -702,7 +753,24 @@ class SceneManager {
 		if (config) {
 			for (let key in config) {
 				if (propiedades.hasOwnProperty(key)) continue;
-				if (["id","x","y","z","w","h","d","nodo","media","img","configOriginal","tipo","imagenAlias"].includes(key)) continue;
+				if (
+					[
+						"id",
+						"x",
+						"y",
+						"z",
+						"w",
+						"h",
+						"d",
+						"nodo",
+						"media",
+						"img",
+						"configOriginal",
+						"tipo",
+						"imagenAlias",
+					].includes(key)
+				)
+					continue;
 				propiedades[key] = config[key];
 			}
 		}
@@ -717,36 +785,36 @@ class SceneManager {
 			positionPrev: { x: x || 0, y: y || 0, z: config?.z || 0 },
 			cubo: config?.cubo || false,
 			configOriginal: config,
-			destruible:false,
+			destruible: false,
 			orientacion: config?.orientacion || "", // N, S, E, W
 			tipo: config?.tipo || imageAlias,
 			imagenAlias: imageAlias || null,
 			escena: config?.escena || "principal",
 			esPlayer: !!config?.esPlayer,
-			installed:false,
+			installed: false,
 			nodo: null,
 			items: [],
 			alto(h) {
 				elemento.nodo.style.setProperty("--h", h);
-				propiedades.alto = h
+				propiedades.alto = h;
 				elemento.h = h;
 				return elemento.baseAlPiso();
 			},
 			ancho(w) {
 				elemento.nodo.style.setProperty("--w", w);
-				propiedades.ancho = w
+				propiedades.ancho = w;
 				elemento.w = w;
 				return elemento.baseAlPiso();
 			},
 			largo(d) {
 				elemento.nodo.style.setProperty("--d", d);
-				propiedades.profundidad = d
+				propiedades.profundidad = d;
 				elemento.d = d;
 				return elemento.baseAlPiso();
 			},
 			animar() {
-				propiedades.animar = true
-				propiedades.animado = true
+				propiedades.animar = true;
+				propiedades.animado = true;
 				return animar(elemento);
 			},
 			baseAlPiso() {
@@ -756,9 +824,15 @@ class SceneManager {
 				if (!media || !elemento.nodo) return elemento;
 				const face = elemento.nodo.querySelector(".face-south");
 				if (!face) return elemento;
-				const faceH = (parseFloat(elemento.nodo.style.getPropertyValue("--h")) || 1) * 40;
+				const faceH =
+					(parseFloat(elemento.nodo.style.getPropertyValue("--h")) ||
+						1) * 40;
 				if (media.tagName === "IMG" && !media.naturalWidth) {
-					media.addEventListener("load", () => elemento.baseAlPiso(), { once: true });
+					media.addEventListener(
+						"load",
+						() => elemento.baseAlPiso(),
+						{ once: true },
+					);
 					return elemento;
 				}
 				let imgH;
@@ -767,8 +841,11 @@ class SceneManager {
 					// del aspect de cada media/variante
 					imgH = propiedades.px.h;
 				} else if (media.tagName === "IMG") {
-					const w = (parseFloat(elemento.nodo.style.getPropertyValue("--w")) || 1) * 60;
-					imgH = w * media.naturalHeight / media.naturalWidth;
+					const w =
+						(parseFloat(
+							elemento.nodo.style.getPropertyValue("--w"),
+						) || 1) * 60;
+					imgH = (w * media.naturalHeight) / media.naturalWidth;
 				} else {
 					// canvas: dimensiones no predecibles, usar escala real del plano de la cara
 					const S = face.getBoundingClientRect().height / faceH;
@@ -776,68 +853,123 @@ class SceneManager {
 					if (!imgH) return elemento;
 				}
 				// margenY manual del usuario tiene prioridad sobre la alineacion automatica
-				const margenYManual = margenEn(propiedades.margenY, elemento.orientacion);
+				const margenYManual = margenEn(
+					propiedades.margenY,
+					elemento.orientacion,
+				);
 				if (typeof margenYManual === "number") {
 					media.style.marginTop = margenYManual + "px";
 				} else {
-					media.style.marginTop = (faceH - imgH) + "px";
+					media.style.marginTop = faceH - imgH + "px";
 				}
 				return elemento;
 			},
 			capa(z) {
 				// $capa
 				if (typeof z !== "number") {
-					errorRender("Capa debe ser un numero:"+ z);
+					errorRender("Capa debe ser un numero:" + z);
 					throw new Error("La capa debe ser un numero");
 				}
 				elemento.z = z;
-				elemento.mover(elemento.x , elemento.y)
+				elemento.mover(elemento.x, elemento.y);
 				// si es piso, reaplicar la correccion de z (piso() la calcula
 				// una sola vez al crearse, con el z que tenia entonces)
 				if (propiedades.piso) {
 					elemento.nodo.style.marginTop =
-						(margenEn(propiedades.margenY, elemento.orientacion) || 0) - z * 23 + "px";
+						(margenEn(propiedades.margenY, elemento.orientacion) ||
+							0) -
+						z * 23 +
+						"px";
 				}
 				return elemento;
 			},
-			guardarItem(tipo, id){
-				elemento.item = { tipo }
-				if(id) elemento.item.id = id
-				else elemento.item.id = elemento.id +"-"+ tipo
-				
+			guardarItem(tipo, id) {
+				elemento.item = { tipo };
+				if (id) elemento.item.id = id;
+				else elemento.item.id = elemento.id + "-" + tipo;
+
 				// el arquero suelta su llave al morir: el id estable (llave-calabozo) la
 				// replica en ambos navegadores via ws:created y queda en el estado del backend
-				escuchar("destruido:"+elemento.id, ({ elemento }) => {
+				escuchar("destruido:" + elemento.id, ({ elemento }) => {
 					elemento.item.creado = escenaActiva()
 						.agregar(
 							elemento.x,
 							elemento.y,
 							elemento.item.tipo,
-							elemento.item.id
+							elemento.item.id,
 						)
 						.solido()
-						.escala(.5)
-						.interactuar(() => player().inventario.guardar(elemento.item.creado))
+						.escala(0.5)
+						.interactuar(() =>
+							player().inventario.guardar(elemento.item.creado),
+						)
 						.propiedades("recoger", true);
 				});
-				return elemento
+				return elemento;
+			},
+
+			en(selector, y, z) {
+				if (y) {
+					let x = selector;
+					z = z || elemento.z;
+					return elemento.x == x && elemento.y == y && elemento.z == z;
+				}
+				// {x,y,z}
+				if (selector && typeof selector === "object") {
+					return (
+						elemento.x == selector.x &&
+						elemento.y == selector.y &&
+						elemento.z == selector.z
+					);
+				}
+				if (typeof selector === "string") {
+					let items = escenaActiva().buscar(selector);
+					for (let item of items) {
+						if (
+							item.x === elemento.x &&
+							item.y === elemento.y &&
+							item.z === elemento.z
+						) {
+							return true;
+						}
+						// evaluamos cuando el objeto fue expandido o es un piso
+						// x avanza con w, y con d (profundidad) y z con h (altura).
+						// Antes d y h estaban invertidos: un piso(2,2) tiene h=1 y
+						// solo reconocia una fila.
+						for (let k = 0; k < (item.h || 1); k++) {
+							for (let i = 0; i < (item.w || 1); i++) {
+								for (let j = 0; j < (item.d || 1); j++) {
+									if (
+										item.x + i === elemento.x &&
+										item.y + j === elemento.y &&
+										item.z + k === elemento.z
+									) {
+										return true;
+									}
+								}
+							}
+						}
+					}
+				}
+				// sin coincidencia: false (antes caia a un bucle con "item" fuera de
+				// scope -> ReferenceError y rompia al que llamaba, ej. al empujar)
+				return false;
 			},
 			escala(n) {
 				let dx = setInterval(() => {
-					if(!(elemento?.media?.objeto || elemento.nodo)) return ;
-					if(elemento?.media && elemento?.media?.objeto){
+					if (!(elemento?.media?.objeto || elemento.nodo)) return;
+					if (elemento?.media && elemento?.media?.objeto) {
 						aplicarEscalaMedia(elemento);
 					} else {
-						let nodo = elemento.nodo.querySelector('img')
-						if(nodo)
-							nodo.style.scale = n
+						let nodo = elemento.nodo.querySelector("img");
+						if (nodo) nodo.style.scale = n;
 					}
-					clearInterval(dx)
-				}, 50)
-				propiedades.escala = n
-				window.neto?.cambiar?.(elemento)
+					clearInterval(dx);
+				}, 50);
+				propiedades.escala = n;
+				window.neto?.cambiar?.(elemento);
 
-				return elemento
+				return elemento;
 			},
 			voltearHorizontal(v) {
 				// espeja el sprite (img o canvas del gif) en X; sin argumento alterna
@@ -864,10 +996,10 @@ class SceneManager {
 				return !!elemento.propiedades("piso");
 			},
 			expandir(w, d, h) {
-				if(typeof w === "object") {
-					h = w.h
-					d = w.d
-					w = w.w
+				if (typeof w === "object") {
+					h = w.h;
+					d = w.d;
+					w = w.w;
 				}
 				// d y h son opcionales: si no se envian conservan su valor actual
 				// (el default h:1 de agregar), asi llamadas viejas expandir(w,d)
@@ -875,7 +1007,11 @@ class SceneManager {
 				elemento.nodo.style.setProperty("--h", h ?? elemento.h);
 				elemento.nodo.style.setProperty("--w", w);
 				if (d !== undefined) elemento.nodo.style.setProperty("--d", d);
-				elemento.propiedades("expandir",{ w, h: h ?? elemento.h, d: d ?? elemento.d })
+				elemento.propiedades("expandir", {
+					w,
+					h: h ?? elemento.h,
+					d: d ?? elemento.d,
+				});
 				elemento.w = w;
 				if (d !== undefined) elemento.d = d;
 				if (h !== undefined) elemento.h = h;
@@ -885,110 +1021,123 @@ class SceneManager {
 			expandirHorizontal(n) {
 				// solo ancho (--w); conserva fondo y altura y re-alinea el
 				// sprite (baseAlPiso) para no requerir margenY a mano
-				return elemento.expandir(n, elemento.d, elemento.h).baseAlPiso();
+				return elemento
+					.expandir(n, elemento.d, elemento.h)
+					.baseAlPiso();
 			},
 			expandirVertical(n) {
 				// solo altura (--h); conserva ancho y fondo y re-alinea el sprite
-				return elemento.expandir(elemento.w, elemento.d, n).baseAlPiso();
+				return elemento
+					.expandir(elemento.w, elemento.d, n)
+					.baseAlPiso();
 			},
-			exportar(){	
-				let el = JSON.stringify(elemento)
-				let config = JSON.parse(el)
-				let ignoreKeys = ["nodo","media","img","configOriginal"];
-				
-				for(let key of ignoreKeys) {
-					if(config?.hasOwnProperty(key)) delete config[key];
-				}
-				
-				for(let key in elemento.propiedades()) {
-					if(!ignoreKeys.includes(key)) config[key] = elemento.propiedades(key)
+			exportar() {
+				let el = JSON.stringify(elemento);
+				let config = JSON.parse(el);
+				let ignoreKeys = ["nodo", "media", "img", "configOriginal"];
+
+				for (let key of ignoreKeys) {
+					if (config?.hasOwnProperty(key)) delete config[key];
 				}
 
-				return config
+				for (let key in elemento.propiedades()) {
+					if (!ignoreKeys.includes(key))
+						config[key] = elemento.propiedades(key);
+				}
+
+				return config;
 			},
 			deslizar(v) {
 				// modo deslizamiento: avanza suave mientras se sostiene una flecha, sin paso a paso
 				elemento.deslizando = v !== false;
 				// transicion a juego con INTERVALO_DESLIZAR_MS (main.js): velocidad constante, sin saltos
 				if (elemento.deslizando) {
-					const ms = typeof INTERVALO_DESLIZAR_MS !== "undefined" ? INTERVALO_DESLIZAR_MS : 230;
-					elemento.nodo.style.transition =
-						`transform ${ms}ms linear, translate ${ms}ms linear, opacity 0.15s ease-out`;
+					const ms =
+						typeof INTERVALO_DESLIZAR_MS !== "undefined"
+							? INTERVALO_DESLIZAR_MS
+							: 230;
+					elemento.nodo.style.transition = `transform ${ms}ms linear, translate ${ms}ms linear, opacity 0.15s ease-out`;
 				} else {
 					elemento.nodo.style.transition = "";
 				}
 				return elemento;
 			},
-			filtro(key, value){
+			filtro(key, value) {
 				let filtros = {
-					foco(value){
+					foco(value) {
 						// add efecto pulse
-						elemento.nodo.style.filter = `blur(${value}px)`
-					}
+						elemento.nodo.style.filter = `blur(${value}px)`;
+					},
+				};
+				if (filtros.hasOwnProperty(key)) {
+					filtros[key](value);
+					if (!propiedades.hasOwnProperty("filtro"))
+						propiedades["filtro"] = {};
+					propiedades["filtro"][key] = value;
 				}
-				if(filtros.hasOwnProperty(key)) {
-					filtros[key](value)
-					if(!propiedades.hasOwnProperty('filtro')) propiedades['filtro'] = {}
-					propiedades['filtro'][key] = value
-				}
-				return filtros
+				return filtros;
 			},
-			quitarFiltro(key){
+			quitarFiltro(key) {
 				let filtros = {
-					foco(){
-						elemento.nodo.style.filter = ""
-					}
-				}
-				if(filtros.hasOwnProperty(key)) filtros[key]()
-				return filtros
+					foco() {
+						elemento.nodo.style.filter = "";
+					},
+				};
+				if (filtros.hasOwnProperty(key)) filtros[key]();
+				return filtros;
 			},
-			guardado( id ){
-				if(id === undefined) return propiedades["guardado"]
-				if(id === false) return elemento.noGuardado()
-				if(typeof id != "string") {
-					errorRender("id debe ser un texto")
-					throw "id debe ser un texto"
+			guardado(id) {
+				if (id === undefined) return propiedades["guardado"];
+				if (id === false) return elemento.noGuardado();
+				if (typeof id != "string") {
+					errorRender("id debe ser un texto");
+					throw "id debe ser un texto";
 				}
-				if(!escenaActiva().elementos.find( i => i.id == id )){
-					errorRender("No existe el componente:#"+id)
-					throw "No existe el componente:#"+id
+				if (!escenaActiva().elementos.find((i) => i.id == id)) {
+					errorRender("No existe el componente:#" + id);
+					throw "No existe el componente:#" + id;
 				}
-				propiedades["guardado"] = true
-				propiedades["guardado-en"] = id
-				return elemento
-			},	
+				propiedades["guardado"] = true;
+				propiedades["guardado-en"] = id;
+				return elemento;
+			},
 			imagen(prop, value) {
-				if(!propiedades?.imagen) propiedades.imagen = {}
-				propiedades.imagen[prop] = value
-let aliasProps = {
-				ancho: "width",
-				alto: "height",
-				tamano: "background-size",
-				z: "translate",
-				y: "translate",
-				x: "translate",
-				repetir: "background-repeat",
-			};
-				let propCss = prop
-				if(prop == "repetir") {
+				if (!propiedades?.imagen) propiedades.imagen = {};
+				propiedades.imagen[prop] = value;
+				let aliasProps = {
+					ancho: "width",
+					alto: "height",
+					tamano: "background-size",
+					z: "translate",
+					y: "translate",
+					x: "translate",
+					repetir: "background-repeat",
+				};
+				let propCss = prop;
+				if (prop == "repetir") {
 					value = "repeat";
 				}
 				if (aliasProps[prop]) propCss = aliasProps[prop];
-				if(prop == "2d"){
-					elemento.propiedades("2d", true)
-					for(let nodo of elemento.nodo.querySelectorAll('canva,img')) {
-						nodo.remove()
+				if (prop == "2d") {
+					elemento.propiedades("2d", true);
+					for (let nodo of elemento.nodo.querySelectorAll(
+						"canva,img",
+					)) {
+						nodo.remove();
 					}
-					let frente = elemento.nodo.querySelector('.face-south')
-					insertarImagenEnNodo(frente, elemento.imagenAlias, "background")
+					let frente = elemento.nodo.querySelector(".face-south");
+					insertarImagenEnNodo(
+						frente,
+						elemento.imagenAlias,
+						"background",
+					);
 					//frente.style.background = 'url('+imagenesImportadasData[elemento.imagenAlias]+')';
-					frente.style.backgroundRepeat = "no-repeat"
-					frente.style.backgroundSize = "100%"
-					frente.style.backgroundPosition = "bottom"
-					frente.style.backfaceVisibility = "visible"
-				}
-				else if(elemento?.media){
-					if(prop == "ancho" || prop == "alto") {
+					frente.style.backgroundRepeat = "no-repeat";
+					frente.style.backgroundSize = "100%";
+					frente.style.backgroundPosition = "bottom";
+					frente.style.backfaceVisibility = "visible";
+				} else if (elemento?.media) {
+					if (prop == "ancho" || prop == "alto") {
 						elemento?.media?.objeto.style.setProperty(
 							propCss,
 							value +
@@ -997,25 +1146,29 @@ let aliasProps = {
 									: "px"),
 						);
 					}
-					if(prop == "x" || prop == "y" || prop == "z") {
-						let translate = ['0px', '0px', '0px']
-						let prev = elemento?.media?.objeto?.style?.translate
-						if(prev){
-							let p = prev.split(' ')
-							if(p.length == 2) p.push('0px')
-							if(p.length == 3) translate = p
+					if (prop == "x" || prop == "y" || prop == "z") {
+						let translate = ["0px", "0px", "0px"];
+						let prev = elemento?.media?.objeto?.style?.translate;
+						if (prev) {
+							let p = prev.split(" ");
+							if (p.length == 2) p.push("0px");
+							if (p.length == 3) translate = p;
 						}
-						let keyId = ['x', 'y', 'z'].indexOf(prop)
-						translate[keyId] = value + "px"
-						if (elemento?.media?.objeto) elemento.media.objeto.style.translate = translate.join(' ')
+						let keyId = ["x", "y", "z"].indexOf(prop);
+						translate[keyId] = value + "px";
+						if (elemento?.media?.objeto)
+							elemento.media.objeto.style.translate =
+								translate.join(" ");
 					}
-				}
-				else {
-					for(let nodo of elemento.nodo.querySelectorAll('.face')) {
+				} else {
+					for (let nodo of elemento.nodo.querySelectorAll(".face")) {
 						nodo.style.setProperty(propCss, value);
-						if(prop=="repetir") {
+						if (prop == "repetir") {
 							nodo.style.setProperty("background-size", "auto");
-							nodo.style.setProperty("backface-visibility", "visible");
+							nodo.style.setProperty(
+								"backface-visibility",
+								"visible",
+							);
 						}
 					}
 				}
@@ -1026,116 +1179,120 @@ let aliasProps = {
 				elemento.nodo.querySelector(".block-label").style.display =
 					"flex";
 				return elemento;
-			},	
+			},
 			informacion(data) {
-				if(typeof data === "string") elemento.infoDescription = data;
+				if (typeof data === "string") elemento.infoDescription = data;
 				return elemento;
 			},
 			interactuar(fn) {
-				if(!fn) {
-					errorRender("interactuar recibe una funcion como parametro")
-					throw "interactuar recibe una funcion como parametro"
+				if (!fn) {
+					errorRender(
+						"interactuar recibe una funcion como parametro",
+					);
+					throw "interactuar recibe una funcion como parametro";
 				}
-				if(typeof fn != "function") {
-					errorRender("interactuar debe ser una funcion")
-					throw "interactuar debe ser una funcion"
+				if (typeof fn != "function") {
+					errorRender("interactuar debe ser una funcion");
+					throw "interactuar debe ser una funcion";
 				}
 				// se guarda como string para poder restaurarla al sacar el objeto del inventario
 				propiedades["interactuarFunction"] = fn.toString();
-				elemento.interaccion = async(n, e) => {
-					if(elemento.interactuando) return ;
-					elemento.interactuando = true
-					n.con = n.objeto()
+				elemento.interaccion = async (n, e) => {
+					if (elemento.interactuando) return;
+					elemento.interactuando = true;
+					n.con = n.objeto();
 					await fn(n, e);
-					elemento.interactuando = false
-					return true
-				}
+					elemento.interactuando = false;
+					return true;
+				};
 				propiedades["colisionable"] = true;
 				return elemento;
 			},
-			largo(d){
+			largo(d) {
 				elemento.nodo.style.setProperty("--d", d);
-				propiedades.largo = d
+				propiedades.largo = d;
 				elemento.d = d;
 				return elemento.baseAlPiso();
 			},
-			lanzar(conf, tecla){
+			lanzar(conf, tecla) {
 				let config = {
-					imagen:conf,
-					distancia:4,
-				}
-				if(typeof conf === "object") config = conf
+					imagen: conf,
+					distancia: 4,
+				};
+				if (typeof conf === "object") config = conf;
 				else {
-					if(tecla){
-						config.tecla = tecla
+					if (tecla) {
+						config.tecla = tecla;
 					}
 				}
 				// si no ejecutamos .animar() lo ejecutamos
-				if (!elemento.hasOwnProperty("animado")){
-					elemento.animar()
-					return elemento.lanzar( config )
-				} 
-				
-				return elemento.lanzar( config )
-			},
-			noMagnetico(){
-				elemento.propiedades("magnetico-material", false)
-				elemento.propiedades("magnetico", false)
-				return elemento
-			},
-			magnetico(material){
-				if (material === false ) {
-					elemento.noMagnetico()
-					return elemento
+				if (!elemento.hasOwnProperty("animado")) {
+					elemento.animar();
+					return elemento.lanzar(config);
 				}
 
-				if(typeof material != "string") {
-					errorRender("El material que atraera debe ser un texto")
-					throw "El material que atraera debe ser un texto"
+				return elemento.lanzar(config);
+			},
+			noMagnetico() {
+				elemento.propiedades("magnetico-material", false);
+				elemento.propiedades("magnetico", false);
+				return elemento;
+			},
+			magnetico(material) {
+				if (material === false) {
+					elemento.noMagnetico();
+					return elemento;
+				}
+
+				if (typeof material != "string") {
+					errorRender("El material que atraera debe ser un texto");
+					throw "El material que atraera debe ser un texto";
 				}
 
 				if (!material) {
-					elemento.propiedades("magnetico")
-					return elemento
+					elemento.propiedades("magnetico");
+					return elemento;
 				}
 
-				elemento.propiedades("magnetico", !!material)
-				
+				elemento.propiedades("magnetico", !!material);
+
 				if (elemento.propiedades("magnetico")) {
-					elemento.propiedades("magnetico-material", material)
+					elemento.propiedades("magnetico-material", material);
 					listenMagnetic();
 				}
 
-
-				return elemento
+				return elemento;
 			},
 			margenY(n) {
-				propiedades.margenY = n
-				const v = margenEn(n, elemento.orientacion)
-				if(elemento?.media && elemento?.media?.objeto){
+				propiedades.margenY = n;
+				const v = margenEn(n, elemento.orientacion);
+				if (elemento?.media && elemento?.media?.objeto) {
 					elemento.media.objeto.style.marginTop = (v ?? -10) + "px";
-				} else{
+				} else {
 					elemento.nodo.style.marginTop = (v ?? -10) + "px";
 				}
-				window.neto?.cambiar?.(elemento)
+				window.neto?.cambiar?.(elemento);
 				return elemento;
 			},
 			margenX(n) {
-				propiedades.margenX = n
-				const v = margenEn(n, elemento.orientacion)
-				if(elemento?.media && elemento?.media?.objeto){
+				propiedades.margenX = n;
+				const v = margenEn(n, elemento.orientacion);
+				if (elemento?.media && elemento?.media?.objeto) {
 					elemento.media.objeto.style.marginLeft = (v ?? -20) + "px";
 				} else {
 					elemento.nodo.style.marginLeft = (v ?? -20) + "px";
 				}
-				window.neto?.cambiar?.(elemento)
+				window.neto?.cambiar?.(elemento);
 				return elemento;
 			},
 			px(w, h) {
 				// fija el tamano renderizado del sprite (img/canvas) en px exactos:
 				// pintar lo reaplica, asi no cambia al pasar de <img> a <canvas>,
 				// entre variantes de gif de distinto tamano, ni al mover el objeto
-				if (typeof w === "object") { h = w.h; w = w.w; }
+				if (typeof w === "object") {
+					h = w.h;
+					w = w.w;
+				}
 				propiedades.px = { w, h };
 				const m = elemento?.media?.objeto;
 				if (m) {
@@ -1145,14 +1302,14 @@ let aliasProps = {
 				window.neto?.cambiar?.(elemento);
 				return elemento;
 			},
-			material(material){
+			material(material) {
 				if (!material) return propiedades["material"];
-				if(typeof material != "string") {
-					errorRender("Material debe ser un texto")
-					throw "Material debe ser un texto"
+				if (typeof material != "string") {
+					errorRender("Material debe ser un texto");
+					throw "Material debe ser un texto";
 				}
-				propiedades["material"] = material
-				return elemento
+				propiedades["material"] = material;
+				return elemento;
 			},
 			mostrar() {
 				elemento.nodo.style.visibility = "visible";
@@ -1160,14 +1317,14 @@ let aliasProps = {
 				elemento.propiedades("visible", true);
 				return elemento;
 			},
-			mover(x,y,z) {
+			mover(x, y, z) {
 				elemento.x = x;
 				elemento.y = y;
-				if(z !== undefined) elemento.z = z;
-				else z = elemento.z
-				
+				if (z !== undefined) elemento.z = z;
+				else z = elemento.z;
+
 				window.physicsEngine.intentarMover(elemento, x, y, z, true);
-				
+
 				return elemento;
 			},
 			moverX(x) {
@@ -1185,7 +1342,8 @@ let aliasProps = {
 					elemento.enElAire ||
 					elemento.z > 0 ||
 					elemento.ocupado === true
-				) return elemento;
+				)
+					return elemento;
 				const dirMap = {
 					derecha: { dx: 1, dy: 0 },
 					izquierda: { dx: -1, dy: 0 },
@@ -1193,7 +1351,9 @@ let aliasProps = {
 					arriba: { dx: 0, dy: -1 },
 				};
 				const dir = dirMap[elemento.orientacion] || { dx: 1, dy: 0 };
-				const x0 = elemento.x, y0 = elemento.y, z0 = elemento.z;
+				const x0 = elemento.x,
+					y0 = elemento.y,
+					z0 = elemento.z;
 				const xf = x0 + dir.dx * distancia;
 				const yf = y0 + dir.dy * distancia;
 				// noSaltarTipos: lista de tipos sobre los que no se puede saltar/caer
@@ -1203,25 +1363,50 @@ let aliasProps = {
 					escenaActiva().elementos.some((o) => {
 						if (o === elemento) return false;
 						const solapa = window.physicsEngine.haySolapamiento(
-							{ x: cx, y: cy, z: z0, w: elemento.w, h: elemento.h, d: elemento.d },
+							{
+								x: cx,
+								y: cy,
+								z: z0,
+								w: elemento.w,
+								h: elemento.h,
+								d: elemento.d,
+							},
 							o,
 						);
 						if (!solapa) return false;
-						const esSolido = o.propiedades("solido") && !o.propiedades("plano");
-						const esRestringido = tiposRestringidos.includes(o.tipo);
+						const esSolido =
+							o.propiedades("solido") && !o.propiedades("plano");
+						const esRestringido = tiposRestringidos.includes(
+							o.tipo,
+						);
 						if (esRestringido) {
-							evento("salto:cancelado", { objeto: o, propiedad: "noSaltar" });
+							evento("salto:cancelado", {
+								objeto: o,
+								propiedad: "noSaltar",
+							});
 						} else if (esSolido && (!soloAltos || o.h >= 2)) {
-							evento("salto:cancelado", { objeto: o, propiedad: "solido" });
+							evento("salto:cancelado", {
+								objeto: o,
+								propiedad: "solido",
+							});
 						}
-						return esRestringido || (esSolido && (!soloAltos || o.h >= 2));
+						return (
+							esRestringido ||
+							(esSolido && (!soloAltos || o.h >= 2))
+						);
 					});
 				// los obstaculos altos (h>=2) a mitad del camino no se pueden saltar
-				const hayAltoEnCamino = Array.from({ length: distancia - 1 }, (_, i) => i + 1).some(
-					(paso) => ocupado(x0 + dir.dx * paso, y0 + dir.dy * paso, true),
+				const hayAltoEnCamino = Array.from(
+					{ length: distancia - 1 },
+					(_, i) => i + 1,
+				).some((paso) =>
+					ocupado(x0 + dir.dx * paso, y0 + dir.dy * paso, true),
 				);
 				if (
-					xf < 0 || xf > 19 || yf < 0 || yf > 19 ||
+					xf < 0 ||
+					xf > 19 ||
+					yf < 0 ||
+					yf > 19 ||
 					ocupado(xf, yf) ||
 					hayAltoEnCamino
 				) {
@@ -1246,7 +1431,9 @@ let aliasProps = {
 						requestAnimationFrame(step);
 						return;
 					}
-					elemento.x = xf; elemento.y = yf; elemento.z = z0; // aterriza exacto
+					elemento.x = xf;
+					elemento.y = yf;
+					elemento.z = z0; // aterriza exacto
 					escenaActiva().actualizarTransformNodo(elemento);
 					escenaActiva().actualizarCamara();
 					elemento.enElAire = false;
@@ -1260,14 +1447,16 @@ let aliasProps = {
 			noSaltar(...tipos) {
 				// bloquea saltar/caer sobre estos tipos; encadenable y con varargs:
 				// empezarEn(13,12).noSaltar("agua","muro")
-				elemento.noSaltarTipos = (elemento.noSaltarTipos || []).concat(tipos);
+				elemento.noSaltarTipos = (elemento.noSaltarTipos || []).concat(
+					tipos,
+				);
 				return elemento;
 			},
-			seguir(config){
+			seguir(config) {
 				// si aun no se ejecuto animar, lo ejecuta
-				if (!elemento.hasOwnProperty("animado")){
+				if (!elemento.hasOwnProperty("animado")) {
 					elemento.animar();
-					return elemento.seguir(config)
+					return elemento.seguir(config);
 				}
 				return elemento;
 			},
@@ -1275,16 +1464,29 @@ let aliasProps = {
 				// dispara cuando ESTE elemento colisiona (sea solido o no: physics.js
 				// emite "colision" para ambos) con algo que coincide con el selector
 				// (@tipo o id). elemento = este objeto, con = el otro.
-				escuchar("colision", ({ objeto, con }) => {
-					if (!objeto || !con || !escenaActiva().elementos.includes(elemento)) return;
-					const esYo = (o) => o.id === elemento.id;
-					const otro = esYo(objeto) ? con : esYo(con) ? objeto : null;
-					if (!otro) return;
-					const matchea = selector.startsWith("@")
-						? otro?.tipo === selector.slice(1)
-						: otro?.id === selector;
-					if (matchea) fn({ elemento, con: otro });
-				}, "play");
+				escuchar(
+					"colision",
+					({ objeto, con }) => {
+						if (
+							!objeto ||
+							!con ||
+							!escenaActiva().elementos.includes(elemento)
+						)
+							return;
+						const esYo = (o) => o.id === elemento.id;
+						const otro = esYo(objeto)
+							? con
+							: esYo(con)
+								? objeto
+								: null;
+						if (!otro) return;
+						const matchea = selector.startsWith("@")
+							? otro?.tipo === selector.slice(1)
+							: otro?.id === selector;
+						if (matchea) fn({ elemento, con: otro });
+					},
+					"play",
+				);
 				return elemento;
 			},
 			moverRequiere(selector) {
@@ -1292,12 +1494,16 @@ let aliasProps = {
 				// ponytail: el valor vive en propiedades, NO en elemento, porque
 				// guardarlo en elemento pisaba el metodo al primer setter y la
 				// segunda llamada ".moverRequiere(...)" fallaba
-				if (selector === undefined) return propiedades.moverRequiere || [];
+				if (selector === undefined)
+					return propiedades.moverRequiere || [];
 				// "", [], null, false -> no requiere nada
-				const vacio = selector === "" || selector === null || selector === false;
+				const vacio =
+					selector === "" || selector === null || selector === false;
 				propiedades.moverRequiere = vacio
 					? []
-					: (Array.isArray(selector) ? selector : [selector]).filter(Boolean);
+					: (Array.isArray(selector) ? selector : [selector]).filter(
+							Boolean,
+						);
 				return elemento;
 			},
 			noSolido() {
@@ -1315,12 +1521,12 @@ let aliasProps = {
 				elemento.pintar(base);
 				return elemento;
 			},
-			noGuardado(){
-				propiedades["guardado"] = false
-				delete propiedades["guardado-en"]
-				return elemento
+			noGuardado() {
+				propiedades["guardado"] = false;
+				delete propiedades["guardado-en"];
+				return elemento;
 			},
-			ocultar(){
+			ocultar() {
 				elemento.nodo.style.visibility = "hidden";
 				elemento.visible = false;
 				elemento.propiedades("visible", false);
@@ -1331,13 +1537,13 @@ let aliasProps = {
 				return elemento;
 			},
 			pintar(imageAlias, config) {
-				if(!imageAlias) return elemento;
+				if (!imageAlias) return elemento;
 				const aliasBase = imageAlias;
 				let url = "";
-				let newAlias = imageAlias
+				let newAlias = imageAlias;
 				const hayVariante = imagenesImportadas.hasOwnProperty(
 					imageAlias + "-" + elemento.orientacion,
-				)
+				);
 				if (hayVariante) {
 					newAlias = imageAlias + "-" + elemento.orientacion;
 					url =
@@ -1349,7 +1555,8 @@ let aliasProps = {
 				// sin pisar las demas propiedades del transform del media
 				// (ponytail: se asume que el sprite base mira a la izquierda; para otro
 				// lado natural registrar <alias>-derecha / <alias>-izquierda)
-				const espejar = !hayVariante && elemento.orientacion === "derecha";
+				const espejar =
+					!hayVariante && elemento.orientacion === "derecha";
 				const voltearMirada = () => {
 					const im = elemento.media?.objeto;
 					if (!im) return;
@@ -1361,14 +1568,16 @@ let aliasProps = {
 						: t;
 				};
 				voltearMirada();
-				if(elemento.installed && newAlias == elemento.imagenAlias) return elemento;
+				if (elemento.installed && newAlias == elemento.imagenAlias)
+					return elemento;
 
-				if(newAlias != elemento.imagenAlias) {
-					imageAlias = newAlias
+				if (newAlias != elemento.imagenAlias) {
+					imageAlias = newAlias;
 				}
 
-				if(!config && elemento.hasOwnProperty("media")) config = elemento.media.config
-								
+				if (!config && elemento.hasOwnProperty("media"))
+					config = elemento.media.config;
+
 				if (!url) {
 					if (imagenesImportadas.hasOwnProperty(imageAlias)) {
 						url = imagenesImportadas[imageAlias];
@@ -1385,7 +1594,7 @@ let aliasProps = {
 							"]",
 					);
 				}
-				
+
 				if (url) {
 					let urlData = null;
 
@@ -1397,10 +1606,10 @@ let aliasProps = {
 						) {
 							let canvas = elemento["canvas"];
 							if (imageAlias !== elemento.imageInstalled) {
-							elemento.imageInstalled = imageAlias;
-							// la pasada estatica deja elemento.canvas = null (scene.js:1370),
-							// asi que hay que comprobar null, no solo undefined
-							canvas?.remove();
+								elemento.imageInstalled = imageAlias;
+								// la pasada estatica deja elemento.canvas = null (scene.js:1370),
+								// asi que hay que comprobar null, no solo undefined
+								canvas?.remove();
 								// elemento instalado originalmente como <img> (sin config):
 								// la pasada gif crea un <canvas>; borrar el <img> viejo o
 								// quedan dos sprites visibles encimados
@@ -1421,38 +1630,49 @@ let aliasProps = {
 									.querySelector(".face-south")
 									.appendChild(canvas);
 							}
-							
+
 							const installCanvasGifPlayer = () => {
-								if (canvas.playerGif && elemento.imageInstalled === imageAlias) return; // ya esta instalado este gif; no apilar bucles
+								if (
+									canvas.playerGif &&
+									elemento.imageInstalled === imageAlias
+								)
+									return; // ya esta instalado este gif; no apilar bucles
 								canvas.playerGif = createGifPlayer({
 									canvas,
 									loop: config.hasOwnProperty("repetir")
 										? config.repetir
 										: false,
-									url: imagenesImportadasData[imageAlias]
+									url: imagenesImportadasData[imageAlias],
 								});
-								
+
 								// cuando el gif termine de cargar, aplicar el estado actual de la animacion
 								// (si el usuario ya llamo animacion.play, reproducir; si no, usar config.pausado)
-								(canvas.playerGif.cuandoListo || Promise.resolve()).then(() => {
+								(
+									canvas.playerGif.cuandoListo ||
+									Promise.resolve()
+								).then(() => {
 									if (elemento.animacion.pausado === true)
 										canvas.playerGif.pause();
-									else
-										canvas.playerGif.play();
+									else canvas.playerGif.play();
 								});
-							}
+							};
 
-							if(!imagenesImportadasData[imageAlias]){
+							if (!imagenesImportadasData[imageAlias]) {
 								let x = setInterval(() => {
-									if(imagenesImportadasData[imageAlias]){
-										installCanvasGifPlayer()
-										clearInterval(x)
-									} else console.log('imagen no lista ', imageAlias)
-								}, 50)
+									if (imagenesImportadasData[imageAlias]) {
+										installCanvasGifPlayer();
+										clearInterval(x);
+									} else
+										console.log(
+											"imagen no lista ",
+											imageAlias,
+										);
+								}, 50);
 							} else {
-								installCanvasGifPlayer()
+								installCanvasGifPlayer();
 							}
-							elemento._gifPausadoPorConfig = config["pausado"] === true;
+							elemento._gifPausadoPorConfig =
+								config["pausado"] === true;
 							elemento.animacion = {
 								pausado: config["pausado"],
 								play: (t) => {
@@ -1466,11 +1686,13 @@ let aliasProps = {
 								reiniciar: () => canvas.playerGif.reiniciar(),
 								pause: () => {
 									elemento.animacion.pausado = true;
-									if(canvas.playerGif?.pause) canvas.playerGif.pause();
+									if (canvas.playerGif?.pause)
+										canvas.playerGif.pause();
 								},
 								pausa: () => {
 									elemento.animacion.pausado = true;
-									if(canvas.playerGif?.pause) canvas.playerGif.pause();
+									if (canvas.playerGif?.pause)
+										canvas.playerGif.pause();
 								},
 								reset: () => {
 									elemento.animacion.pausado = false;
@@ -1487,22 +1709,38 @@ let aliasProps = {
 											canvas.playerGif.pause();
 										});
 									return canvas.playerGif.playReverso();
-								}
+								},
 							};
 							// mismo encuadre que la rama <img> de mas abajo: sin esto el
 							// canvas del gif sale a su tamano nativo (display:inline), mas
 							// grande que la celda, y los margenes/escala que el usuario
 							// ajusto sobre el <img> dejan de centrarlo al empezar a seguir
 							canvas.style.display = "block";
-							canvas.style.width = propiedades.px ? propiedades.px.w + "px" : "100%";
-							canvas.style.height = propiedades.px ? propiedades.px.h + "px" : "auto";
-							canvas.style.marginLeft = (margenEn(propiedades?.margenX, elemento.orientacion) ?? "-20") +"px";
-							canvas.style.marginTop = (margenEn(propiedades?.margenY, elemento.orientacion) ?? "-10") +"px";
-							if(propiedades.hasOwnProperty("animadoImagen")){
-								if(propiedades.animadoImagen.hasOwnProperty(elemento.orientacion)){
-									canvas.style.translate = `${ propiedades.animadoImagen[elemento.orientacion]?.x || 0 }px ${ propiedades.animadoImagen[elemento.orientacion].y || 0 }px ${ propiedades.animadoImagen[elemento.orientacion].z || 0 }px`
+							canvas.style.width = propiedades.px
+								? propiedades.px.w + "px"
+								: "100%";
+							canvas.style.height = propiedades.px
+								? propiedades.px.h + "px"
+								: "auto";
+							canvas.style.marginLeft =
+								(margenEn(
+									propiedades?.margenX,
+									elemento.orientacion,
+								) ?? "-20") + "px";
+							canvas.style.marginTop =
+								(margenEn(
+									propiedades?.margenY,
+									elemento.orientacion,
+								) ?? "-10") + "px";
+							if (propiedades.hasOwnProperty("animadoImagen")) {
+								if (
+									propiedades.animadoImagen.hasOwnProperty(
+										elemento.orientacion,
+									)
+								) {
+									canvas.style.translate = `${propiedades.animadoImagen[elemento.orientacion]?.x || 0}px ${propiedades.animadoImagen[elemento.orientacion].y || 0}px ${propiedades.animadoImagen[elemento.orientacion].z || 0}px`;
 								}
-							} 
+							}
 							aplicarEscalaMedia(elemento);
 							elemento.canvas = canvas;
 							elemento.nodo
@@ -1515,7 +1753,10 @@ let aliasProps = {
 							// (canvas de un gif, img de un plano o de otra pasada) antes
 							// de crear el <img> nuevo, o quedan sprites encimados y .src
 							// no surte sobre un <canvas>.
-							for (const m of [elemento.media?.objeto, elemento.img]) {
+							for (const m of [
+								elemento.media?.objeto,
+								elemento.img,
+							]) {
 								if (m?.playerGif?.reset) m.playerGif.reset();
 								if (m?.pause) m.pause();
 								m?.remove?.();
@@ -1525,22 +1766,32 @@ let aliasProps = {
 							elemento.img = null;
 							let img = document.createElement("img");
 							img.style.display = "block";
-							img.style.width = propiedades.px ? propiedades.px.w + "px" : "100%";
-							img.style.height = propiedades.px ? propiedades.px.h + "px" : "auto";
-							img.style.marginLeft = (margenEn(propiedades?.margenX, elemento.orientacion) ?? "-20") +"px";
-							img.style.marginTop = (margenEn(propiedades?.margenY, elemento.orientacion) ?? "-10") +"px";
+							img.style.width = propiedades.px
+								? propiedades.px.w + "px"
+								: "100%";
+							img.style.height = propiedades.px
+								? propiedades.px.h + "px"
+								: "auto";
+							img.style.marginLeft =
+								(margenEn(
+									propiedades?.margenX,
+									elemento.orientacion,
+								) ?? "-20") + "px";
+							img.style.marginTop =
+								(margenEn(
+									propiedades?.margenY,
+									elemento.orientacion,
+								) ?? "-10") + "px";
 							elemento.media = { objeto: img, type: "image" };
 							aplicarEscalaMedia(elemento);
 							elemento.nodo
 								.querySelectorAll(".face")
-								.forEach(
-									(f) => (f.style.background = "none"),
-								);
+								.forEach((f) => (f.style.background = "none"));
 							elemento.nodo
 								.querySelector(".face-south")
 								.appendChild(img);
 							elemento.img = img;
-							insertarImagenEnNodo(img, imageAlias)
+							insertarImagenEnNodo(img, imageAlias);
 						}
 					};
 					updateGUI();
@@ -1553,43 +1804,49 @@ let aliasProps = {
 				return elemento;
 			},
 
-			piso(w,d, sombra) {
-				if(sombra === undefined) sombra = true
-				elemento.noSolido()
-				elemento.plano()
-				elemento.propiedades("piso", true)
+			piso(w, d, sombra) {
+				if (sombra === undefined) sombra = true;
+				elemento.noSolido();
+				elemento.plano();
+				elemento.propiedades("piso", true);
 				// el piso es suelo: el z-index del .block pesa (cy+d)*100, asi un
 				// piso ancho (3x3, 4x4...) taparia a quien camina encima. Se hunde
 				// debajo de todo lo que no sea piso para que se pise "por encima".
 				elemento.nodo.style.zIndex =
-					"calc((var(--cy) + var(--d)) * 100 + var(--cz) * 10 + var(--cx) - 1000000)"
+					"calc((var(--cy) + var(--d)) * 100 + var(--cz) * 10 + var(--cx) - 1000000)";
 				// elemento.media no existe si el alias no esta importado, y .objeto tampoco
 				// hasta que la imagen carga: sin guarda .piso() rompia la escena
-				if(w && d){
+				if (w && d) {
 					elemento.nodo.style.setProperty("--w", w);
 					elemento.nodo.style.setProperty("--d", d);
 					// el estado tambien: sin esto el piso queda en w/d = 1 y
 					// el calculo de colisiones y de la cara inferior usan 1x1
 					elemento.w = w;
 					elemento.d = d;
-					elemento.nodo.querySelectorAll(".face img").forEach((img) => {
-						img.style.width = "100%";
-						img.style.height = "100%";
+					elemento.nodo
+						.querySelectorAll(".face img")
+						.forEach((img) => {
+							img.style.width = "100%";
+							img.style.height = "100%";
+						});
+				}
+				if (elemento?.media?.objeto && sombra) {
+					esperarY(0.5, () => {
+						elemento.media.objeto.style.marginTop = "20px";
+						elemento.media.objeto.style.border = "#444 solid 1px";
+						elemento.media.objeto.style.borderWidth =
+							"0px 0px 19px 3px";
 					});
 				}
-				if(elemento?.media?.objeto && sombra) {
-					esperarY(.5,() => {
-						elemento.media.objeto.style.marginTop = '20px'
-						elemento.media.objeto.style.border = "#444 solid 1px";
-						elemento.media.objeto.style.borderWidth = "0px 0px 19px 3px";
-					})
-				}
-				console.log(elemento)
+				console.log(elemento);
 				// cada capa de z desplaza el piso ~23px en el grid rotado: sin
 				// correcting el margen el piso queda flotando sobre el suelo
 				const corracionZ = (elemento.z || 0) * 23;
-				elemento.nodo.style.marginTop = (margenEn(propiedades.margenY, elemento.orientacion) || 0) - corracionZ + "px";
-				return elemento
+				elemento.nodo.style.marginTop =
+					(margenEn(propiedades.margenY, elemento.orientacion) || 0) -
+					corracionZ +
+					"px";
+				return elemento;
 			},
 			/*
 			volumen(cantidad, imagen) {
@@ -1613,12 +1870,15 @@ let aliasProps = {
 			},
 			*/
 			plano() {
-				elemento.propiedades("plano", true)
+				elemento.propiedades("plano", true);
 				let tx = setInterval(() => {
-					if(!elemento.nodo) return ;
+					if (!elemento.nodo) return;
 					// .volumen() pinta una textura repetida en esa misma cara:
 					// este <img> la taparia. caso normal: .piso(..).volumen(..)
-					if(propiedades.volumen){ clearInterval(tx); return ; }
+					if (propiedades.volumen) {
+						clearInterval(tx);
+						return;
+					}
 					elemento.nodo.querySelector(".face img")?.remove();
 					// pintaremos la cara inferior del cubo
 					let img = document.createElement("img");
@@ -1626,62 +1886,68 @@ let aliasProps = {
 					img.style.height = "100%";
 					elemento.media = { objeto: img, type: "image-plain" };
 					elemento.plano = true;
-					let faceDown = elemento.nodo.querySelector(
-						".face-down"
-					)
-					insertarImagenEnNodo(img, elemento.imagenAlias)
+					let faceDown = elemento.nodo.querySelector(".face-down");
+					insertarImagenEnNodo(img, elemento.imagenAlias);
 					faceDown.style.backfaceVisibility = "visible";
 					faceDown.appendChild(img);
 					Array.from(faceDown.parentNode.children).forEach((face) => {
 						face.style.boxShadow = "none";
-					})
-					clearInterval(tx)
-				}, 50)
+					});
+					clearInterval(tx);
+				}, 50);
 				return elemento;
 			},
 			propiedades(key, val) {
 				if (key === undefined) return propiedades;
 				if (val === undefined) return propiedades[key];
 				propiedades[key] = val;
-				if (key === "recoger" && val && typeof elemento.interaccion !== "function") {
+				if (
+					key === "recoger" &&
+					val &&
+					typeof elemento.interaccion !== "function"
+				) {
 					// ítem de recogida (guardarItem): al recargar el elemento recreado
 					// desde datos/neto se re-cablea la interacción para que se guarde
 					// en el inventario, sin depender de la string de función.
 					elemento.interaccion = async () => {
 						if (elemento.interactuando) return;
 						elemento.interactuando = true;
-						try { await player().inventario.guardar(elemento); }
-						finally { elemento.interactuando = false; }
+						try {
+							await player().inventario.guardar(elemento);
+						} finally {
+							elemento.interactuando = false;
+						}
 						return true;
 					};
 					propiedades["colisionable"] = true;
 				}
 				if (key === "x" || key === "y" || key === "z")
-				escenaActiva().actualizarTransformNodo(elemento);
+					escenaActiva().actualizarTransformNodo(elemento);
 				elemento.baseAlPiso();
 				return elemento;
 			},
-			redondear(val){
-				elemento.propiedades("redondear", val)
-				if (elemento?.media?.objeto) elemento.media.objeto.style.borderRadius = val+"%"
-				return elemento
+			redondear(val) {
+				elemento.propiedades("redondear", val);
+				if (elemento?.media?.objeto)
+					elemento.media.objeto.style.borderRadius = val + "%";
+				return elemento;
 			},
 			rotarX(val, updated) {
 				$styleTransform(elemento.nodo, "rotateX", { val });
-				elemento.propiedades("rotarX", val)
-				if(updated) updated(elemento);
+				elemento.propiedades("rotarX", val);
+				if (updated) updated(elemento);
 				return elemento;
 			},
 			rotarY(val, updated, nodo) {
 				$styleTransform(nodo || elemento.nodo, "rotateY", { val });
-				if(updated) updated(elemento);
-				elemento.propiedades("rotarY", val)
+				if (updated) updated(elemento);
+				elemento.propiedades("rotarY", val);
 				return elemento;
 			},
 			rotarZ(val, updated) {
 				$styleTransform(elemento.nodo, "rotateZ", { val });
-				if(updated) updated(elemento);
-				elemento.propiedades("rotarZ", val)
+				if (updated) updated(elemento);
+				elemento.propiedades("rotarZ", val);
 				/*
 				let width = elemento.nodo.offsetWidth;
 				let height = elemento.nodo.offsetHeight;
@@ -1696,45 +1962,51 @@ let aliasProps = {
 				elemento.propiedades("solido", v || true);
 				return elemento;
 			},
-			
-			transicion(key, time){
-				if(key == "margenY") key = 'margin-top';
-				if(key == "margenX") key = 'margin-left';
+
+			transicion(key, time) {
+				if (key == "margenY") key = "margin-top";
+				if (key == "margenX") key = "margin-left";
 				let transition = String(elemento.media.objeto.style.transition);
-				if(!transition) transition = ` ${key} ${time}s ease-in-out`;
-				else{
+				if (!transition) transition = ` ${key} ${time}s ease-in-out`;
+				else {
 					transition += `, ${key} ${time}s ease-in-out`;
 				}
-				elemento.media.objeto.style.setProperty("transition", transition);
-				return elemento
+				elemento.media.objeto.style.setProperty(
+					"transition",
+					transition,
+				);
+				return elemento;
 			},
 			transparencia(v) {
 				elemento.propiedades("transparencia", v);
 				// opacity<1 en el .block fuerza flattening de preserve-3d y
 				// derrumba las caras; se aplica a las caras hijas
-				elemento.nodo.querySelectorAll(".face, img, canvas").forEach((f) => {
-					f.style.opacity = v;
-				});
+				elemento.nodo
+					.querySelectorAll(".face, img, canvas")
+					.forEach((f) => {
+						f.style.opacity = v;
+					});
 				return elemento;
 			},
-			usarInventario(items){
-				if(items && Array.isArray(items)) elemento.propiedades("items", items)
-				if(!elemento.propiedades("items")){
-					elemento.propiedades("items", [])
+			usarInventario(items) {
+				if (items && Array.isArray(items))
+					elemento.propiedades("items", items);
+				if (!elemento.propiedades("items")) {
+					elemento.propiedades("items", []);
 				}
 				convertirEnAlmacen(() => elemento);
-				return elemento
+				return elemento;
 			},
-			opciones(accionName, accion){
-				console.log('opciones registro')
-				if(!opcionesInventarioGlobal.hasOwnProperty(elemento.id)){
-					opcionesInventarioGlobal[elemento.id] = {}
+			opciones(accionName, accion) {
+				console.log("opciones registro");
+				if (!opcionesInventarioGlobal.hasOwnProperty(elemento.id)) {
+					opcionesInventarioGlobal[elemento.id] = {};
 				}
-				opcionesInventarioGlobal[elemento.id][accionName] = accion
-				return elemento
+				opcionesInventarioGlobal[elemento.id][accionName] = accion;
+				return elemento;
 			},
-			vision(){
-				return elemento
+			vision() {
+				return elemento;
 			},
 		};
 		// evento "orientar": se dispara al cambiar la orientacion, sin importar
@@ -1744,21 +2016,29 @@ let aliasProps = {
 		Object.defineProperty(elemento, "orientacion", {
 			enumerable: true,
 			configurable: true,
-			get() { return orientacionActual; },
+			get() {
+				return orientacionActual;
+			},
 			set(v) {
 				if (v === orientacionActual) return;
 				const anterior = orientacionActual;
 				orientacionActual = v;
-				const info = { elemento, objeto: elemento, origen: () => elemento, orientacion: v, anterior };
+				const info = {
+					elemento,
+					objeto: elemento,
+					origen: () => elemento,
+					orientacion: v,
+					anterior,
+				};
 				evento("orientar", info);
 				evento("orientar:" + elemento.id, info);
 			},
 		});
-		if(config?.escala){
-			elemento.escala(config.escala)
+		if (config?.escala) {
+			elemento.escala(config.escala);
 		}
 		elemento.nodo = this.crearNodoHTML(elemento);
-		elemento.nodo.setAttribute('tipo', elemento.tipo)
+		elemento.nodo.setAttribute("tipo", elemento.tipo);
 		if (config?.cubo) {
 			elemento.nodo.classList.add("cubo-style");
 			elemento.nodo.querySelectorAll(".face").forEach((f) => {
@@ -1777,7 +2057,11 @@ let aliasProps = {
 		// y para elementos recreados desde el backend/datos (la propiedad puede llegar
 		// con el resto del estado restaurado, despues de crearObjeto)
 		const restaurarInteraccion = () => {
-			if (!elemento.propiedades("interactuarFunction") || typeof elemento.interaccion === "function") return;
+			if (
+				!elemento.propiedades("interactuarFunction") ||
+				typeof elemento.interaccion === "function"
+			)
+				return;
 			const interOriginal = elemento.propiedades("interactuarFunction");
 			try {
 				let fnNueva = new Function(
@@ -1792,29 +2076,45 @@ let aliasProps = {
 					try {
 						await fnNueva.call(elemento, n, e);
 					} catch (error) {
-						console.log("interaccion restaurada con fallback de #" + elemento.id, error);
+						console.log(
+							"interaccion restaurada con fallback de #" +
+								elemento.id,
+							error,
+						);
 						player().inventario.guardar(elemento);
 					}
 				};
 				elemento.propiedades("interactuarFunction", interOriginal);
 				elemento.propiedades("colisionable", true);
 			} catch (error) {
-				console.log("Error al restaurar interaccion de #" + elemento.id, error);
+				console.log(
+					"Error al restaurar interaccion de #" + elemento.id,
+					error,
+				);
 			}
 		};
 		restaurarInteraccion();
 
 		if (elemento.esPlayer) {
-			elemento.animar()
+			elemento.animar();
 			this.jugador = elemento;
 		}
 		// restaurar estado guardado: posicion de empujados, vidas y propiedades
 		try {
 			let saved = datos?.elementos?.[elemento.id];
-			if (saved && !saved.destruido && (elemento.esPlayer || saved.escena == escenaActiva().name)) {
-				for (let p in (saved.propiedades || {})) {
-					if (p == "items" || p == "guardado" || p == "guardado-en") continue;
-					if (elemento.esPlayer && !["vidas", "vidas-imagen"].includes(p)) continue;
+			if (
+				saved &&
+				!saved.destruido &&
+				(elemento.esPlayer || saved.escena == escenaActiva().name)
+			) {
+				for (let p in saved.propiedades || {}) {
+					if (p == "items" || p == "guardado" || p == "guardado-en")
+						continue;
+					if (
+						elemento.esPlayer &&
+						!["vidas", "vidas-imagen"].includes(p)
+					)
+						continue;
 					elemento.propiedades(p, saved.propiedades[p]);
 				}
 				if (!elemento.esPlayer && typeof elemento.x !== "function") {
@@ -1831,13 +2131,23 @@ let aliasProps = {
 		restaurarInteraccion();
 		//this.seleccionarObjeto(elemento.id);
 		estadoAnimado(elemento);
+		// todos los elementos pueden hablar (.decir/.preguntar), no solo los
+		// que pasan por animar() (player, enemigos, gifs)
+		if (typeof elemento.decir !== "function" && typeof decir === "function") {
+			decir(elemento);
+		}
 		this.actualizarCamara();
 		escenaActiva().elementos.push(elemento);
-		evento('creado', elemento);
-		evento('creado:@'+elemento.tipo, {elemento});
-		evento('creado:'+elemento.id, {elemento});
+		evento("creado", elemento);
+		evento("creado:@" + elemento.tipo, { elemento });
+		evento("creado:" + elemento.id, { elemento });
 		// sincronizar objetos creados en tiempo real (neto)
-		if (window.neto?.activo && window.neto?.listo && !window.neto?.silencioso && typeof window.red === "function") {
+		if (
+			window.neto?.activo &&
+			window.neto?.listo &&
+			!window.neto?.silencioso &&
+			typeof window.red === "function"
+		) {
 			window.red("ws:created", window.neto.serializar(elemento));
 		}
 		revisarColisionesAlAgregar(elemento);
@@ -1845,7 +2155,7 @@ let aliasProps = {
 	}
 
 	eliminarObjeto(id) {
-		if(typeof id === 'object') id = id.id
+		if (typeof id === "object") id = id.id;
 		const index = this.elementos.findIndex((o) => o.id === id);
 		if (index === -1) return;
 
@@ -1855,10 +2165,16 @@ let aliasProps = {
 		// si es un enemigo o un objeto guardado (en un inventario), marcamos que fue eliminado para que no reaparezca
 		// (ponytail: destruible = usa vida, es un enemigo matable aunque no use seguir(): el arquero/otros
 		//  lanzadores tambien deben quedar destruidos en el backend si el jugador los mata)
-		if (!obj.esPlayer && (obj.persiguiendo || obj.destruible || obj.propiedades("guardado"))) {
+		if (
+			!obj.esPlayer &&
+			(obj.persiguiendo || obj.destruible || obj.propiedades("guardado"))
+		) {
 			try {
 				if (!datos.hasOwnProperty("elementos")) datos.elementos = {};
-				datos.elementos[obj.id] = { destruido: true, escena: escenaActiva().name };
+				datos.elementos[obj.id] = {
+					destruido: true,
+					escena: escenaActiva().name,
+				};
 				escribirMemoria();
 			} catch (error) {}
 			// lista compartida en el backend: el id no debe volver a crearse en la escena.
@@ -1867,7 +2183,9 @@ let aliasProps = {
 			// a liberarse (ws:restaurar)
 			if (
 				obj.id &&
-				window.neto?.activo && window.neto?.listo && !window.neto?.silencioso &&
+				window.neto?.activo &&
+				window.neto?.listo &&
+				!window.neto?.silencioso &&
 				typeof window.red === "function"
 			) {
 				window.neto.eliminados = window.neto.eliminados || new Set();
@@ -1879,7 +2197,12 @@ let aliasProps = {
 		if (obj.esPlayer) this.jugador = null;
 		this.elementos.splice(index, 1);
 		// sincronizar eliminaciones en tiempo real (neto)
-		if (window.neto?.activo && window.neto?.listo && !window.neto?.silencioso && typeof window.red === "function") {
+		if (
+			window.neto?.activo &&
+			window.neto?.listo &&
+			!window.neto?.silencioso &&
+			typeof window.red === "function"
+		) {
 			window.red("ws:removed", { id, x: obj.x, y: obj.y, z: obj.z });
 		}
 
@@ -1899,32 +2222,45 @@ let aliasProps = {
 		this.actualizarCamara();
 	}
 
-	en(x,y,z, todos){
-		const prepare = res => {
+	en(x, y, z, todos) {
+		const prepare = (res) => {
 			// .find() devuelve undefined en una celda vacia: sin este guardia
 			// prepare(undefined) reventaba al asignar .buscar
 			if (!res) return res;
-			res.buscar = (selector) => escenaActiva().buscar(selector, res)
-			return res
-		}
+			res.buscar = (selector) => escenaActiva().buscar(selector, res);
+			return res;
+		};
 		// buscaremos el elemento que esta en esta posicion
-		if(z === undefined) z = player().z
-		if(todos === true){
+		if (z === undefined) z = player().z;
+		if (todos === true) {
 			// buscaremos todos los que coincidan
-			return prepare(Array.from(this.elementos.filter(o => o.x == x && o.y == y && o.z == z)));
-		}
-		else{
+			return prepare(
+				Array.from(
+					this.elementos.filter(
+						(o) => o.x == x && o.y == y && o.z == z,
+					),
+				),
+			);
+		} else {
 			// buscaremos el primero que coincida
 			// sin Array.from: .find() ya devuelve el elemento (o undefined si la
 			// celda esta vacia). Array.from() sobre un objeto sin length devolvia
 			// [] siempre, y sobre undefined lanzaba TypeError -> "Tirar" reventaba
 			// al soltar en una celda libre.
-			return prepare(this.elementos.find(o => o.x == x && o.y == y && o.z == z));
+			return prepare(
+				this.elementos.find((o) => o.x == x && o.y == y && o.z == z),
+			);
 		}
 	}
 
-	esPiso(x,y,z) {
-		return this.elementos.find(o => o.x == x && o.y == y && o.z == (z || 0) && o.propiedades("piso"));
+	esPiso(x, y, z) {
+		return this.elementos.find(
+			(o) =>
+				o.x == x &&
+				o.y == y &&
+				o.z == (z || 0) &&
+				o.propiedades("piso"),
+		);
 	}
 
 	exportarJSON() {
@@ -1957,10 +2293,10 @@ let aliasProps = {
 		if (window.actualizarUI) window.actualizarUI();
 	}
 	ocupada(x, y, z) {
-		if(!z) z = player().z
+		if (!z) z = player().z;
 		// retornara true o false si esta ocupada la casilla en las coordenadas que recibe
-		for(let elemento of escenaActiva().elementos) {
-			if (elemento.propiedades("guardado")===true) continue;
+		for (let elemento of escenaActiva().elementos) {
+			if (elemento.propiedades("guardado") === true) continue;
 			if (elemento?.expandido !== undefined) {
 				for (let cell of elemento.expandido) {
 					if (cell.x == x && cell.y == y && cell.z == z) {
@@ -1968,13 +2304,19 @@ let aliasProps = {
 					}
 				}
 			}
-			if(elemento.x == x && elemento.y == y)
-				return elemento;
+			if (elemento.x == x && elemento.y == y) return elemento;
 		}
 	}
 
-	seleccionado(){
-		return this.elementos.find(o => o.id == this.idSeleccionado);
+	seleccionado() {
+		return this.elementos.find((o) => o.id == this.idSeleccionado);
+	}
+
+	// reinicia la partida desde cero: borra el estado guardado (posiciones,
+	// vidas e inventarios viven en localStorage "datos") y recarga la escena.
+	// Reusa resetJuego() y conserva la sesion y el cache de imagenes.
+	reset() {
+		return resetJuego();
 	}
 
 	colisionarPorTipo(tipo, cb) {
@@ -1982,22 +2324,30 @@ let aliasProps = {
 		// events.js expande "colision" a colision:@tipo en ambos casos).
 		// elemento = el de tipo, con = el player.
 		if (tipo.startsWith("@")) tipo = tipo.slice(1);
-		escuchar(`colision:@${tipo}`, ({ objeto, con }) => {
-			if (!objeto || !con) return;
-			const deTipo = objeto.tipo === tipo ? objeto : con;
-			const otro = deTipo === objeto ? con : objeto;
-			if (!otro?.esPlayer) return;
-			cb({ elemento: deTipo, con: otro });
-		}, "play");
+		escuchar(
+			`colision:@${tipo}`,
+			({ objeto, con }) => {
+				if (!objeto || !con) return;
+				const deTipo = objeto.tipo === tipo ? objeto : con;
+				const otro = deTipo === objeto ? con : objeto;
+				if (!otro?.esPlayer) return;
+				cb({ elemento: deTipo, con: otro });
+			},
+			"play",
+		);
 		return this;
 	}
 
 	seleccionarObjeto(id) {
-		if(this.idSeleccionado){
-			document.querySelector(`.actor-chip[name="${this.idSeleccionado}"]`)?.classList.remove('selected')
+		if (this.idSeleccionado) {
+			document
+				.querySelector(`.actor-chip[name="${this.idSeleccionado}"]`)
+				?.classList.remove("selected");
 		}
 		this.idSeleccionado = id;
-		document.querySelector(`.actor-chip[name="${id}"]`)?.classList.add('selected')
+		document
+			.querySelector(`.actor-chip[name="${id}"]`)
+			?.classList.add("selected");
 		this.elementos.forEach((o) => {
 			o.nodo.classList.toggle("selected", o.id === id && !o.esPlayer);
 		});
@@ -2118,7 +2468,9 @@ window.player = function (nuevo) {
 };
 
 function esperar(time, func) {
-	return new Promise((resolve) => setTimeout(resolve, time * 1000)).then(func);
+	return new Promise((resolve) => setTimeout(resolve, time * 1000)).then(
+		func,
+	);
 }
 
 function esperarY(time, func) {
@@ -2130,7 +2482,10 @@ function esperarY(time, func) {
 // de index.html que lo guarda en localStorage, y si el primer ingreso llega por
 // URL debe dejar el mismo nombre que recargar despues (si no, el estado guardado
 // se guarda como "principal" y los objetos destruidos reaparecen al recargar).
-window.sceneManager.name = new URLSearchParams(location.search).get("escena") || localStorage.getItem("escenaSeleccionada") || "principal";
+window.sceneManager.name =
+	new URLSearchParams(location.search).get("escena") ||
+	localStorage.getItem("escenaSeleccionada") ||
+	"principal";
 
 // un elemento fantasma: devuelve un objeto inerte para no romper el encadenado
 // cuando el id ya fue eliminado o esta guardado en un inventario
@@ -2170,7 +2525,6 @@ function elementoFantasma(id, x, y, z) {
 	return fantasma;
 }
 
-
 escuchar("o", resetJuego);
 
 // cuando un objeto entra a la escena (o el player aterriza un salto, que se
@@ -2180,15 +2534,17 @@ escuchar("o", resetJuego);
 function revisarColisionesAlAgregar(elemento) {
 	if (estado() !== "play") return;
 	const pe = window.physicsEngine;
-	escenaActiva().elementos
-		.filter((o) => o.id !== elemento.id && pe.haySolapamiento(elemento, o))
+	escenaActiva()
+		.elementos.filter(
+			(o) => o.id !== elemento.id && pe.haySolapamiento(elemento, o),
+		)
 		.forEach((con) => {
 			// si el objeto aparece sobre el player, la colision se cuenta igual
 			// que si el player se hubiera movido contra el objeto (con = el objeto)
-			if (con.tipo === 'player') {
+			if (con.tipo === "player") {
 				evento("colision", { objeto: con, quien: con, con: elemento });
-			}
-			else evento("colision", { objeto: elemento, quien: elemento, con });
+			} else
+				evento("colision", { objeto: elemento, quien: elemento, con });
 		});
 }
 
@@ -2211,7 +2567,9 @@ function resetJuego() {
 			} else {
 				saltarGuardadoAlSalir = false;
 				saltarEscribirMemoria = false;
-				console.warn("resetJuego: sesión vencida, no se resetea la partida");
+				console.warn(
+					"resetJuego: sesión vencida, no se resetea la partida",
+				);
 			}
 		})
 		.catch(() => {
@@ -2220,56 +2578,63 @@ function resetJuego() {
 		});
 }
 let datos = memoria({
-	vida:3,
-	dinero:10
-})
+	vida: 3,
+	dinero: 10,
+});
 function memoria(datosDefault) {
-	if(!datosDefault) {
+	if (!datosDefault) {
 		datosDefault = {
-			vida:3,
-			dinero:10
-		}
+			vida: 3,
+			dinero: 10,
+		};
 	}
 	try {
-		let datos = datosDefault
-		if (localStorage.getItem("datos") !== undefined){
-			try {		
-				if(localStorage.getItem("datos"))
+		let datos = datosDefault;
+		if (localStorage.getItem("datos") !== undefined) {
+			try {
+				if (localStorage.getItem("datos"))
 					datos = JSON.parse(localStorage.getItem("datos"));
 			} catch (error) {
 				errorRender("No se pudo cargar la memoria, datos corruptos");
-				console.log("Error memoria")
-				console.log(error)
-				console.log(localStorage.getItem("datos"))
+				console.log("Error memoria");
+				console.log(error);
+				console.log(localStorage.getItem("datos"));
 			}
 			try {
-				if(datos.hasOwnProperty("elementos")){
+				if (datos.hasOwnProperty("elementos")) {
 					// reparar datos viejos: el primer ingreso por ?escena= guardaba el
 					// estado con escena "principal" (el nombre no estaba listo todavia).
 					// esos marcados quedan huérfanos y hacen que los objetos destruidos
 					// reaparezcan al recargar; se realinean a la escena actual.
 					const nombreActual = escenaActiva()?.name;
-					for(let elemento of Object.values(datos.elementos)){
-						if (elemento.escena === "principal" && nombreActual && nombreActual !== "principal")
+					for (let elemento of Object.values(datos.elementos)) {
+						if (
+							elemento.escena === "principal" &&
+							nombreActual &&
+							nombreActual !== "principal"
+						)
 							elemento.escena = nombreActual;
-						if(elemento.escena == nombreActual || elemento.id == "player"){
-							if(elemento.id != "player")
-								idsExistsStatePrevious .push(elemento.id)
-							if(elemento?.items !== undefined){
-								for(let item of elemento.items){
-									idsExistsStatePrevious .push(item.id)
+						if (
+							elemento.escena == nombreActual ||
+							elemento.id == "player"
+						) {
+							if (elemento.id != "player")
+								idsExistsStatePrevious.push(elemento.id);
+							if (elemento?.items !== undefined) {
+								for (let item of elemento.items) {
+									idsExistsStatePrevious.push(item.id);
 								}
 							}
 						}
 					}
 				}
 			} catch (error) {
-				errorRender("Error al extraer ids de los elementos en memoria")
-				console.log(error)
+				errorRender("Error al extraer ids de los elementos en memoria");
+				console.log(error);
 			}
 		}
-		
-		console.log('Memoria recuperada: ', datos)
+
+		console.log("Memoria recuperada: ", datos);
 
 		return new Proxy(datos, {
 			set: function (target, key, value) {
@@ -2277,81 +2642,79 @@ function memoria(datosDefault) {
 				escribirMemoria();
 				return true;
 			},
-			guardar(key, value){
+			guardar(key, value) {
 				target[key] = value;
 				escribirMemoria();
-			}
+			},
 		});
 	} catch (error) {
 		errorRender("No se pudo crear la memoria");
-		console.log(error)
+		console.log(error);
 	}
 }
 // mientas espera el reload, el juego en marcha volveria a escribir "datos"
 // (proxy/guardarEstadoElemento); esta bandera lo congela hasta que recargue
 let saltarEscribirMemoria = false;
-function escribirMemoria(){
+function escribirMemoria() {
 	if (saltarEscribirMemoria) return;
 	try {
 		localStorage.setItem("datos", JSON.stringify(datos));
 	} catch (error) {
 		errorRender("No se pudo guardar la memoria");
-		console.log("Error memoria")
-		console.log(error)
+		console.log("Error memoria");
+		console.log(error);
 	}
 }
-function cargarEstadoElemento( id , elemento, propiedades){
+function cargarEstadoElemento(id, elemento, propiedades) {
 	try {
-		if(datos.hasOwnProperty('elementos')){
+		if (datos.hasOwnProperty("elementos")) {
 			// si no es id generico
 			// sobrecarga de datos
-			let item = datos.elementos[id]
-			if(item){
-				elemento().x(item.x)
-				elemento().y(item.y)
-				elemento().z(item.z)
-				elemento().escena(item.escena)
-				for(let p in item.propiedades){
-					elemento().propiedades(p, item.propiedades[p], true)
+			let item = datos.elementos[id];
+			if (item) {
+				elemento().x(item.x);
+				elemento().y(item.y);
+				elemento().z(item.z);
+				elemento().escena(item.escena);
+				for (let p in item.propiedades) {
+					elemento().propiedades(p, item.propiedades[p], true);
 				}
-				
 			}
 		}
 	} catch (error) {
-		errorRender('cargarEstadoElemento #'+id)
-		console.log(error)
+		errorRender("cargarEstadoElemento #" + id);
+		console.log(error);
 	}
 }
 function guardarEstadoElemento(elemento) {
-	
-		if(datos){
-			if(!datos.hasOwnProperty('elementos')) datos.elementos = {}
-			// si no es id generico
+	if (datos) {
+		if (!datos.hasOwnProperty("elementos")) datos.elementos = {};
+		// si no es id generico
 
-				let propiedades = {...elemento.propiedades() , esPersonaje: false}
-				const pos = (v) => typeof v === "function" ? v.call(elemento) : v;
-				let datoElemento = {
-					x:pos(elemento.x),
-					y:pos(elemento.y),
-					z:pos(elemento.z),
-					id:elemento.id,
-					tipo:elemento.tipo,
-					imagenAlias:elemento.imagenAlias,
-					escena:escenaActiva().name,
-					propiedades,
-					esPersonaje:false
-				}
-				if(elemento.propiedades("items")?.length > 0){
-					datoElemento.items = elemento.propiedades("items").map(i => ({
-						tipo:i.tipo,
-						id:i.id,
-						"guardado-en":elemento.id,
-						imagenAlias:i.imagenAlias,
-						imagen:i?.url || imagenesImportadasData[i.tipo],
-						props: i
-					}))
-				}
-				/*
+		let propiedades = { ...elemento.propiedades(), esPersonaje: false };
+		const pos = (v) => (typeof v === "function" ? v.call(elemento) : v);
+		let datoElemento = {
+			x: pos(elemento.x),
+			y: pos(elemento.y),
+			z: pos(elemento.z),
+			id: elemento.id,
+			tipo: elemento.tipo,
+			imagenAlias: elemento.imagenAlias,
+			escena: escenaActiva().name,
+			propiedades,
+			esPersonaje: false,
+		};
+		if (elemento.propiedades("items")?.length > 0) {
+			datoElemento.items = elemento.propiedades("items").map((i) => ({
+				tipo: i.tipo,
+				id: i.id,
+				"guardado-en": elemento.id,
+				imagenAlias: i.imagenAlias,
+				imagen: i?.url || imagenesImportadasData[i.tipo],
+				props: i,
+			}));
+		}
+		/*
 				// si falta algun dato
 				const validacion = () =>{
 					for(let key in datos.elementos[elemento.id]){
@@ -2361,12 +2724,11 @@ function guardarEstadoElemento(elemento) {
 				}
 				if( datos.elementos[elemento.id] && !validacion()) throw "Falta algun dato"; 
 				*/
-				// guardamos el componente con sus datos
-				datos.elementos[elemento.id] = datoElemento
-				// guardamos en la memoria del navegador
-				escribirMemoria()
-			
-		}
+		// guardamos el componente con sus datos
+		datos.elementos[elemento.id] = datoElemento;
+		// guardamos en la memoria del navegador
+		escribirMemoria();
+	}
 }
 
 // al salir de la escena guardamos la posicion de los objetos (los enemigos no)
@@ -2389,26 +2751,23 @@ window.addEventListener("beforeunload", () => {
 	}
 });
 
-
 const cambiarPisoTextura = (alias) => {
-	document.querySelectorAll('.cell').forEach(e => {
+	document.querySelectorAll(".cell").forEach((e) => {
 		e.style.backgroundImage = `url(${imagenesImportadasData[alias]})`;
 		e.style.backgroundSize = "cover";
-	})
+	});
 };
 
-function cambiarPiso(urlPiso, cover, position="center"){
-	escenaActiva().cambiarPiso(urlPiso,cover, position );
+function cambiarPiso(urlPiso, cover, position = "center") {
+	escenaActiva().cambiarPiso(urlPiso, cover, position);
 	return escenaActiva().piso;
 }
-
-
 
 // margenX/margenY aceptan un numero (igual para todas las orientaciones) o un
 // objeto { izquierda, arriba, derecha, abajo } que se resuelve segun la
 // orientacion con la que se pinta el sprite
 const margenEn = (valor, orientacion) =>
-	(valor && typeof valor === "object" ? valor[orientacion] : valor);
+	valor && typeof valor === "object" ? valor[orientacion] : valor;
 
 // escala + volteos (voltearHorizontal/voltearVertical) del sprite (img o canvas):
 // un solo style.scale para todo, si cada uno escribia lo suyo se pisaban
@@ -2422,7 +2781,6 @@ const aplicarEscalaMedia = (el) => {
 };
 
 const $styleTransform = (elemento, transformProp, value) => {
-
 	const units = {
 		translate: "px",
 		rotate: "deg",
@@ -2437,14 +2795,14 @@ const $styleTransform = (elemento, transformProp, value) => {
 			break;
 		}
 	}
-	let nodo = elemento.querySelector('img')
-	if(!nodo) nodo = elemento.querySelector('canvas')
+	let nodo = elemento.querySelector("img");
+	if (!nodo) nodo = elemento.querySelector("canvas");
 
 	if (!nodo) return;
 
-	if (!String(nodo.style?.transform)){
+	if (!String(nodo.style?.transform)) {
 		nodo.style.transform = `${transformProp}(${value.val}${unit})`;
-		return ;
+		return;
 	}
 
 	let transform = String(nodo.style?.transform);
@@ -2473,52 +2831,51 @@ const $styleTransform = (elemento, transformProp, value) => {
 
 	// aqui usaremos props para obtener el transform
 	//if (elemento.id.search("3d:personaje-frente") > -1)
-		//$printError(transformNew)
+	//$printError(transformNew)
 	nodo.style.transform = transformNew;
 };
 
-
-
-function estilarElementosAgua (elementos, opciones = {}) {
-	if(!elementos) return;
+function estilarElementosAgua(elementos, opciones = {}) {
+	if (!elementos) return;
 	const update = async (index) => {
-		let item = elementos[index]
-		let { x , y, z } = item
-		let left = 0
-		let top = 1
-		let right = 2
-		let bottom = 3
-		let borders = [false, false, false, false]
+		let item = elementos[index];
+		let { x, y, z } = item;
+		let left = 0;
+		let top = 1;
+		let right = 2;
+		let bottom = 3;
+		let borders = [false, false, false, false];
 
-		if( !elementos.find( i => i.x == x + 1 && i.y == y && i.z == z )) borders[left] = true
-			
-		if( !elementos.find( i => i.x == x - 1 && i.y == y && i.z == z )) borders[right] = true
-			
-		if( !elementos.find( i => i.x == x && i.y == y + 1 && i.z == z )) borders[bottom] = true
-			
-		if( !elementos.find( i => i.x == x && i.y == y - 1 && i.z == z )) borders[top] = true
-		let img = item.nodo.querySelector('img')
-		if(!img) img = item.nodo.querySelector('canvas')
+		if (!elementos.find((i) => i.x == x + 1 && i.y == y && i.z == z))
+			borders[left] = true;
 
-		let css = ["0px", "0px", "0px", "0px"]
-		if(borders[left] && borders[top]) css[0] = "50%"
-		if(borders[right] && borders[top]) css[1] = "50%"
-		if(borders[right] && borders[bottom]) css[2] = "50%"
-		if(borders[left] && borders[bottom]) css[3] = "50%"
-		item.css = css.join(" ")
+		if (!elementos.find((i) => i.x == x - 1 && i.y == y && i.z == z))
+			borders[right] = true;
 
-		img.style.borderRadius = css.join(" ")
-		
-		if(index < elementos.length - 1) update(index + 1)
+		if (!elementos.find((i) => i.x == x && i.y == y + 1 && i.z == z))
+			borders[bottom] = true;
 
+		if (!elementos.find((i) => i.x == x && i.y == y - 1 && i.z == z))
+			borders[top] = true;
+		let img = item.nodo.querySelector("img");
+		if (!img) img = item.nodo.querySelector("canvas");
+
+		let css = ["0px", "0px", "0px", "0px"];
+		if (borders[left] && borders[top]) css[0] = "50%";
+		if (borders[right] && borders[top]) css[1] = "50%";
+		if (borders[right] && borders[bottom]) css[2] = "50%";
+		if (borders[left] && borders[bottom]) css[3] = "50%";
+		item.css = css.join(" ");
+
+		img.style.borderRadius = css.join(" ");
+
+		if (index < elementos.length - 1) update(index + 1);
+	};
+	if (Array.isArray(elementos)) {
+		if (elementos.length > 0) update(0);
 	}
-	if(Array.isArray(elementos)){
-		if(elementos.length > 0) update(0)
-	}
-	return []
+	return [];
 }
-
-
 
 function magnetismoAtraer(iman) {
 	// aqui buscaremos en un rango de 2 posiciones desde la posicion actual del iman
@@ -2555,14 +2912,15 @@ function magnetismoAtraer(iman) {
 	for (let position of positions) {
 		let [x, y] = position;
 		// paso 2: buscar el elemento en la posicion
-		let elementsMagnetic = escenaActiva().elementos.find(
-			(o) =>{
-				return (o.x == x &&
+		let elementsMagnetic = escenaActiva().elementos.find((o) => {
+			return (
+				o.x == x &&
 				o.y == y &&
 				!o.propiedades("guardado") &&
-				o.propiedades("material") == iman.propiedades("magnetico-material"))
-			}
-		);
+				o.propiedades("material") ==
+					iman.propiedades("magnetico-material")
+			);
+		});
 		// paso 3: si el elemento es elementsMagnetic
 		if (elementsMagnetic) {
 			// paso 4: moverlo 1 posicion hacia el iman si hay espacio
@@ -2640,8 +2998,8 @@ function listenMagnetic() {
 	}, 500);
 }
 
-function posicion (elemento){
-	console.log(elemento)
+function posicion(elemento) {
+	console.log(elemento);
 	// retornar todos los espacios que ocupa el objeto
 	let x = elemento.x;
 	let y = elemento.y;
@@ -2659,59 +3017,65 @@ function posicion (elemento){
 		}
 	}
 
-	return positions
+	return positions;
 }
 
 function teletransportar(el, x, y, z) {
-		if (el.x === x && el.y === y && el.z === (z ?? el.z)) return;
-		el.x = x;
-		el.y = y;
-		el.z = z || el.z;
-		window.sceneManager?.actualizarTransformNodo(el);
-	}
+	if (el.x === x && el.y === y && el.z === (z ?? el.z)) return;
+	el.x = x;
+	el.y = y;
+	el.z = z || el.z;
+	window.sceneManager?.actualizarTransformNodo(el);
+}
 
-function superpuestos(obj1, obj2){
-	if(typeof obj1 === "string") {
-		obj1 = escenaActiva().elementos.find(o => o.id == obj1)
+function superpuestos(obj1, obj2) {
+	if (typeof obj1 === "string") {
+		obj1 = escenaActiva().elementos.find((o) => o.id == obj1);
 	}
-	if(typeof obj2 === "string") {
-		obj2 = escenaActiva().elementos.find(o => o.id == obj2)
+	if (typeof obj2 === "string") {
+		obj2 = escenaActiva().elementos.find((o) => o.id == obj2);
 	}
-	if(!obj1) errorRender("Objeto no encontrado o no tiene id valido" +  obj1)
-	if(!obj2) errorRender("Objeto no encontrado o no tiene id valido" +  obj2)
+	if (!obj1) errorRender("Objeto no encontrado o no tiene id valido" + obj1);
+	if (!obj2) errorRender("Objeto no encontrado o no tiene id valido" + obj2);
 
 	let positions1 = posicion(obj1);
 	let positions2 = posicion(obj2);
 	// buscamos si los objetos se superponen
 	for (let position1 of positions1) {
 		for (let position2 of positions2) {
-			if(String(position1[0]) == String(position2[0]) && String(position1[1]) == String(position2[1]) && String(position1[2]) == String(position2[2])){
+			if (
+				String(position1[0]) == String(position2[0]) &&
+				String(position1[1]) == String(position2[1]) &&
+				String(position1[2]) == String(position2[2])
+			) {
 				return true;
 			}
 		}
 	}
 
-	return false
+	return false;
 }
 
 /**==================================================== RELATAR ============================================ */
-var cursorRelatar = 0
+var cursorRelatar = 0;
 let relatarDialog = document.querySelector("#relatar");
 let markdown = document.querySelector(".markdown");
 let nodoCursorRelatar = document.querySelector(".markdown [name=cursor]");
 let nodoTotalRelatar = document.querySelector(".markdown [name=total]");
 let contenidoRelatar = null;
 function relatar(textoMarkdown) {
-	if(estado() == "start"){
+	if (estado() == "start") {
 		return setTimeout(() => {
 			relatar(textoMarkdown);
-		}, 400)
+		}, 400);
 	}
 	if (estado() == "relatando") {
 		if (contenidoRelatar[cursorRelatar]) {
 			nodoCursorRelatar.innerHTML = cursorRelatar + 1;
 
-			let content = contenidoRelatar[cursorRelatar].replaceAll('    ',"&emsp;&emsp;").replaceAll('\t',"&emsp;&emsp;");
+			let content = contenidoRelatar[cursorRelatar]
+				.replaceAll("    ", "&emsp;&emsp;")
+				.replaceAll("\t", "&emsp;&emsp;");
 			for (let key in imagenesImportadasData) {
 				content = content.replace(
 					`](${key})`,
@@ -2731,116 +3095,125 @@ function relatar(textoMarkdown) {
 				walkTokens: null,
 			});
 
-			let items = Array.from(markdown.children[0].children)
-			console.log(items)
-			for(let item of items){
+			let items = Array.from(markdown.children[0].children);
+			console.log(items);
+			for (let item of items) {
 				// bloque codigo
-				let cut = item.innerText.split('/code')
-				if(cut.length > 1){
-					let codigo = cut[1]
-					item.innerHTML = `<p>${cut[0]}</p><pre class="copy"><code>${codigo}</code>\n\n<small>(click aquí para copiar)</small></pre>`
+				let cut = item.innerText.split("/code");
+				if (cut.length > 1) {
+					let codigo = cut[1];
+					item.innerHTML = `<p>${cut[0]}</p><pre class="copy"><code>${codigo}</code>\n\n<small>(click aquí para copiar)</small></pre>`;
 				}
 				// bloque tablas
-				if(item.innerText.startsWith("#")){
-					item.style.position = 'relative'
-					let tableItem = item.innerText.trim().slice(1).split(':');
-					let dimensiones = tableItem[0].split('x');
-					let config = {}
-					if(tableItem.length > 1 && tableItem[1]){
-						tableItem.splice(0,1)
-						for(let itemConfig of tableItem[0].split(',')){
-							let configData = itemConfig.split('=')
-							if(configData.length > 1){
-								let [clave,valor] = configData
-								config[clave] = valor
+				if (item.innerText.startsWith("#")) {
+					item.style.position = "relative";
+					let tableItem = item.innerText.trim().slice(1).split(":");
+					let dimensiones = tableItem[0].split("x");
+					let config = {};
+					if (tableItem.length > 1 && tableItem[1]) {
+						tableItem.splice(0, 1);
+						for (let itemConfig of tableItem[0].split(",")) {
+							let configData = itemConfig.split("=");
+							if (configData.length > 1) {
+								let [clave, valor] = configData;
+								config[clave] = valor;
 							} else {
-								config[configData[0]] = true
+								config[configData[0]] = true;
 							}
 						}
 					}
 					// dibujar tabla con dimensiones
-					let table = document.createElement('table')
+					let table = document.createElement("table");
 					// dibujando las tablas
-					table.style.width= 'fit-content'
-					for(let i = 0; i < Number(dimensiones[0]); i++){
-						let tr = document.createElement('tr')
-						for(let j = 0; j < Number(dimensiones[1]); j++){
-							let td = document.createElement('td')
-							td.name = `${i+1},${j+1}`
-							td.style.fontSize = '0.7em'
-							td.style.padding = '2px'
-							td.style.border = '1px solid black'
-							td.style.width = '10px'
-							td.style.height = '10px'
-							tr.appendChild(td)
+					table.style.width = "fit-content";
+					for (let i = 0; i < Number(dimensiones[0]); i++) {
+						let tr = document.createElement("tr");
+						for (let j = 0; j < Number(dimensiones[1]); j++) {
+							let td = document.createElement("td");
+							td.name = `${i + 1},${j + 1}`;
+							td.style.fontSize = "0.7em";
+							td.style.padding = "2px";
+							td.style.border = "1px solid black";
+							td.style.width = "10px";
+							td.style.height = "10px";
+							tr.appendChild(td);
 						}
-						table.appendChild(tr)
+						table.appendChild(tr);
 					}
-					item.innerHTML = table.outerHTML
-					
+					item.innerHTML = table.outerHTML;
+
 					// antes de la tabla agregamos un texto
-					if(config?.n === true){
-						let textX = document.createElement('small')
-						textX.style = "font-size:0.7em;position:absolute;left:0px;top:-23px"
-						textX.innerHTML = `y:1`
-						item.prepend(textX)
-						let textY = document.createElement('small')
-						textY.style = "font-size:0.7em;position:absolute;left:-20px;top:-3px;"
-						textY.innerHTML = `x:1`
-						item.prepend(textY)
+					if (config?.n === true) {
+						let textX = document.createElement("small");
+						textX.style =
+							"font-size:0.7em;position:absolute;left:0px;top:-23px";
+						textX.innerHTML = `y:1`;
+						item.prepend(textX);
+						let textY = document.createElement("small");
+						textY.style =
+							"font-size:0.7em;position:absolute;left:-20px;top:-3px;";
+						textY.innerHTML = `x:1`;
+						item.prepend(textY);
 					}
-					
+
 					// si config select
-					if(config?.select){
+					if (config?.select) {
 						// cremos un input para seleccionar las celdas
-						const createInput = (name) => {								
-							let label = document.createElement('label')
-							label.innerText = name+': '
-							let input = document.createElement('input')
-							input.type = 'number'
-							input.name = name
-							input.min = 1
-							input.max = dimensiones[0]
-							input.value = 1
-							label.appendChild(input)
-							item.prepend(label)
-							return input
-						}
-						let inputY = createInput('y')
-						let inputX = createInput('x')
-						let selected = null
+						const createInput = (name) => {
+							let label = document.createElement("label");
+							label.innerText = name + ": ";
+							let input = document.createElement("input");
+							input.type = "number";
+							input.name = name;
+							input.min = 1;
+							input.max = dimensiones[0];
+							input.value = 1;
+							label.appendChild(input);
+							item.prepend(label);
+							return input;
+						};
+						let inputY = createInput("y");
+						let inputX = createInput("x");
+						let selected = null;
 						let fn = () => {
-							if(selected) selected.style.background = "none"
-							let row = item.querySelector('table').querySelector(`tr:nth-child(${inputX.value})`)
-							let cell = row.querySelector(`td:nth-child(${inputY.value})`)
-							cell.style.background = 'green'
-							selected = cell
-							
-							if(config.select == inputX.value + "x" + inputY.value){
+							if (selected) selected.style.background = "none";
+							let row = item
+								.querySelector("table")
+								.querySelector(`tr:nth-child(${inputX.value})`);
+							let cell = row.querySelector(
+								`td:nth-child(${inputY.value})`,
+							);
+							cell.style.background = "green";
+							selected = cell;
+
+							if (
+								config.select ==
+								inputX.value + "x" + inputY.value
+							) {
 								setTimeout(() => {
 									cursorRelatar++;
 									relatar();
-								}, 1500)
+								}, 1500);
 							}
-						}
-						inputX.onchange = fn
-						inputY.onchange = fn
+						};
+						inputX.onchange = fn;
+						inputY.onchange = fn;
 					}
 				}
 			}
 			setTimeout(() => {
-				markdown.style.height = markdown.children[0].offsetHeight + 20 + "px";
+				markdown.style.height =
+					markdown.children[0].offsetHeight + 20 + "px";
 			}, 250);
 		}
 		return;
 	}
 	if (!textoMarkdown) {
 		errorRender("No hay texto para relatar.");
-		console.log({textoMarkdown});
+		console.log({ textoMarkdown });
 		throw "No hay texto para relatar o no es valido.";
 	}
 	try {
-
 		cursorRelatar = 0;
 		contenidoRelatar = Array.isArray(textoMarkdown)
 			? textoMarkdown
@@ -2850,8 +3223,8 @@ function relatar(textoMarkdown) {
 		nodoTotalRelatar.innerHTML = contenidoRelatar.length;
 		relatar();
 	} catch (error) {
-		console.log(error)
-		console.log({textoMarkdown});
+		console.log(error);
+		console.log({ textoMarkdown });
 		return ayuda("No hay texto para relatar o no es valido.");
 	}
 }
@@ -2870,7 +3243,7 @@ document.addEventListener("click", (e) => {
 	}
 });
 
-escuchar("s", ()=>ocultarRelatar(), "relatando");
+escuchar("s", () => ocultarRelatar(), "relatando");
 
 escuchar(
 	"derecha",
@@ -2894,9 +3267,7 @@ escuchar(
 	"relatando",
 );
 
-
 /** bar info */
-
 
 /**
  * Muestra la informacion de una variable en la barra de informacion
@@ -2904,14 +3275,12 @@ escuchar(
  * @param {number} position [1 al 4] - la columna en la que se va a mostrar la informacion
  * @abstract ejemplo: mostrar(() => "vida" + vida, 1);
  */
-var barInfo = null
-let listeners = {
-
-}
+var barInfo = null;
+let listeners = {};
 function mostrar(variable, position) {
 	if (!barInfo) {
 		barInfo = document.querySelector("#barInfo");
-		if(!barInfo) {
+		if (!barInfo) {
 			barInfo = document.createElement("div");
 			barInfo.id = "barInfo";
 			document.body.appendChild(barInfo);
@@ -2931,63 +3300,76 @@ function mostrar(variable, position) {
 		nodo: () => div,
 	};
 	div.innerText = variable();
+	setInterval(() => {
+		div.innerText = variable();		
+	}, 1000)
 	barInfo.appendChild(div);
 }
 
 /** error render */
 let renderConsole = document.querySelector("#error-code");
 function errorRender(...params) {
-	if(!params.length) return {
-		clearGroup(group, key) {
-			renderConsole.querySelectorAll(`[group="${group}"]`).forEach(item => {
-				if(key !== undefined){
-					if(item.getAttribute('group-val') == key) item.remove()
-				}else{
-					item.remove()
-				}
-			})
-		}
-	}
-	let nodos = []
-	let texts = renderConsole.children ? Array.from(renderConsole.children).forEach(item => item.innerText) : []
-	if(!texts) texts = []
-	for(let item of params) {
+	if (!params.length)
+		return {
+			clearGroup(group, key) {
+				renderConsole
+					.querySelectorAll(`[group="${group}"]`)
+					.forEach((item) => {
+						if (key !== undefined) {
+							if (item.getAttribute("group-val") == key)
+								item.remove();
+						} else {
+							item.remove();
+						}
+					});
+			},
+		};
+	let nodos = [];
+	let texts = renderConsole.children
+		? Array.from(renderConsole.children).forEach((item) => item.innerText)
+		: [];
+	if (!texts) texts = [];
+	for (let item of params) {
 		let div = document.createElement("div");
-		div.className = "p-1 text-md me-1 flex items-center bg-red-500 m-1 justify-between rounded-lg";
-		div.style.minWidth = '200px';
+		div.className =
+			"p-1 text-md me-1 flex items-center bg-red-500 m-1 justify-between rounded-lg";
+		div.style.minWidth = "200px";
 		div.innerHTML = `<div class="px-3 error-text" style="word-break: break-word;"></div>`;
-		div.children[0].innerHTML = item
+		div.children[0].innerHTML = item;
 		let close = document.createElement("button");
 		close.innerText = "X";
-		close.className = "bg-red-400 text-lg text-white p-1 ms-3 cursor-pointer rounded-full border-0 flex items-center justify-center";
-		close.style ="width: 30px; height: 30px;";
+		close.className =
+			"bg-red-400 text-lg text-white p-1 ms-3 cursor-pointer rounded-full border-0 flex items-center justify-center";
+		close.style = "width: 30px; height: 30px;";
 		close.onclick = () => div.remove();
 		div.appendChild(close);
-		if(!texts.includes(div.innerText)) {
-			texts.push(div.innerText)
+		if (!texts.includes(div.innerText)) {
+			texts.push(div.innerText);
 			renderConsole.appendChild(div);
-			nodos.push(div)
+			nodos.push(div);
 		}
 	}
-	nodos.setGroup = (group,val) => {
-		nodos.forEach(nodo => {
-			renderConsole.querySelectorAll(`[group="${group}"]`).forEach(item => {
-				if(val !== undefined){
-					if(item.getAttribute('group-val') == val) nodo.remove()
-					return ;
-				}else{
-					nodo.remove()
-					return ;
-				}
-			})
+	nodos.setGroup = (group, val) => {
+		nodos.forEach((nodo) => {
+			renderConsole
+				.querySelectorAll(`[group="${group}"]`)
+				.forEach((item) => {
+					if (val !== undefined) {
+						if (item.getAttribute("group-val") == val)
+							nodo.remove();
+						return;
+					} else {
+						nodo.remove();
+						return;
+					}
+				});
 
-			nodo.setAttribute('group',group)
-			nodo.setAttribute('group-val',val)
-		})
-	}
-	return nodos
+			nodo.setAttribute("group", group);
+			nodo.setAttribute("group-val", val);
+		});
+	};
+	return nodos;
 }
-
 
 function fondo(url, config = {}) {
 	escenaActiva().fondo("atras", url, config || {});

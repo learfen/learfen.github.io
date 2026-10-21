@@ -88,6 +88,8 @@ function decir(elemento, time) {
 		}
 		return;
 	}
+	// ya cablado (p.ej. por crearObjeto): no re-registrar listeners ni pisar metodos
+	if (typeof elemento.decir === "function") return elemento;
 	/**
 	 *
 	 * @param {string} pregunta
@@ -311,7 +313,7 @@ function lanzar(obj) {
 				const orient = eje === "x"
 					? (objetivo.y < obj.y ? "arriba" : "abajo")
 					: (objetivo.x < obj.x ? "izquierda" : "derecha");
-				if (orient !== obj.orientacion) {
+				if (orient !== obj.orientacion && opciones?.orientar !== false){
 					obj.orientar(orient);
 					// actor compartido (neto): el peer replicó su orientación
 					if (window.neto?.activo && ultimaOrient !== orient) {
@@ -660,7 +662,8 @@ function estadoAnimado(elemento) {
 			elemento.referenciaEstado()
 		) {
 			elemento.referenciaEstado().innerHTML = "";
-			elemento.referenciaEstado().classList.remove("show");
+			elemento.referenciaEstado().classList.remove("show", "options");
+			if (elemento.nodo) elemento.nodo.classList.remove("menu-abierto");
 		}
 		return elemento;
 	};
@@ -673,10 +676,10 @@ function estadoAnimado(elemento) {
 			elemento.referenciaEstado = () =>
 				elemento.nodo.querySelector(".block-label");
 			const nodoEstado = elemento.referenciaEstado();
-			if (nodoEstado) nodoEstado.classList.add("show");
+			if (nodoEstado) nodoEstado.classList.add("show","inventario-menu");
 			else {
 				const nuevo = document.createElement("div");
-				nuevo.classList.add("block-label", "show");
+				nuevo.classList.add("block-label", "show", "inventario-menu");
 				if (elemento.nodo) elemento.nodo.appendChild(nuevo);
 				elemento.referenciaEstado = () =>
 					elemento.nodo.querySelector(".block-label");
@@ -685,6 +688,10 @@ function estadoAnimado(elemento) {
 		if (mode === "options")
 			optionsOpenMenu.nodo = elemento.referenciaEstado();
 		elemento.referenciaEstado().classList.add("show");
+		// el menu de opciones va en columna y por encima de los demas bloques
+		const esMenu = mode === "options";
+		elemento.referenciaEstado().classList.toggle("options", esMenu);
+		if (elemento.nodo) elemento.nodo.classList.toggle("menu-abierto", esMenu);
 		elemento.referenciaEstado().innerHTML = texto;
 		return elemento;
 	};
@@ -718,6 +725,25 @@ function estadoAnimado(elemento) {
 		}
 		elemento.info({ vidas: elemento.vidasTexto() });
 		window.neto?.cambiar?.(elemento);
+		// al llegar a 0 se muere: disparamos "destruido" ACA para que valga tanto
+		// restarVida() (la API documentada) como perderVida(). Antes el evento
+		// solo salia por perderVida(), asi que el codigo que usa restarVida()
+		// restaba vidas pero nunca veia "destruido:@tipo".
+		if (elemento.destruible && vidas === 0) {
+			evento("destruido", { elemento });
+			evento("destruido:" + elemento.id, { elemento });
+			evento("destruido:@" + elemento.tipo, { elemento });
+			// un enemigo derrotado se elimina de la escena: eliminarObjeto
+			// deja datos.elementos[id] = {destruido:true} (ver scene.js) para
+			// que al recargar NO reaparezca. El player muerto se maneja aparte.
+			if (
+				window.sceneManager &&
+				elemento.id !== "player" &&
+				elemento.id !== player()?.id
+			) {
+				window.sceneManager.eliminarObjeto(elemento.id);
+			}
+		}
 		return elemento;
 	};
 	elemento.perderVida = (n) => {
@@ -725,21 +751,6 @@ function estadoAnimado(elemento) {
 		// tienen vidas:1 por defecto pero no son destruibles
 		if(elemento.destruible && elemento.vidas() > 0) {
 			elemento.restarVida(n);
-			if(elemento.vidas() === 0) {
-				evento("destruido", { elemento });
-				evento("destruido:" + elemento.id, { elemento });
-				evento("destruido:@" + elemento.tipo, { elemento });
-				// un enemigo derrotado se elimina de la escena: eliminarObjeto
-				// deja datos.elementos[id] = {destruido:true} (ver scene.js) para
-				// que al recargar NO reaparezca. El player muerto se maneja aparte.
-				if (
-					window.sceneManager &&
-					elemento.id !== "player" &&
-					elemento.id !== player()?.id
-				) {
-					window.sceneManager.eliminarObjeto(elemento.id);
-				}
-			}
 		}
 	}
 	elemento.sumarVida = function (n) {
@@ -1057,8 +1068,9 @@ escuchar(
 escuchar(
 	"menu-info:cerrar",
 	() => {
-		if (!optionsOpenMenu?.actions) return;
-		optionsOpenMenu.actions.reset();
+		// el menu pudo haberse limpiado antes (optionsOpenMenu = {}), pero el
+		// estado SIEMPRE debe volver a play o el juego queda trabado
+		if (optionsOpenMenu?.actions) optionsOpenMenu.actions.reset();
 		estado("play", 1);
 	},
 	"menu-info:abierto",
@@ -1255,41 +1267,6 @@ function animar(obj) {
 			}
 		});
 	};
-	obj.en = (selector,y,z) => {
-		if(y){
-			let x = selector
-			z = z || obj.z
-			return (obj.x == x && obj.y == y && obj.z == z)
-		}
-		if(typeof selector === 'string'){
-			let items = escenaActiva().buscar(selector)
-			for(let item of items){
-				if(item.x === obj.x && item.y === obj.y && item.z === obj.z){
-					return true
-				}
-				// evaluamos cuando el objeto fue expandido o es un piso
-				for(let k = 0; k < item.d; k++){
-					for(let i = 0; i < item.w; i++){
-						for(let j = 0; j < item.h; j++){
-							if(item.x + i === obj.x && item.y + j === obj.y && item.z + k === obj.z){
-								return true
-							}			
-						}
-					}
-				}
-			}
-		}
-		// evaluamos cuando el objeto fue expandido o es un piso
-		for(let k = 0; k < item.d; k++){
-			for(let i = 0; i < item.w; i++){
-				for(let j = 0; j < item.h; j++){
-					if(item.x + i === obj.x && item.y + j === obj.y && item.z + k === obj.z){
-						return true
-					}			
-				}
-			}
-		}
-	}
 	obj.adelante = (pos) => {
 		let vista = obj.mirando()
 		let { x, y, z } = obj
@@ -1619,6 +1596,7 @@ escuchar(
 					interaccionStandBy = true;
 					item.interaccion({
 						elemento: item,
+						quien: item,
 						objeto: () => item,
 					})
 						.then(() => {

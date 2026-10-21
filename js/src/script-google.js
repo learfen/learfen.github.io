@@ -11,6 +11,70 @@ function tokenActual() {
 }
 
 async function $fetch(url, options) {
+	
+
+let errorRender = (...params) => {
+	if (!params.length)
+		return {
+			clearGroup(group, key) {
+				renderConsole
+					.querySelectorAll(`[group="${group}"]`)
+					.forEach((item) => {
+						if (key !== undefined) {
+							if (item.getAttribute("group-val") == key)
+								item.remove();
+						} else {
+							item.remove();
+						}
+					});
+			},
+		};
+	let nodos = [];
+	let texts = renderConsole.children
+		? Array.from(renderConsole.children).forEach((item) => item.innerText)
+		: [];
+	if (!texts) texts = [];
+	for (let item of params) {
+		let div = document.createElement("div");
+		div.className =
+			"p-1 text-md me-1 flex items-center bg-red-500 m-1 justify-between rounded-lg";
+		div.style.minWidth = "200px";
+		div.innerHTML = `<div class="px-3 error-text" style="word-break: break-word;"></div>`;
+		div.children[0].innerHTML = item;
+		let close = document.createElement("button");
+		close.innerText = "X";
+		close.className =
+			"bg-red-400 text-lg text-white p-1 ms-3 cursor-pointer rounded-full border-0 flex items-center justify-center";
+		close.style = "width: 30px; height: 30px;";
+		close.onclick = () => div.remove();
+		div.appendChild(close);
+		if (!texts.includes(div.innerText)) {
+			texts.push(div.innerText);
+			renderConsole.appendChild(div);
+			nodos.push(div);
+		}
+	}
+	nodos.setGroup = (group, val) => {
+		nodos.forEach((nodo) => {
+			renderConsole
+				.querySelectorAll(`[group="${group}"]`)
+				.forEach((item) => {
+					if (val !== undefined) {
+						if (item.getAttribute("group-val") == val)
+							nodo.remove();
+						return;
+					} else {
+						nodo.remove();
+						return;
+					}
+				});
+
+			nodo.setAttribute("group", group);
+			nodo.setAttribute("group-val", val);
+		});
+	};
+	return nodos;
+}
 	if (url.search("/api") === -1) {
 		return fetch(url, options);
 	}

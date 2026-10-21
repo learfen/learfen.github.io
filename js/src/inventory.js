@@ -25,6 +25,10 @@ async function usarInventario(user, items) {
 		opcionesData: {},
 		abrir: (modo) => {
 			if (modo) interacionItems = modo;
+			// si venimos del menu de opciones de un objeto (guardar/recuperar),
+			// cerramos ese menu antes de guardar estadoPrevio; si no, al cerrar
+			// el inventario el estado vuelve a "menu-info:abierto" y queda trabado
+			if (estado() === "menu-info:abierto") evento("menu-info:cerrar");
 			// referencia al inventario a la vista
 			inventarioSeleccionado = () => user().inventario;
 			origenInventarioAbierto = user;
@@ -131,6 +135,9 @@ async function usarInventario(user, items) {
 			if (button) {
 				button.remove();
 			}
+			// el item que tenia abierto su submenu de opciones ya no existe:
+			// lo cerramos para que no quede flotando sobre el inventario
+			if (inventario.menu().abierto) inventario.menu().cerrar();
 			for (let objetivo of borrados)
 				evento("inventario:eliminar", { objeto: objetivo, ref: user });
 			user().propiedades("items", items.filter((i) => !borrados.includes(i)));
@@ -317,7 +324,7 @@ function createDialogInventario(cols, rows) {
 
 			if (selected) {
 				
-				if (!opciones) {
+				if (!opciones && typeof selected?.objeto === 'function') {
 					opciones = menu.opciones;
 					const itemOptions =
 						player().inventario.opcionesData[
@@ -346,7 +353,7 @@ function createDialogInventario(cols, rows) {
                 
                 menu.nodo.style.left = x2 + "px";
                 menu.nodo.style.top = y2 + "px";
-				let options = [...opciones];
+				let options = Array.isArray(opciones) ? [...opciones] : [];
 				if(opcionesInventarioGlobal[selected.objeto()?.id]) {
 					for(let key of Object.keys(opcionesInventarioGlobal[selected.objeto()?.id])) {
 						options.push(key);

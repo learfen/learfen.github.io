@@ -80,13 +80,16 @@ class PhysicsEngine {
       return false;
     }
 
-    // Regla de Fuerza vs Peso
+    // Regla de Fuerza vs Peso: la fuerza debe alcanzar para TODA la cadena
+    // (los pesos se suman; antes se comparaba cada caja contra la fuerza y
+    // con fuerza 1 se empujaban N cajas de peso 1 una tras otra).
     const cadenaSolida = [];
+    let pesoCadena = 0;
     let actual = solidos[0];
 
     while (actual && !cadenaSolida.some(e => e.id === actual.id)) {
-      // Si la fuerza del objeto que empuja es menor que el peso del objeto objetivo, no se puede empujar
-      if (obj.propiedades("fuerza") < actual.propiedades("peso")) {
+      pesoCadena += actual.propiedades("peso");
+      if (obj.propiedades("fuerza") < pesoCadena) {
         solidos.forEach(con => evento("colision", { objeto: obj, quien: obj, con }));
         return false;
       }
@@ -121,6 +124,7 @@ class PhysicsEngine {
       elem.x = ex; elem.y = ey; elem.z = ez;
       scene.actualizarTransformNodo(elem);
       window.neto?.cambiar?.(elem);
+      this.avisarMovimiento(elem); // el empujado tambien avisa "mover"
       this.caer(elem); // empujado fuera del piso: cae hasta el apoyo de abajo
     }
 
@@ -131,6 +135,14 @@ class PhysicsEngine {
     evento("mover", obj)
     evento("mover:"+obj.id, { origen: () => obj, x: obj.x, y: obj.y, z: obj.z});
     return true;
+  }
+
+  // Avisa que un solido cambio de posicion (empujado, arrastrado o caido).
+  // Reusa el canal "mover:<id>" del jugador para que escuchar("mover:@tipo")
+  // tambien dispare en lo que empuja el jugador.
+  avisarMovimiento(elem) {
+    evento("mover", elem);
+    evento("mover:" + elem.id, { origen: () => elem, x: elem.x, y: elem.y, z: elem.z });
   }
 
   // Que algo lo frene al caer: lo solido y lo marcado .piso() (que no es
@@ -154,8 +166,7 @@ class PhysicsEngine {
       a.z--;
       scene.actualizarTransformNodo(a);
       window.neto?.cambiar?.(a);
-      evento("mover", a);
-      evento("mover:" + a.id, { origen: () => a, x: a.x, y: a.y, z: a.z });
+      this.avisarMovimiento(a);
     }
   }
 
@@ -178,13 +189,16 @@ class PhysicsEngine {
 
     // Cadena arrastrada: los sólidos que quedan detrás (al moverse +D caen sobre el jugador).
     // Un sólido demasiado pesado corta la cadena y se queda quieto (no bloquea el arrastre).
+    // La fuerza debe alcanzar para el peso ACUMULADO de lo arrastrado.
     const tirando = [];
+    let pesoArrastre = 0;
     let actual = objetos.find(
       (o) => o.id !== obj.id && esSolido(o) && this.haySolapamiento(o, obj, o.x + dx, o.y + dy, o.z + dz),
     );
     const gastados = new Set();
     while (actual && !gastados.has(actual.id)) {
-      if (obj.propiedades("fuerza") < actual.propiedades("peso")) break;
+      pesoArrastre += actual.propiedades("peso");
+      if (obj.propiedades("fuerza") < pesoArrastre) break;
       gastados.add(actual.id);
       tirando.push(actual);
       actual = objetos.find(
@@ -197,12 +211,15 @@ class PhysicsEngine {
     }
 
     // Cadena empujada: los sólidos delante del jugador (hacia donde retrocede), pesado = corte
+    // La fuerza debe alcanzar para el peso ACUMULADO de lo empujado.
     const empujando = [];
+    let pesoEmpuje = 0;
     actual = objetos.find(
       (o) => o.id !== obj.id && !gastados.has(o.id) && esSolido(o) && this.haySolapamiento(obj, o, tx, ty, tz),
     );
     while (actual && !gastados.has(actual.id)) {
-      if (obj.propiedades("fuerza") < actual.propiedades("peso")) break;
+      pesoEmpuje += actual.propiedades("peso");
+      if (obj.propiedades("fuerza") < pesoEmpuje) break;
       gastados.add(actual.id);
       empujando.push(actual);
       actual = objetos.find(
@@ -212,6 +229,15 @@ class PhysicsEngine {
           !gastados.has(o.id) &&
           this.haySolapamiento(actual, o, actual.x + dx, actual.y + dy, actual.z + dz),
       );
+    }
+
+    // Si hay algo que empujar en la direccion del movimiento, no se arrastra
+    // ademas lo que quedo atras (con el player entre dos objetos, empujar el de
+    // adelante movia tambien el de atras).
+    if (empujando.length > 0) {
+      tirando.length = 0;
+      gastados.clear();
+      for (const o of empujando) gastados.add(o.id);
     }
 
     if (tirando.length === 0 && empujando.length === 0) return null;
@@ -236,6 +262,7 @@ class PhysicsEngine {
         c.x += dx; c.y += dy; c.z += dz;
         scene.actualizarTransformNodo(c);
         window.neto?.cambiar?.(c);
+        this.avisarMovimiento(c); // el arrastrado/empujado tambien avisa "mover"
         this.caer(c); // arrastrado/empujado fuera del piso: cae al apoyo de abajo
       }
     };

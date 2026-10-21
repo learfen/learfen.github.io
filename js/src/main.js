@@ -57,6 +57,35 @@ const updateImagesStatus = (alias, value) => {
 	if(imageStatus) imageStatus.innerHTML = Object.keys(imagenesImportadasData).length + '/' + Object.keys(imagenesImportadas).length
 	setTimeout(() => revisarAssets(), 1000)
 }
+// Cache Storage ("caches") solo existe en contexto seguro (HTTPS o localhost).
+// En HTTP por IP (LAN) cae a IndexedDB, que si persiste ahi. Misma idea:
+// no volver a bajar una imagen ya cacheada al recargar.
+let _idbImagenPromise = null;
+function _idbImagen() {
+	if (_idbImagenPromise) return _idbImagenPromise;
+	_idbImagenPromise = new Promise((resolve, reject) => {
+		const req = indexedDB.open("imagenes-v1", 1);
+		req.onupgradeneeded = () => req.result.createObjectStore("blobs");
+		req.onsuccess = () => resolve(req.result);
+		req.onerror = () => reject(req.error);
+	});
+	return _idbImagenPromise;
+}
+function _idbGetImagen(key) {
+	return _idbImagen().then((db) => new Promise((resolve, reject) => {
+		const r = db.transaction("blobs", "readonly").objectStore("blobs").get(key);
+		r.onsuccess = () => resolve(r.result);
+		r.onerror = () => reject(r.error);
+	}));
+}
+function _idbPutImagen(key, blob) {
+	return _idbImagen().then((db) => new Promise((resolve, reject) => {
+		const tx = db.transaction("blobs", "readwrite");
+		tx.objectStore("blobs").put(blob, key);
+		tx.oncomplete = () => resolve();
+		tx.onerror = () => reject(tx.error);
+	}));
+}
 function usarImagen(alias, url) {
 	if(imagenesImportadas.hasOwnProperty(alias)) return ;
 	if(!imageStatus ) imageStatus = document.querySelector("#images-status");
@@ -79,23 +108,28 @@ function usarImagen(alias, url) {
 			}
 		}, 5000);
 		const getImageBlob = async function (url) {
-			if (typeof caches === "undefined") return (await fetch(url)).blob();
-			const cache = await caches.open("imagenes-v1");
-			const cached = await cache.match(url);
-
-			if (cached) {
-				return cached.blob();
+			// 1) Cache Storage (solo contexto seguro: HTTPS / localhost)
+			if (typeof caches !== "undefined") {
+				const cache = await caches.open("imagenes-v1");
+				const cached = await cache.match(url);
+				if (cached) return cached.blob();
+				const response = await fetch(url);
+				if (!response.ok) throw new Error(`HTTP ${response.status}: ${url}`);
+				await cache.put(url, response.clone());
+				return response.blob();
 			}
-
-			const response = await fetch(url);
-
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}: ${url}`);
+			// 2) IndexedDB (HTTP por IP: caches no existe)
+			if (typeof indexedDB !== "undefined") {
+				const cached = await _idbGetImagen(url);
+				if (cached) return cached;
+				const response = await fetch(url);
+				if (!response.ok) throw new Error(`HTTP ${response.status}: ${url}`);
+				const blob = await response.blob();
+				await _idbPutImagen(url, blob);
+				return blob;
 			}
-
-			await cache.put(url, response.clone());
-
-			return response.blob();
+			// 3) sin cache disponible
+			return (await fetch(url)).blob();
 		}
 
 		try {
