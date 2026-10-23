@@ -34,7 +34,7 @@
 </head>
 
 <body class="min-h-screen bg-gradient-to-br from-blue-500 via-blue-400 to-blue-300">
-
+  <div id="error-code"></div>
   <div class="min-h-screen flex items-center justify-center p-6">
 
     <div class="w-full max-w-6xl grid lg:grid-cols-2 gap-10 items-center">
@@ -164,6 +164,9 @@
     </div>
 
   </div>
+  <script>
+  var renderConsole = document.querySelector("#error-code");
+  </script>
   <script src="/js/src/script-google.js"></script>
   <script>
 
@@ -230,7 +233,6 @@
             })
           });
 
-          console.log(result)
           if (result.status === "success") {
             localStorage.setItem("username", username);
             localStorage.setItem("token", result.token);

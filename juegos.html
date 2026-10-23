@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Jugar</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<link rel="stylesheet" href="styles.css?d=04-10-26-06-20-2026">
+	<style>
+		body {
+			padding: 0;
+			min-height: 100vh;
+			justify-content: center;
+			overflow: hidden;
+		}
+		button {
+			text-transform: uppercase;
+		}
+		.scene {
+			margin: 0 !important;
+		}
+
+		#import-overlay {
+			position: fixed;
+			inset: 0;
+			z-index: 1000;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: rgba(0, 0, 0, .85);
+		}
+
+		#import-overlay.arrastrando {
+			background: rgba(30, 60, 90, .92);
+		}
+
+		#import-box {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 10px;
+			padding: 28px 34px;
+			border: 1px solid #333;
+			border-radius: 12px;
+			background: #111;
+			color: #e5e5e5;
+			font-family: system-ui, sans-serif;
+			text-align: center;
+		}
+
+		#import-box h1 {
+			margin: 0;
+			font-size: 20px;
+		}
+
+		#import-box p {
+			margin: 0;
+			color: #aaa;
+			font-size: 14px;
+		}
+
+		#import-elegir,
+		#import-otro,
+		.btn {
+			font: inherit;
+			padding: 9px 16px;
+			border-radius: 8px;
+			border: 1px solid #444;
+			background: #222;
+			color: #eee;
+			cursor: pointer;
+		}
+
+		#import-elegir:hover {
+			background: #2e2e2e;
+		}
+
+		.menu-juegos {
+			position: fixed;
+			top: 8px;
+			right: 8px;
+			z-index: 1001;
+			opacity: .35;
+			font-size: 12px;
+			padding: 5px 10px;
+		}
+
+		.menu-juegos:hover {
+			opacity: 1;
+		}
+	</style>
+	<script>
+		// sin seleccion de celdas/personajes: es un reproductor, no el editor
+		window.modoJuego = true;
+		// La escena se elige por ?escena=; si el usuario recarga sin el query,
+		// lo restauramos desde el nombre guardado antes de que arranque scene.js.
+		(function () {
+			const p = new URLSearchParams(location.search);
+			if (p.get("escena")) return;
+			const n = localStorage.getItem("juegoLocalNombre");
+			if (!n) return;
+			const u = new URL(location.href);
+			u.searchParams.set("escena", n);
+			history.replaceState(null, "", u);
+		})();
+	</script>
+</head>
+
+<body>
+	<div id="app">
+		<div id="errorRender" style="position: fixed; top: 0; left: 0;padding:0px 20px;background-color: red;"></div>
+		<dialog id="info">
+			<div id="info-content">
+				<div></div>
+			</div>
+		</dialog>
+	</div>
+
+	<div class="scene" id="scene">
+		<div class="camera-viewport" id="cameraViewport">
+			<div class="grid-wrap" id="gridWrap">
+				<div class="grid" id="grid"></div>
+			</div>
+			<div class="container-ayuda">
+				<div id="ayuda" class="bg-white bg-50 text-gray-600"></div>
+			</div>
+		</div>
+	</div>
+
+	<div id="barInfo" class="p-1 flex justify-center" style="position:fixed;top:0;left:0;right:0;z-index:2"></div>
+	<div class="status" id="status" style="display:none">Consola de eventos...</div>
+	<div id="error-code" style="z-index:100;max-width:500px;max-height:90vh;overflow-y:auto"
+		class="fixed bottom-0 mt-1 z-[100] w-[300px] bg-gray-100 text-white text-sm rounded-lg"></div>
+
+	<!-- modal simula una hoja para relatar una historia -->
+	<div id="relatar" class="hidden">
+		<div class="top-0 start-0 absolute w-full h-full bg-black bg-50 flex justify-center items-center" style="z-index:10000000">
+			<div style="width:80ch;height:5px;overflow-y:hidden;transition: height 0.4s ease-in-out, width 0.4s ease-in-out;transition-behavior: allow-discrete; "
+				class="markdown rounded-lg bg-slate-300 text-gray-800 relative">
+				<div class="prose p-10 max-w-none  prose-sm"></div>
+				<div class="flex justify-between p-4 gap-2 absolute bottom-0 w-full bg-slate-400">
+					<div><span name="cursor"></span>/<span name="total"></span></div>
+					<small>[S] para salir</small>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="import-overlay">
+		<div id="import-box">
+			<h1>Jugar un juego</h1>
+			<p>Arrastra un archivo <b>.js</b> o elígelo</p>
+			<input id="import-file" type="file" accept=".js,text/javascript,application/javascript" hidden>
+			<button id="import-elegir" type="button">Elegir archivo .js</button>
+		</div>
+	</div>
+	<button class="menu-juegos btn" type="button">Juegos</button>
+	<dialog id="juegos">
+		<div class="container">
+			<button id="import-otro" class="btn w-full" type="button">Importar desde archivo</button>
+			
+			
+			<h3 class="w-full text-center">JUEGOS</h3>
+			
+			<button type="button" class="btn game">Zombies</button>
+		</div>
+	</dialog>
+
+	<style>
+		.text-center{
+			text-align: center;
+		}
+		.w-full {
+			width: 100%;
+		}
+		dialog{
+			justify-content: center;
+			align-items: center;
+			background: rgba(0,0,0,.5);
+			width: 100%;
+			min-height: 100vh;
+
+			&:not([open]) {
+				display: none;
+			}
+			&[open] {
+				display: flex;
+			}
+			.container{
+				background: #eee;
+				padding: 10px;
+				border-radius: 15px;
+				min-width: 520px;
+				max-height: 80vh;
+				overflow-y: auto;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+				justify-content: start;
+				align-items: stretch;
+				button.game{
+					min-width: 100px;
+					height: 100px;
+					font-size: 12px;
+				}
+			}
+		}
+
+
+	</style>
+
+	<script src="/js/src/script-google.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/marked.umd.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/gif.lib.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/gif.frames.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/object-helper.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/events.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/scene.js?d=05-10-26-06-20-2026"></script>
+	<script src="/js/src/physics.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/character.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/inventory.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/procedural.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/main.js?d=04-10-26-06-20-2026"></script>
+	<script src="/js/src/neto.js?d=04-10-26-06-20-2026"></script>
+
+	<script>
+		const K_CODE = "juegoLocal";
+		const K_NAME = "juegoLocalNombre";
+
+		function parsearEscena(code) {
+			// misma normalizacion que el editor (index.html): idempotente con el token
+			return code
+				.replaceAll("interactuar ( async", "@INTERACTUAR@")
+				.replaceAll("interactuar( async", "@INTERACTUAR@")
+				.replaceAll("interactuar (", "@INTERACTUAR@")
+				.replaceAll("interactuar(", "@INTERACTUAR@")
+				.replaceAll("@INTERACTUAR@", "interactuar( async ")
+				.replaceAll("function juego  (", "function juego(")
+				.replaceAll("function juego (", "function juego(")
+				.replaceAll("function juego(", "async function juego(")
+				.replaceAll(" preguntar (", " preguntar(")
+				.replaceAll(" preguntar(", " await preguntar(")
+				.replaceAll(" si(", "if(")
+				.replaceAll(" si (", "if(")
+				.replaceAll(" sino (", "sino(")
+				.replaceAll(" sino(", "else if(")
+				.replaceAll(" sino{", "else{")
+				.replaceAll(" sino {", "else{");
+		}
+
+		function evaluarEscena(code) {
+			if (!code || code.indexOf("function juego") === -1) return false;
+			const script = document.createElement("script");
+			script.innerHTML = parsearEscena(code);
+			document.body.appendChild(script);
+			return true;
+		}
+
+		function importar(file) {
+			if (!file) return;
+			file.text().then((code) => {
+				if (code.indexOf("function juego") === -1) {
+					alert("El archivo no contiene una función juego().");
+					return;
+				}
+				const name = (file.name || "juego").replace(/\.js$/i, "") || "juego";
+				localStorage.setItem(K_CODE, code);
+				localStorage.setItem(K_NAME, name);
+				const u = new URL("juegos.html", location.href);
+				u.searchParams.set("escena", name);
+				u.searchParams.set("t", Date.now());
+				location.href = u;
+			}).catch((e) => alert("No se pudo leer el archivo: " + e));
+		}
+
+		const overlay = document.getElementById("import-overlay");
+		const input = document.getElementById("import-file");
+		const otro = document.getElementById("import-otro");
+		const menuJuegos = document.querySelector(".menu-juegos");
+		const dialogJuegos = document.querySelector("dialog#juegos");
+		
+		if(!localStorage.getItem(K_CODE)){
+			dialogJuegos.showModal();
+		}
+		document.querySelectorAll("dialog#juegos .container>button.game").forEach((boton) => {
+			boton.addEventListener("click", () => {
+				// peticion a /games/{file}.js
+				fetch(`/games/${boton.innerHTML}.js`).then((r) => r.text()).then((code) => {
+					if (evaluarEscena(code)) {
+						localStorage.setItem(K_CODE, code);
+						localStorage.setItem(K_NAME, boton.innerHTML);
+						const u = new URL("juegos.html", location.href);
+						u.searchParams.set("escena", boton.innerHTML);
+						u.searchParams.set("t", Date.now());
+						location.href = u;
+					}
+				});
+			});
+		})
+		dialogJuegos.addEventListener("click", (ev) => {
+			if(ev.target.tagName === "DIALOG"){
+				dialogJuegos.close();
+			}
+		});
+		menuJuegos.addEventListener("click", () => dialogJuegos.showModal());
+		document.getElementById("import-elegir").addEventListener("click", () => input.click());
+		input.addEventListener("change", () => importar(input.files[0]));
+		overlay.addEventListener("dragover", (e) => {
+			e.preventDefault();
+			overlay.classList.add("arrastrando");
+		});
+		overlay.addEventListener("dragleave", () => overlay.classList.remove("arrastrando"));
+		overlay.addEventListener("drop", (e) => {
+			e.preventDefault();
+			overlay.classList.remove("arrastrando");
+			importar(e.dataTransfer.files[0]);
+		});
+		otro.addEventListener("click", () => {
+			localStorage.removeItem(K_CODE);
+			localStorage.removeItem(K_NAME);
+			location.href = "juegos.html";
+		});
+
+		// un juego local es autocontenido: no hay global.js remoto que cargar
+		globalCargado = true;
+		globalListos = true;
+
+		const guardado = localStorage.getItem(K_CODE);
+		if (guardado) {
+			overlay.remove();
+			otro.hidden = false;
+			evaluarEscena(guardado);
+			window.instalarJoystickNeto?.();
+		}
+	</script>
+</body>
+
+</html>
