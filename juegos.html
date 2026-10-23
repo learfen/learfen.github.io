@@ -88,6 +88,94 @@
 		.menu-juegos:hover {
 			opacity: 1;
 		}
+
+		/* alternativa al joystick analogico: botones que emiten los mismos
+		   eventos que las flechas del teclado (mismo cooldown y desliz) */
+		.neto-dpad {
+			position: fixed;
+			left: max(16px, env(safe-area-inset-left));
+			bottom: max(16px, env(safe-area-inset-bottom));
+			display: grid;
+			grid-template-columns: repeat(3, 48px);
+			grid-template-rows: repeat(3, 48px);
+			gap: 4px;
+			pointer-events: auto;
+			z-index: 3000;
+			touch-action: none;
+			user-select: none;
+			-webkit-user-select: none;
+			-webkit-touch-callout: none;
+		}
+
+		.neto-dpad button {
+			border: 2px solid rgba(255, 255, 255, .35);
+			border-radius: 10px;
+			background: rgba(37, 99, 235, .8);
+			color: #fff;
+			font-size: 20px;
+			line-height: 1;
+			touch-action: none;
+			user-select: none;
+			-webkit-user-select: none;
+			-webkit-touch-callout: none;
+		}
+
+		.neto-dpad button:active {
+			background: rgba(29, 78, 216, .95);
+			transform: scale(.95);
+		}
+
+		.neto-dpad button[data-dir="arriba"] { grid-area: 1 / 2; }
+		.neto-dpad button[data-dir="izquierda"] { grid-area: 2 / 1; }
+		.neto-dpad button[data-dir="derecha"] { grid-area: 2 / 3; }
+		.neto-dpad button[data-dir="abajo"] { grid-area: 3 / 2; }
+
+		/* el analogico queda en el DOM, solo oculto por ahora */
+		body.jugando #neto-controls .neto-joystick {
+			display: none;
+		}
+
+		/* telefono en vertical: la escena ocupa el alto y los controles van abajo,
+		   sin taparla (esta vista no se usa para desarrollar) */
+		@media (max-width: 960px) and (orientation: portrait) {
+			body.jugando .scene {
+				position: fixed;
+				inset: 0 0 200px 0;
+				width: auto;
+				max-width: none;
+				height: auto;
+				aspect-ratio: auto;
+				transform: none;
+				margin: 0 !important;
+				border: 0;
+				border-radius: 0;
+			}
+
+			body.jugando .camera-viewport {
+				width: 100%;
+				height: 100%;
+				border-radius: 0;
+				box-shadow: none;
+			}
+
+			body.jugando #neto-controls .neto-joystick,
+			body.jugando #neto-controls .neto-actions {
+				top: auto;
+				bottom: max(16px, env(safe-area-inset-bottom));
+			}
+
+			body.jugando #neto-controls .neto-actions {
+				height: auto;
+			}
+
+			body.jugando #neto-controls .neto-joystick {
+				left: max(16px, env(safe-area-inset-left));
+			}
+
+			body.jugando #neto-controls .neto-actions {
+				right: max(16px, env(safe-area-inset-right));
+			}
+		}
 	</style>
 	<script>
 		// sin seleccion de celdas/personajes: es un reproductor, no el editor
@@ -106,7 +194,7 @@
 	</script>
 </head>
 
-<body>
+<body class="jugando">
 	<div id="app">
 		<div id="errorRender" style="position: fixed; top: 0; left: 0;padding:0px 20px;background-color: red;"></div>
 		<dialog id="info">
@@ -190,7 +278,7 @@
 				background: #eee;
 				padding: 10px;
 				border-radius: 15px;
-				min-width: 520px;
+				min-width: 380px;
 				max-height: 80vh;
 				overflow-y: auto;
 				display: flex;
@@ -254,6 +342,42 @@
 			script.innerHTML = parsearEscena(code);
 			document.body.appendChild(script);
 			return true;
+		}
+
+		function instalarDpad() {
+			const controles = document.getElementById("neto-controls");
+			if (!controles || controles.querySelector(".neto-dpad")) return;
+			const dpad = document.createElement("div");
+			dpad.className = "neto-dpad";
+			dpad.setAttribute("aria-label", "Mover personaje");
+			dpad.innerHTML = `
+				<button type="button" data-dir="arriba" aria-label="Arriba">▲</button>
+				<button type="button" data-dir="izquierda" aria-label="Izquierda">◀</button>
+				<button type="button" data-dir="derecha" aria-label="Derecha">▶</button>
+				<button type="button" data-dir="abajo" aria-label="Abajo">▼</button>`;
+			controles.appendChild(dpad);
+			const teclas = {
+				arriba: "ArrowUp",
+				abajo: "ArrowDown",
+				izquierda: "ArrowLeft",
+				derecha: "ArrowRight",
+			};
+			dpad.querySelectorAll("button[data-dir]").forEach((boton) => {
+				const key = teclas[boton.dataset.dir];
+				const presionar = (ev) => {
+					ev.preventDefault();
+					try {
+						boton.setPointerCapture?.(ev.pointerId);
+					} catch {}
+					document.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+				};
+				const soltar = () =>
+					document.dispatchEvent(new KeyboardEvent("keyup", { key, bubbles: true }));
+				boton.addEventListener("pointerdown", presionar);
+				boton.addEventListener("pointerup", soltar);
+				boton.addEventListener("pointercancel", soltar);
+				boton.addEventListener("lostpointercapture", soltar);
+			});
 		}
 
 		function importar(file) {
@@ -331,6 +455,12 @@
 			otro.hidden = false;
 			evaluarEscena(guardado);
 			window.instalarJoystickNeto?.();
+			instalarDpad();
+			const reencuadrar = () =>
+				setTimeout(() => escenaActiva().actualizarCamara(), 100);
+			addEventListener("resize", reencuadrar);
+			addEventListener("orientationchange", reencuadrar);
+			setTimeout(reencuadrar, 800);
 		}
 	</script>
 </body>
