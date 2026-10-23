@@ -185,9 +185,10 @@ class SceneManager {
 		this.cameraViewport.classList.remove("dev-mode");
 		// restaurar la transicion del grid al volver al modo juego
 		// en desliz, la camara viaja a la misma velocidad que el bloque (mismos ms, linear)
-		this.gridWrap.style.transition = this.jugador?.deslizando
+		const transicion = this.jugador?.deslizando
 			? `transform ${typeof INTERVALO_DESLIZAR_MS === "number" ? INTERVALO_DESLIZAR_MS : 300}ms linear`
 			: "";
+		this.gridWrap.style.transition = transicion;
 		// La proyeccion es un valor FIJO, no derivado del jugador: perspective y
 		// perspective-origin no son transicionables aqui (Blink reconstruye el
 		// arbol de capas y las celdas salen negras), asi que recalcularlos por
@@ -240,7 +241,34 @@ class SceneManager {
 		const b = this.limitesMalla();
 		x = Math.min(Math.max(x, b.xMin), b.xMax);
 		y = Math.min(Math.max(y, b.yMin), b.yMax);
-		this.gridWrap.style.transform = `scale(${this.zoom}) translate3d(${x}px, ${y}px, 0px)`;
+		const gw = this.gridWrap;
+		const anterior = gw.style.transform;
+		// en vertical el clamp deja al jugador fuera del visor: centrarlo midiendo
+		// su posicion real (misma idea que la camara libre). Solo en el reproductor:
+		// el editor se sigue viendo igual.
+		const retrato = window.modoJuego && innerHeight > innerWidth;
+		if (retrato) gw.style.transition = "none";
+		gw.style.transform = `scale(${this.zoom}) translate3d(${x}px, ${y}px, 0px)`;
+		if (retrato) {
+			const media = elemento.media?.objeto || elemento.nodo;
+			const vp = this.cameraViewport.getBoundingClientRect();
+			const cx = vp.left + vp.width / 2;
+			const cy = vp.top + vp.height / 2;
+			for (let i = 0; i < 4; i++) {
+				const r = media.getBoundingClientRect();
+				const dx = cx - (r.left + r.width / 2);
+				const dy = cy - (r.top + r.height / 2);
+				if (Math.abs(dx) < 1 && Math.abs(dy) < 1) break;
+				x += dx / this.zoom;
+				y += dy / this.zoom;
+				gw.style.transform = `scale(${this.zoom}) translate3d(${x}px, ${y}px, 0px)`;
+			}
+			// volver al estado ya pintado y animar hasta el destino corregido
+			gw.style.transform = anterior;
+			gw.getBoundingClientRect();
+			gw.style.transition = transicion;
+			gw.style.transform = `scale(${this.zoom}) translate3d(${x}px, ${y}px, 0px)`;
+		}
 		this.actualizarOclusion();
 	}
 
