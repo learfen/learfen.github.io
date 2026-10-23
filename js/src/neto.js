@@ -230,6 +230,9 @@
 		}, 50);
 	}
 
+	// visible para otras vistas que quieran los mismos controles tactiles (juegos.html)
+	window.instalarJoystickNeto = instalarJoystickNeto;
+
 	function instalarJoystickNeto() {
 		if (document.getElementById("neto-controls")) return;
 		const controles = document.createElement("div");

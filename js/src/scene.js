@@ -37,6 +37,8 @@ class SceneManager {
 		// asi que si el click no aterrizo en ningun bloque, se elige el mas
 		// cercano al cursor dentro de un radio de 50px
 		document.addEventListener("click", (e) => {
+			// en el reproductor (juegos.html) no se seleccionan celdas ni personajes
+			if (window.modoJuego) return;
 			// si existe en la queryurl neto=1 ignoraremos la seleccion
 			if (new URLSearchParams(location.search).has("neto")) return;
 			// si se hizo click en algun bloque, no hacer nada
@@ -655,6 +657,8 @@ class SceneManager {
 		el.appendChild(lbl);
 
 		el.addEventListener("click", (e) => {
+			// en el reproductor no se seleccionan bloques
+			if (window.modoJuego) return;
 			// si existe neto en query url ignoramos
 			if (new URLSearchParams(location.search).has("neto")) return;
 			e.stopPropagation();
@@ -1184,7 +1188,7 @@ class SceneManager {
 				if (typeof data === "string") elemento.infoDescription = data;
 				return elemento;
 			},
-			interactuar(fn) {
+			interactuar(fn, config) {
 				if (!fn) {
 					errorRender(
 						"interactuar recibe una funcion como parametro",
@@ -1197,10 +1201,14 @@ class SceneManager {
 				}
 				// se guarda como string para poder restaurarla al sacar el objeto del inventario
 				propiedades["interactuarFunction"] = fn.toString();
+				elemento.interactuarConfig = config || {} ;
 				elemento.interaccion = async (n, e) => {
 					if (elemento.interactuando) return;
 					elemento.interactuando = true;
 					n.con = n.objeto();
+					if(config?.condicion) {
+						if(!config.condicion(n)) return;
+					}
 					await fn(n, e);
 					elemento.interactuando = false;
 					return true;
@@ -2160,6 +2168,9 @@ class SceneManager {
 		if (index === -1) return;
 
 		const obj = this.elementos[index];
+		// los bucles (seguir/hacia) y el codigo del juego consultan esta bandera:
+		// sin ella, eliminar() solo sacaba el nodo y los timers seguian atacando
+		obj.eliminado = true;
 		if (obj.nodo) obj.nodo.remove();
 
 		// si es un enemigo o un objeto guardado (en un inventario), marcamos que fue eliminado para que no reaparezca
@@ -2339,6 +2350,11 @@ class SceneManager {
 	}
 
 	seleccionarObjeto(id) {
+		if (window.modoJuego) {
+			// en el reproductor solo importa quien es el jugador (movimiento), no el resaltado
+			this.idSeleccionado = id;
+			return;
+		}
 		if (this.idSeleccionado) {
 			document
 				.querySelector(`.actor-chip[name="${this.idSeleccionado}"]`)
@@ -2556,10 +2572,15 @@ function resetJuego() {
 	// congela las escrituras: el juego en marcha no re-crea "datos" antes del reload
 	saltarEscribirMemoria = true;
 	// la escena vive en el backend por sala: sin esto el reload revive el estado viejo
-	if (window.red) red("ws:reset");
-	localStorage.removeItem("datos");
-	location.reload();
-	fetch("/api/refresh")
+		if (window.red) red("ws:reset");
+		localStorage.removeItem("datos");
+		// el reproductor (juegos.html) no tiene sesion: no hay cookie que renovar
+		if (window.modoJuego) {
+			location.reload();
+			return;
+		}
+		location.reload();
+		fetch("/api/refresh")
 		.then((r) => {
 			if (r.ok) {
 				localStorage.removeItem("datos");

@@ -280,6 +280,7 @@ class PhysicsEngine {
 
 escuchar("colision", ({ objeto, con }) => {
   if (con?.interaccion && objeto.esPlayer) {
+    if(con.interactuarConfig?.condicion && !con.interactuarConfig.condicion({objeto, con})) return;
     ayuda("Presiona A/Usar para interactuar." + (con?.interactuarTexto ? ("<br><b>"+con?.interactuarTexto) : "</b>" ) );
   }
 }, "play");

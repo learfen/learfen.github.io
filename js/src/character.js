@@ -709,8 +709,13 @@ function estadoAnimado(elemento) {
 		return elemento;
 	};
 	elemento.restarVida = function (n) {
-		n = n || 1;
-		let vidas = parseInt(elemento.propiedades("vidas")) - parseInt(n);
+		// n puede venir como info de colision ({objeto, quien, con}) si el juego
+		// pasa player().restarVida directo: solo cuenta un numero positivo
+		n = Number(n);
+		if (!Number.isFinite(n) || n <= 0) n = 1;
+		// clamp en 0: dos golpes con 1 vida dejaban vidas=-1 y el enemigo no
+		// disparaba "destruido" (se comparaba === 0), quedando vivo y atacando
+		let vidas = Math.max(0, (parseInt(elemento.propiedades("vidas")) || 0) - n);
 		elemento.propiedades("vidas", vidas);
 
 		evento(elemento.id + ":vidas", vidas);
@@ -1464,11 +1469,18 @@ function animar(obj) {
 		// calcularemos la ruta utilizando los puntos de referencia y los obstaculos que deberemos rodear
 		// utilizaremos un metodo eficiente para encontrar la ruta mas corta
 		if (obj["persiguiendo"]) return obj;
+		escuchar("destruido:"+obj.id, () => {
+			obj.dejarDeSeguir();
+			obj.persiguiendo = false;
+		})
 		// .seguir() cancela un .aleatorio() previo
 		obj.propiedades("movimiento-aleatorio", "cancelado");
 		obj.solido().animar();
 		obj.persiguiendo = true;
 		let repeticion = repetir(() => {
+			// si lo eliminaron con .eliminar() no hubo "destruido:<id>": cortar
+			// aca o el enemigo fantasma sigue persiguiendo y restando vida
+			if (obj.eliminado) return obj.dejarDeSeguir();
 			// obstaculos
 			let obstaculos = [];
 			for (let i = 0; i < escenaActiva().elementos.length; i++) {
@@ -1536,7 +1548,7 @@ function animar(obj) {
 			};
 			let sentido = mirando();
 
-			if (to.x == player().x && to.y == player().y) {
+			if (to.x == player().x && to.y == player().y && obj.persiguiendo) {
 				// colision
 				if (config?.hasOwnProperty?.("colision")) config.colision({
 					objeto: obj,

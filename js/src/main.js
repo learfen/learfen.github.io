@@ -1044,7 +1044,9 @@ function repetir(accion) {
 			return manager
 		}
 	};
-	interval = setInterval(() => {
+	// antes era global: cada repetir() pisaba el handle del anterior y
+	// detener() cortaba otro bucle (los enemigos muertos seguian atacando)
+	let interval = setInterval(() => {
 		fn();
 	}, n * 1000);
 	return manager
