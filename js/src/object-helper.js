@@ -13,7 +13,7 @@ function crearPuerta(x, y, z, key, config) {
 		cubo: false,
 		repetir:false,
 		pausado:true
-	}).solido().animar()
+	}).solido().animar().escala(1.1)
 	//puerta.pintar(imagenAlias);
 	let gif = puerta.media.objeto.tagName !== "IMG" ;
 	//bloque.interactuar(() => {
@@ -42,9 +42,9 @@ function crearPuerta(x, y, z, key, config) {
 		face.style.background = 'url('+domainMedias+'/textura-madera.jpg)'
 		face.style.width = '10px'
 		face.style.marginTop = '17px'
-		face.style.marginLeft = '-14px'
+		face.style.marginLeft = '-12px'
 	}else{
-		puerta.media.objeto.parentNode.style.marginLeft = '14px'
+		puerta.media.objeto.parentNode.style.marginLeft = '16px'
 	}
 	// podemos personalizar el texto que aparece
 	puerta.abrir = (info) => {
@@ -516,5 +516,8 @@ function habitacionOculta(x, y, w, h, key, imagen) {
 		puerta() {
 			return puerta;
 		},
+		llave(llaveId) {
+			puerta.llave(llaveId);
+		}
 	}
 }

@@ -1874,7 +1874,6 @@ class SceneManager {
 							"0px 0px 19px 3px";
 					});
 				}
-				console.log(elemento);
 				// cada capa de z desplaza el piso ~23px en el grid rotado: sin
 				// correcting el margen el piso queda flotando sobre el suelo
 				const corracionZ = (elemento.z || 0) * 23;
@@ -1915,17 +1914,16 @@ class SceneManager {
 						clearInterval(tx);
 						return;
 					}
-					elemento.nodo.querySelector(".face img")?.remove();
 					// pintaremos la cara inferior del cubo
-					let img = document.createElement("img");
-					img.style.width = "100%";
-					img.style.height = "100%";
-					elemento.media = { objeto: img, type: "image-plain" };
-					elemento.plano = true;
 					let faceDown = elemento.nodo.querySelector(".face-down");
-					insertarImagenEnNodo(img, elemento.imagenAlias);
-					faceDown.style.backfaceVisibility = "visible";
-					faceDown.appendChild(img);
+					// mover una imagen a otro nodo
+					let time = setInterval(() => {
+						if(!elemento?.media?.objeto) return
+						let imagen = elemento.media.objeto
+						// mover imagen a otro padre(faceDown)
+						faceDown.appendChild(imagen);
+						clearInterval(time);
+					}, 10)
 					Array.from(faceDown.parentNode.children).forEach((face) => {
 						face.style.boxShadow = "none";
 					});
