@@ -8,6 +8,7 @@ class PhysicsEngine {
   }
 
   intentarMover(obj, dx, dy, dz, useCoordination, empujar = true, ignorarTipo = null) {
+    if (obj && (obj.eliminado || obj._eliminado)) return false;
     if (estado() === "pausa") {
       return false;
     }
@@ -25,7 +26,7 @@ class PhysicsEngine {
     // ignorarTipo: el objeto se desplaza libre dentro de su propio medio
     // (ej. un pez que nada en agua solida: la ignora pero choca con lo demas)
     const esIgnorable = (o) => ignorarTipo && o.tipo === ignorarTipo;
-    const colisiones = scene.elementos.filter(o => o.id !== obj.id && !esIgnorable(o) && this.haySolapamiento(obj, o, targetX, targetY, targetZ));
+    const colisiones = scene.elementos.filter(o => o.id !== obj.id && !o.eliminado && !o._eliminado && !esIgnorable(o) && this.haySolapamiento(obj, o, targetX, targetY, targetZ));
 
     // moverRequiere: solo se mueve si al destino tiene debajo algo que
     // coincida con el selector (@tipo o id). vacio/null/false = sin requisito.
@@ -72,9 +73,9 @@ class PhysicsEngine {
     // Sin la tecla "s" el jugador no empuja ni arrastra: choca y se detiene
     if (!empujar) {
       solidos.forEach(con => {
-        evento("colision", { objeto: obj, quien: obj, con })
-        evento("colision:@"+con.tipo, { objeto: obj, quien: obj, con })
-        evento("colision:"+con.id, { objeto: obj, quien: obj, con })
+        evento("colision", { objeto: obj, elemento:obj, quien: obj, con })
+        evento("colision:@"+con.tipo, { objeto: obj, elemento:obj, quien: obj, con })
+        evento("colision:"+con.id, { objeto: obj, elemento:obj, quien: obj, con })
         // si el obj.tipo === 'player' y con tiene interaccion ejecutaremos la funcion de ayuda que dice que presione a
       });
       return false;
@@ -280,7 +281,7 @@ class PhysicsEngine {
 
 escuchar("colision", ({ objeto, con }) => {
   if (con?.interaccion && objeto.esPlayer) {
-    if(con.interactuarConfig?.condicion && !con.interactuarConfig.condicion({objeto, con})) return;
+    if(con.interactuarConfig?.condicion && !con.interactuarConfig.condicion({objeto, elemento: objeto, quien: objeto, con})) return;
     ayuda("Presiona A/Usar para interactuar." + (con?.interactuarTexto ? ("<br><b>"+con?.interactuarTexto) : "</b>" ) );
   }
 }, "play");

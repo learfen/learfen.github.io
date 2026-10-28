@@ -826,6 +826,51 @@ class SceneManager {
 			installed: false,
 			nodo: null,
 			items: [],
+			destruido:false,
+			animacion:{
+				canvas:() => {},
+				pausado: config["pausado"],
+				play: (t) => {
+					elemento.animacion.pausado = false;
+					if(!elemento.animacion.canvas()) return;
+					if (t)
+						esperarY(t, () => {
+							elemento.animacion.canvas().playerGif.pause();
+						});
+					return elemento.animacion.canvas().playerGif.play();
+				},
+				reiniciar: () => elemento.animacion.canvas().playerGif.reiniciar(),
+				pause: () => {
+					elemento.animacion.pausado = true;
+					if(!elemento.animacion.canvas()) return;
+					if (elemento.animacion.canvas().playerGif?.pause)
+						elemento.animacion.canvas().playerGif.pause();
+				},
+				pausa: () => {
+					elemento.animacion.pausado = true;
+					if(!elemento.animacion.canvas()) return;
+					if (elemento.animacion.canvas().playerGif?.pause)
+						elemento.animacion.canvas().playerGif.pause();
+				},
+				reset: () => {
+					elemento.animacion.pausado = false;
+					if(!elemento.animacion.canvas()) return;
+					return elemento.animacion.canvas().playerGif.reset();
+				},
+				siguiente: () => elemento.animacion.canvas().playerGif.next(),
+				atras: () => elemento.animacion.canvas().playerGif.prev(),
+				frame: (n) => elemento.animacion.canvas().playerGif.getFrame(n),
+				repetir: (n) => elemento.animacion.canvas().playerGif.useLoop(true),
+				playReverso: (t) => {
+					elemento.animacion.pausado = false;
+					if(!elemento.animacion.canvas()) return;
+					if (t)
+						esperarY(t, () => {
+							elemento.animacion.canvas().playerGif.pause();
+						});
+					return elemento.animacion.canvas().playerGif.playReverso();
+				},
+			},
 			alto(h) {
 				elemento.nodo.style.setProperty("--h", h);
 				propiedades.alto = h;
@@ -1098,8 +1143,14 @@ class SceneManager {
 				let filtros = {
 					foco(value) {
 						// add efecto pulse
-						elemento.nodo.style.filter = `blur(${value}px)`;
+						elemento.media.objeto.style.filter += `blur(${value}px)`;
 					},
+					color(value) {
+						elemento.media.objeto.style.filter += `hue-rotate(${value})`;
+					},
+					saturar(value) {
+						elemento.media.objeto.style.filter += `saturate(${value})`;
+					}
 				};
 				if (filtros.hasOwnProperty(key)) {
 					filtros[key](value);
@@ -1234,6 +1285,7 @@ class SceneManager {
 					if (elemento.interactuando) return;
 					elemento.interactuando = true;
 					n.con = n.objeto();
+					n.elemento = n.objeto();
 					if(config?.condicion) {
 						if(!config.condicion(n)) return;
 					}
@@ -1707,46 +1759,9 @@ class SceneManager {
 							} else {
 								installCanvasGifPlayer();
 							}
+							elemento.animacion.canvas = () => canvas;
 							elemento._gifPausadoPorConfig =
 								config["pausado"] === true;
-							elemento.animacion = {
-								pausado: config["pausado"],
-								play: (t) => {
-									elemento.animacion.pausado = false;
-									if (t)
-										esperarY(t, () => {
-											canvas.playerGif.pause();
-										});
-									return canvas.playerGif.play();
-								},
-								reiniciar: () => canvas.playerGif.reiniciar(),
-								pause: () => {
-									elemento.animacion.pausado = true;
-									if (canvas.playerGif?.pause)
-										canvas.playerGif.pause();
-								},
-								pausa: () => {
-									elemento.animacion.pausado = true;
-									if (canvas.playerGif?.pause)
-										canvas.playerGif.pause();
-								},
-								reset: () => {
-									elemento.animacion.pausado = false;
-									return canvas.playerGif.reset();
-								},
-								siguiente: () => canvas.playerGif.next(),
-								atras: () => canvas.playerGif.prev(),
-								frame: (n) => canvas.playerGif.getFrame(n),
-								repetir: (n) => canvas.playerGif.useLoop(true),
-								playReverso: (t) => {
-									elemento.animacion.pausado = false;
-									if (t)
-										esperarY(t, () => {
-											canvas.playerGif.pause();
-										});
-									return canvas.playerGif.playReverso();
-								},
-							};
 							// mismo encuadre que la rama <img> de mas abajo: sin esto el
 							// canvas del gif sale a su tamano nativo (display:inline), mas
 							// grande que la celda, y los margenes/escala que el usuario
@@ -1758,6 +1773,8 @@ class SceneManager {
 							canvas.style.height = propiedades.px
 								? propiedades.px.h + "px"
 								: "auto";
+							canvas.style.maxWidth = "none";
+							canvas.style.imageRendering = "pixelated";
 							canvas.style.marginLeft =
 								(margenEn(
 									propiedades?.margenX,
@@ -1859,12 +1876,22 @@ class SceneManager {
 					// el calculo de colisiones y de la cara inferior usan 1x1
 					elemento.w = w;
 					elemento.d = d;
-					elemento.nodo
-						.querySelectorAll(".face img")
-						.forEach((img) => {
+					const imgs = elemento.nodo.querySelectorAll(".face img");
+					const tile = (w > 1 || d > 1) && propiedades.repetir !== false;
+					if (tile) {
+						imgs.forEach((img) => {
+							img.style.width = "auto";
+							img.style.height = "100%";
+							img.style.maxWidth = "none";
+							img.style.imageRendering = "pixelated";
+							img.style.display = "block";
+						});
+					} else {
+						imgs.forEach((img) => {
 							img.style.width = "100%";
 							img.style.height = "100%";
 						});
+					}
 				}
 				if (elemento?.media?.objeto && sombra) {
 					esperarY(0.5, () => {
@@ -1881,6 +1908,20 @@ class SceneManager {
 					(margenEn(propiedades.margenY, elemento.orientacion) || 0) -
 					corracionZ +
 					"px";
+				if ((elemento.w > 1 || elemento.d > 1) && propiedades.repetir !== false && elemento?.media?.objeto) {
+					try {
+						elemento.media.objeto.style.width = "auto";
+						elemento.media.objeto.style.height = "100%";
+						elemento.media.objeto.style.maxWidth = "none";
+						elemento.media.objeto.style.imageRendering = "pixelated";
+						elemento.media.objeto.style.display = "block";
+					} catch (e) {}
+				} else if (elemento?.media?.objeto) {
+					try {
+						elemento.media.objeto.style.width = "100%";
+						elemento.media.objeto.style.height = "100%";
+					} catch (e) {}
+				}
 				return elemento;
 			},
 			/*
@@ -1916,14 +1957,36 @@ class SceneManager {
 					}
 					// pintaremos la cara inferior del cubo
 					let faceDown = elemento.nodo.querySelector(".face-down");
-					// mover una imagen a otro nodo
-					let time = setInterval(() => {
-						if(!elemento?.media?.objeto) return
-						let imagen = elemento.media.objeto
-						// mover imagen a otro padre(faceDown)
-						faceDown.appendChild(imagen);
-						clearInterval(time);
-					}, 10)
+					faceDown.style.backfaceVisibility = "visible";
+					if (elemento.media?.type === "canvas" && elemento.media.objeto) {
+						const canvas = elemento.media.objeto;
+						if (canvas.parentNode !== faceDown) {
+							try { faceDown.appendChild(canvas); } catch (e) {}
+						}
+						canvas.style.display = "block";
+						if (propiedades.px) {
+							canvas.style.width = propiedades.px.w + "px";
+							canvas.style.height = propiedades.px.h + "px";
+						} else {
+							canvas.style.width = "100%";
+							canvas.style.height = "100%";
+						}
+						canvas.style.maxWidth = "none";
+						canvas.style.imageRendering = "pixelated";
+					} else {
+						let img = elemento.media?.objeto || elemento.img;
+						if (img) {
+							if (img.parentNode !== faceDown) {
+								try { faceDown.appendChild(img); } catch (e) {}
+							}
+						} else if (elemento.imagenAlias) {
+							insertarImagenEnNodo(img, elemento.imagenAlias);
+							img = elemento.media?.objeto || elemento.img;
+							if (img && img.parentNode !== faceDown) {
+								try { faceDown.appendChild(img); } catch (e) {}
+							}
+						}
+					}
 					Array.from(faceDown.parentNode.children).forEach((face) => {
 						face.style.boxShadow = "none";
 					});
@@ -1962,8 +2025,12 @@ class SceneManager {
 			},
 			redondear(val) {
 				elemento.propiedades("redondear", val);
-				if (elemento?.media?.objeto)
+				if (elemento?.media?.objeto){
 					elemento.media.objeto.style.borderRadius = val + "%";
+					setTimeout(() => {
+						elemento.media.objeto.style.borderRadius = val + "%";					
+					}, 2200)
+				}
 				return elemento;
 			},
 			rotarX(val, updated) {
@@ -2197,7 +2264,25 @@ class SceneManager {
 		// los bucles (seguir/hacia) y el codigo del juego consultan esta bandera:
 		// sin ella, eliminar() solo sacaba el nodo y los timers seguian atacando
 		obj.eliminado = true;
+		obj._eliminado = true;
 		if (obj.nodo) obj.nodo.remove();
+		try {
+			if (window.evento) {
+				if (!window.eventBus?.oyentes?.has("destruido:" + obj.id)) {
+					window.evento("destruido", { elemento: obj });
+					window.evento("destruido:" + obj.id, { elemento: obj });
+					if (obj.tipo) window.evento("destruido:@" + obj.tipo, { elemento: obj });
+				}
+			}
+		} catch (e) {}
+		try {
+			if (typeof window.limpiarEscuchas === "function") {
+				window.limpiarEscuchas(obj.id);
+			}
+			if (window.eventBus && typeof window.eventBus.limpiarPorId === "function") {
+				window.eventBus.limpiarPorId(obj.id);
+			}
+		} catch (e) {}
 
 		// si es un enemigo o un objeto guardado (en un inventario), marcamos que fue eliminado para que no reaparezca
 		// (ponytail: destruible = usa vida, es un enemigo matable aunque no use seguir(): el arquero/otros
@@ -2575,12 +2660,14 @@ escuchar("o", resetJuego);
 // (solo en juego vivo, no al construir la escena)
 function revisarColisionesAlAgregar(elemento) {
 	if (estado() !== "play") return;
+	if (elemento && (elemento.eliminado || elemento._eliminado)) return;
 	const pe = window.physicsEngine;
 	escenaActiva()
 		.elementos.filter(
-			(o) => o.id !== elemento.id && pe.haySolapamiento(elemento, o),
+			(o) => o.id !== elemento.id && !o.eliminado && !o._eliminado && pe.haySolapamiento(elemento, o),
 		)
 		.forEach((con) => {
+			if (con && (con.eliminado || con._eliminado)) return;
 			// si el objeto aparece sobre el player, la colision se cuenta igual
 			// que si el player se hubiera movido contra el objeto (con = el objeto)
 			if (con.tipo === "player") {
@@ -3110,7 +3197,7 @@ let markdown = document.querySelector(".markdown");
 let nodoCursorRelatar = document.querySelector(".markdown [name=cursor]");
 let nodoTotalRelatar = document.querySelector(".markdown [name=total]");
 let contenidoRelatar = null;
-function relatar(textoMarkdown) {
+async function relatar(textoMarkdown) {
 	if (estado() == "start") {
 		return setTimeout(() => {
 			relatar(textoMarkdown);
@@ -3126,12 +3213,12 @@ function relatar(textoMarkdown) {
 			for (let key in imagenesImportadasData) {
 				content = content.replace(
 					`](${key})`,
-					`](${imagenesImportadasData[key]})`,
+					`](${imagenesImportadas[key]})`,
 				);
 			}
 
-			markdown.children[0].innerHTML = marked.parse(content, {
-				async: false,
+			markdown.children[0].innerHTML = await marked.parse(content, {
+				async: true,
 				breaks: true,
 				extensions: null,
 				gfm: true,
@@ -3143,7 +3230,6 @@ function relatar(textoMarkdown) {
 			});
 
 			let items = Array.from(markdown.children[0].children);
-			console.log(items);
 			for (let item of items) {
 				// bloque codigo
 				let cut = item.innerText.split("/code");

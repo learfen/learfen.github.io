@@ -972,7 +972,7 @@ const iniciarJuego = () => {
 				setTimeout(() => {
 					window.eventBus.setEstado("play");
 					actualizarUI();
-					esperarY(1, () => estilarElementosAgua(escenaActiva().elementos.filter((e) => e.tipo == 'agua' && !e.propiedades("redondear") )));
+					esperarY(1, () => estilarElementosAgua(escenaActiva().elementos.filter((e) => e.tipo == 'agua' && e.propiedades("redondear") === undefined )));
 				}, 500);
 				clearInterval(x);
 			}
@@ -1020,6 +1020,9 @@ function repetir(accion) {
 	}
 	let manager = {
 		index(){
+			return n
+		},
+		cursor(){
 			return n
 		},
 		cada(segundos) {

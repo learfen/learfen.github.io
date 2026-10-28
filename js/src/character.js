@@ -232,7 +232,11 @@ function lanzar(obj) {
 		//   .hacia("@player", {vision:true}) -> solo si queda en la línea de visión
 		obj.hacia = (selector, conf) => {
 			conf = conf || {};
-			const sel = selector[0] === "@" ? selector.slice(1) : selector;
+			let sel = selector;
+			if (typeof selector === "string" && selector.length && selector[0] === "@") {
+				sel = selector.slice(1);
+			}
+			const todos = selector === "*" || selector === null || selector === undefined;
 			// los actores compartidos (neto) solo los decide el jugador 1: el
 			// peer replica orientación/disparo, no decide su propio objetivo
 			const puedo =
@@ -291,7 +295,9 @@ function lanzar(obj) {
 					.filter(
 						(e) =>
 							e.id !== obj.id &&
-							(e.id === selector || e.tipo === sel) &&
+							!e.eliminado &&
+							!e._eliminado &&
+							(todos || e.id === selector || e.tipo === sel || e.tipo === selector) &&
 							enArea(e) &&
 							(!conf.vision || enVision(e)),
 					)
@@ -301,45 +307,45 @@ function lanzar(obj) {
 							Math.max(Math.abs(b.x - obj.x), Math.abs(b.y - obj.y)),
 					)[0];
 			let ultimaOrient = obj.orientacion;
-			repetir((ciclo) => {
-				if (!vivo()) return ciclo.detener();
-				if (!puedo()) return;
-				const objetivo = objetivoEnArea();
-				if (!objetivo) {
-					// sin nadie al alcance: congelar el gif hasta que reaparezca alguien
-					if (obj.animacion?.pause) obj.animacion.pause();
-					return;
-				}
-				const orient = eje === "x"
-					? (objetivo.y < obj.y ? "arriba" : "abajo")
-					: (objetivo.x < obj.x ? "izquierda" : "derecha");
-				if (orient !== obj.orientacion && opciones?.orientar !== false){
-					obj.orientar(orient);
-					// actor compartido (neto): el peer replicó su orientación
-					if (window.neto?.activo && ultimaOrient !== orient) {
-						ultimaOrient = orient;
-						evento("actor:orientar", {
-							actor: obj.id, orientacion: orient,
-							x: obj.x, y: obj.y,
-						});
+			if(conf?.cada){
+				repetir((ciclo) => {
+					if (!vivo()) return ciclo.detener();
+					if (!puedo()) return;
+					const objetivo = objetivoEnArea();
+					if (!objetivo) {
+						// sin nadie al alcance: congelar el gif hasta que reaparezca alguien
+						if (obj.animacion?.pause) obj.animacion.pause();
+						return;
 					}
-				}
-				//if(vision == 'x' && objetivo.y == obj.y) 
-				if( vision === 'x' ){
-					if(obj.y == objetivo.y)
+					const orient = eje === "x"
+						? (objetivo.y < obj.y ? "arriba" : "abajo")
+						: (objetivo.x < obj.x ? "izquierda" : "derecha");
+					if (orient !== obj.orientacion && opciones?.orientar !== false){
+						obj.orientar(orient);
+						// actor compartido (neto): el peer replicó su orientación
+						if (window.neto?.activo && ultimaOrient !== orient) {
+							ultimaOrient = orient;
+							evento("actor:orientar", {
+								actor: obj.id, orientacion: orient,
+								x: obj.x, y: obj.y,
+							});
+						}
+					}
+					//if(vision == 'x' && objetivo.y == obj.y) 
+					if( vision === 'x' ){
+						if(obj.y == objetivo.y)
+							obj.disparar(objetivo.x, objetivo.y, objetivo.z);
+						else if (obj.animacion?.pause) obj.animacion.pause();
+					} else if( vision === 'y'){
+						if(obj.x == objetivo.x )
+							obj.disparar(objetivo.x, objetivo.y, objetivo.z);
+						else if (obj.animacion?.pause) obj.animacion.pause();
+					} else {
 						obj.disparar(objetivo.x, objetivo.y, objetivo.z);
-					else
-						obj.animacion.pause();
-				} else if( vision === 'y'){
-					if(obj.x == objetivo.x )
-						obj.disparar(objetivo.x, objetivo.y, objetivo.z);
-					else
-						obj.animacion.pause();
-				} else {
-					obj.disparar(objetivo.x, objetivo.y, objetivo.z);
-				}
-				//else obj.animacion.pause()
-			}).cada(conf.cada ?? .2);
+					}
+					//else obj.animacion.pause()
+				}).cada((conf?.cada || opciones?.cada) || .2);
+			}
 			return obj;
 		};
 
@@ -351,7 +357,7 @@ function lanzar(obj) {
 		// la animación solo corre durante el disparo (ejecutarLanzamiento la
 		// reproduce y vuelve a pausar). Sin esto, un lanzador sin `.hacia` y
 		// sin pausado:true en config tiene el gif corriendo para siempre.
-		if (!obj.esPlayer && obj.animacion?.pause) obj.animacion.pause();
+		if (!obj.esPlayer && obj.animacion?.pause && opciones.pausado !== false) obj.animacion.pause();
 
 		return obj;
 	};
@@ -394,8 +400,8 @@ function lanzar(obj) {
 			typeof obj?.animacion?.play == "function"
 		) {
 			// duracion de la animacion en segundos (default 1.5)
-			const duracion = opciones.animacion ?? 1.5;
-			obj.animacion.reset();
+			const duracion = typeof opciones.animacion === "number" ? opciones.animacion : 1.5;
+			if (typeof obj.animacion.reset === "function") obj.animacion.reset();
 			obj.animacion.play(duracion);
 			// pasado ese tiempo se resetea y pausa hasta el proximo disparo
 			setTimeout(() => {
@@ -1168,6 +1174,7 @@ function animar(obj) {
 		// a la misma distancia, sin depender de la orientacion
 		obj.visionConfig = { selector, distancia, tipo: "circula" };
 		escuchar("mover:" + selector, (info) => {
+			if (obj.eliminado || obj._eliminado) return;
 			let x = obj.x;
 			let y = obj.y;
 			let z = obj.z;
@@ -1221,6 +1228,7 @@ function animar(obj) {
 	obj.vision = function (selector, action, distancia) {
 		obj.visionConfig = { selector, distancia, tipo: "cono" };
 		escuchar("mover:" + selector, (info) => {
+			if (obj.eliminado || obj._eliminado) return;
 			let x = obj.x;
 			let y = obj.y;
 			let z = obj.z;
@@ -1349,18 +1357,20 @@ function animar(obj) {
 		};
 
 		// el selector puede ser un id o un tipo (con o sin "@"); ataca a cualquiera en vision
-		const sel = selector[0] === "@" ? selector.slice(1) : selector;
+		const sel = typeof selector === "string" && selector[0] === "@" ? selector.slice(1) : selector;
 		const coinciden = () =>
 			escenaActiva().elementos.filter(
-				(e) => e.id === selector || e.tipo === sel,
+				(e) => e && !e.eliminado && !e._eliminado && (e.id === selector || e.tipo === sel),
 			);
 
 		const dispararSiVisible = (x, y, z) => {
-			const objetivo = coinciden().find((e) => enVision(e.x, e.y, e.z));
+			if (obj.eliminado || obj._eliminado) return;
+			const objetivo = coinciden().find((e) => e && !e.eliminado && !e._eliminado && enVision(e.x, e.y, e.z));
 			if (!objetivo) return;
 			return action({
 				origen: obj,
 				objeto: objetivo,
+				elemento: obj,
 				x,
 				y,
 				z,
@@ -1372,7 +1382,8 @@ function animar(obj) {
 		const reprogramarDisparo = () => {
 			clearTimeout(rearme);
 			rearme = setTimeout(() => {
-				const objetivo = coinciden().find((e) => enVision(e.x, e.y, e.z));
+				if (obj.eliminado || obj._eliminado) return;
+				const objetivo = coinciden().find((e) => e && !e.eliminado && !e._eliminado && enVision(e.x, e.y, e.z));
 				if (objetivo) {
 					dispararSiVisible(objetivo.x, objetivo.y, objetivo.z);
 					reprogramarDisparo();
@@ -1382,6 +1393,11 @@ function animar(obj) {
 
 		coinciden().forEach((o) =>
 			escuchar("mover:" + o.id, (info) => {
+				if (obj.eliminado || obj._eliminado) {
+					clearTimeout(rearme);
+					return;
+				}
+				if (o.eliminado || o._eliminado) return;
 				if (enVision(info.x, info.y, info.z)) {
 					dispararSiVisible(info.x, info.y, info.z);
 					reprogramarDisparo();
@@ -1502,7 +1518,7 @@ function animar(obj) {
 			}
 			// si vio al objetivo, va a la ultima posicion vista (no a su posicion
 			// real, que seria ver a traves de muros); si nunca lo vio, lo persigue
-			const objetivo = obj.ultimaPosicionVista || { x: player().x, y: player().y };
+			const objetivo = config?.objetivo || (obj.ultimaPosicionVista || { x: player().x, y: player().y });
 			let route = encontrarRutaAStar(
 				{ x: obj.x, y: obj.y },
 				{ x: objetivo.x, y: objetivo.y },
@@ -1614,7 +1630,8 @@ escuchar(
 						.then(() => {
 							interaccionStandBy = false;
 						})
-						.catch(() => {
+						.catch((e) => {
+							errorRender("Error en Interacción:"+item.id+": "+ e.message);
 							interaccionStandBy = false;
 						});
 					return;

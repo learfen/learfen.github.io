@@ -16,8 +16,18 @@ dialogInfo.abrir = () => {
 };
 dialogInfo.cerrar = () => {
 	dialogInfo.classList.remove("flex");
-	dialogInfo.close();
-	estado(dialogInfo.backupEstado);
+	try { dialogInfo.close(); } catch(e){}
+	if (dialogInfo.backupEstado) {
+		const b = dialogInfo.backupEstado;
+		dialogInfo.backupEstado = null;
+		if (b === "inventario:info") {
+			estado("inventario");
+		} else {
+			estado(b);
+		}
+	} else {
+		estado("inventario");
+	}
 };
 let origenInventarioAbierto = null;
 async function usarInventario(user, items) {
@@ -104,7 +114,7 @@ async function usarInventario(user, items) {
 			return false;
 		},
 		cerrar() {
-			inventario.menu().cerrar();
+			try { if (inventario.menu().abierto) inventario.menu().cerrar(); } catch(e){}
 			dialogoInventario.style.display = "none";
 			dialogoInventario.classList.remove("z-50");
 			inventario.innerHTML = "";
@@ -113,8 +123,9 @@ async function usarInventario(user, items) {
 
 			evento("inventario:cerrar:" + user().id);
 			
-			estado(inventario.estadoPrevio, 50);
+			estado("play", 50);
 			inventario.menu().opciones = inventario.menu().opcionesDefault;
+			inventarioOpcionSeleccionada = null;
 			return user();
 		},
 		eliminar(selector, n = 1) {
@@ -182,11 +193,26 @@ async function usarInventario(user, items) {
 					refInventario: () => user().inventario,
 				};
 				user().propiedades("items").push(item);
-				if (modoImportar !== true)
+				if (modoImportar !== true){
+					console.log(user())
 					evento("inventario:guardar", {
 						objeto: item,
+						elemento:item,
 						ref: user,
 					});
+					
+					evento("inventario:guardar:@"+user().tipo, {
+						objeto: item,
+						elemento:item,
+						ref: user,
+					});
+					
+					evento("inventario:guardar:"+user().id, {
+						objeto: item,
+						elemento:item,
+						ref: user,
+					});
+				}
 				return user();
 			} else {
 				// los elementos fantasma (id ya eliminado o guardado en otro
@@ -204,11 +230,27 @@ async function usarInventario(user, items) {
 				if (typeof objeto.propiedades !== "function") {
 					let clon = { ...objeto, "guardado-en": user().id };
 					user().propiedades("items").push(clon);
-					if (modoImportar !== true)
+					if (modoImportar !== true){
+						
 						evento("inventario:guardar", {
 							objeto: clon,
 							ref: user,
+							elemento:clon,
 						});
+
+						evento("inventario:guardar:@"+user().tipo, {
+							objeto: clon,
+							ref: user,
+							elemento:clon,
+						});
+
+						evento("inventario:guardar:"+user().id, {
+							objeto: clon,
+							ref: user,
+							elemento:clon,
+						});
+
+					}
 					return user();
 				}
 			}
@@ -243,11 +285,26 @@ async function usarInventario(user, items) {
 			
 			user().propiedades("items").push(nuevoObjeto);
 
-			if (modoImportar !== true)
+			if (modoImportar !== true){
+				
 				evento("inventario:guardar", {
 					objeto: nuevoObjeto,
+					elemento: nuevoObjeto,
 					ref: user,
 				});
+
+				evento("inventario:guardar:@"+user().tipo, {
+					objeto: nuevoObjeto,
+					elemento: nuevoObjeto,
+					ref: user,
+				});
+
+				evento("inventario:guardar:"+user().id, {
+					objeto: nuevoObjeto,
+					elemento: nuevoObjeto,
+					ref: user,
+				});
+			}
 			
 				
 			// eliminamos
@@ -322,7 +379,7 @@ function createDialogInventario(cols, rows) {
 
 			menu.abierto = true;
 
-			if (selected) {
+			if (selected && selected.objeto()) {
 				
 				if (!opciones && typeof selected?.objeto === 'function') {
 					opciones = menu.opciones;
@@ -450,11 +507,13 @@ escuchar("a", () => inventario.menu().abrir(), "inventario");
 escuchar(
 	"a",
 	async () => {
-		let objeto = inventarioItemSeleccionado();
-        if(typeof inventarioOpcionSeleccionada !== "function") return ;
+		if (estado() !== "inventario:menu") return;
+		let objeto = inventarioItemSeleccionado ? inventarioItemSeleccionado() : null;
+		if(!objeto) return;
+		if(typeof inventarioOpcionSeleccionada !== "function") return ;
 
-        const opcion = inventarioOpcionSeleccionada();
-        if(!opcion) return ;
+		const opcion = inventarioOpcionSeleccionada();
+		if(!opcion) return ;
 
 		// enviamos al receptor el objeto y que este lo maneje
 		let objetoInteraccion = player().mirandoObjeto();
@@ -472,6 +531,7 @@ escuchar(
 					objeto
                 );
             }
+			inventarioSeleccionado().menu().cerrar();
         } 
 		if (
 			inventarioSeleccionado.inventario?.opcionesData.hasOwnProperty(
@@ -485,6 +545,7 @@ escuchar(
 					objeto
                 );
             }
+			inventarioSeleccionado().menu().cerrar();
         } 
 		
 		
@@ -542,8 +603,9 @@ escuchar(
 			if (sentido === "arriba") y = player().y - 1;
 			// validaremos que sea una celda valida pos > 0 && pos < 19
 			if (x < 1 || x > 20 || y < 1 || y > 20) {
-				objeto.refInventario().cerrar()
-				objeto.refInventario().usuario().decir("No puedes soltarlo aqui", 4);
+				try { inventarioSeleccionado().menu().cerrar(); } catch(e){}
+				try { if (objeto.refInventario) objeto.refInventario().cerrar(); } catch(e){}
+				try { objeto.refInventario().usuario().decir("No puedes soltarlo aqui", 4); } catch(e){}
 				return
 			}
 			
@@ -553,8 +615,8 @@ escuchar(
 			// validaos que la celda no este ocupada
 			if (Array.isArray(celda)) {
 				if(celda.length > 0){
-					objeto.refInventario().cerrar()
-					objeto.refInventario().usuario().decir("Hay un objeto alli, no puedes encimarlos", 4);
+					try { objeto.refInventario().cerrar(); } catch(e){}
+					try { objeto.refInventario().usuario().decir("Hay un objeto alli, no puedes encimarlos", 4); } catch(e){}
 					return
 				}
 			}
@@ -588,50 +650,50 @@ escuchar(
 				guardarEstadoElemento(nuevo);
 
 			}, 400);
-			objeto.refInventario().cerrar();
+			try { inventarioSeleccionado().menu().cerrar(); } catch(e){}
+			try { if (objeto.refInventario) objeto.refInventario().cerrar(); } catch(e){}
 			return objeto;
 		}
 
 		if (objetoInteraccion) {
 			let option = opcion.toLowerCase();
 			if (inventarioSeleccionado()?.opcionesOriginal?.hasOwnProperty("option")) {
-				inventarioSeleccionado().opcionesOriginal[option](
-					objetoInteraccion,
-					objeto,
-				);
-				return inventarioSeleccionado().menu().cerrar();
+				try { inventarioSeleccionado().opcionesOriginal[option](objetoInteraccion, objeto); } catch(e){}
+				try { inventarioSeleccionado().menu().cerrar(); } catch(e){}
+				return;
 			}
 
 			if (inventarioSeleccionado()?.opcionesOriginal?.hasOwnProperty(opcion)) {
-				inventarioSeleccionado().opcionesOriginal[opcion](
-					objetoInteraccion,
-					objeto,
-				);
-				return inventarioSeleccionado().menu().cerrar();
+				try { inventarioSeleccionado().opcionesOriginal[opcion](objetoInteraccion, objeto); } catch(e){}
+				try { inventarioSeleccionado().menu().cerrar(); } catch(e){}
+				return;
 			}
 			if (typeof objetoInteraccion[option] === "function") {
-				objetoInteraccion[option](objeto);
-				return inventarioSeleccionado().menu().cerrar();
+				try { objetoInteraccion[option](objeto); } catch(e){}
+				try { inventarioSeleccionado().menu().cerrar(); } catch(e){}
+				return;
 			}
-			const opciones = player().inventario.opciones(
-				"@" + objetoInteraccion.tipo,
-			);
-			if (opciones !== undefined) {
-				if (typeof opciones[opcion] === "function") {
-					opciones[opcion](objetoInteraccion);
-					return inventarioSeleccionado().menu().cerrar();
-				}
+			try {
+				const opciones = player().inventario.opciones(
+					"@" + objetoInteraccion.tipo,
+				);
+				if (opciones !== undefined) {
+					if (typeof opciones[opcion] === "function") {
+						try { opciones[opcion](objetoInteraccion); } catch(e){}
+						try { inventarioSeleccionado().menu().cerrar(); } catch(e){}
+						return;
+					}
 
-				if (typeof opciones[option] === "function") {
-					opciones[option](objetoInteraccion);
-					return inventarioSeleccionado().menu().cerrar();
+					if (typeof opciones[option] === "function") {
+						try { opciones[option](objetoInteraccion); } catch(e){}
+						try { inventarioSeleccionado().menu().cerrar(); } catch(e){}
+						return;
+					}
 				}
-			}
+			} catch(e){}
 		} else {
-            
-            inventarioSeleccionado().menu().cerrar();
-            
-        }
+			try { if (typeof inventarioSeleccionado === "function") inventarioSeleccionado().menu().cerrar(); } catch(e){}
+		}
 		/*
         if(interacionItems?.origen && interacionItems.origen()[inventarioOpcionSeleccionada().toLowerCase()]){
             interacionItems.origen()[inventarioOpcionSeleccionada().toLowerCase()](objeto, interacionItems.origen())
@@ -647,9 +709,19 @@ escuchar(
 escuchar(
 	"s",
 	(ev) => {
-		inventarioSeleccionado().cerrar();
-		inventarioSeleccionado = null;
-		ev.detener();
+		try {
+			if (estado() === "inventario") {
+				if (inventario.menu().abierto) {
+					inventario.menu().cerrar();
+					return ev.detener();
+				}
+				if (typeof inventarioSeleccionado === "function") {
+					inventarioSeleccionado().cerrar();
+				}
+				inventarioSeleccionado = null;
+				return ev.detener();
+			}
+		} catch(e){}
 	},
 	"inventario",
 );
@@ -657,8 +729,8 @@ escuchar(
 escuchar(
 	"s",
 	(ev) => {
-		inventario.menu().cerrar();
-		ev.detener();
+		try { if (inventario.menu().abierto) inventario.menu().cerrar(); } catch(e){}
+		try { ev.detener(); } catch(e){}
 	},
 	"inventario:menu",
 );
@@ -666,8 +738,8 @@ escuchar(
 escuchar(
 	"s",
 	(ev) => {
-		dialogInfo.cerrar();
-		ev.detener();
+		try { dialogInfo.cerrar(); } catch(e){}
+		try { ev.detener(); } catch(e){}
 	},
 	"inventario:info",
 );
@@ -675,6 +747,7 @@ escuchar(
 escuchar(
 	["abajo", "arriba"],
 	(evento) => {
+		if (estado() !== "inventario:menu") return;
 		let button = inventario.querySelector(
 			".inventario-menu-item button.focus",
 		);
@@ -684,18 +757,17 @@ escuchar(
 			if (evento.evento == "abajo") {
 				if (button.nextElementSibling)
 					select = button.nextElementSibling;
-				else select = button.parentNode.children[0];
+				else if (button.parentNode && button.parentNode.children.length) select = button.parentNode.children[0];
 			} else {
 				if (button.previousElementSibling)
 					select = button.previousElementSibling;
-				else
-					select =
-						button.parentNode.children[
-							button.parentNode.children.length - 1
-						];
+				else if (button.parentNode && button.parentNode.children.length)
+					select = button.parentNode.children[button.parentNode.children.length - 1];
 			}
-			select.classList.add("focus");
-			inventarioOpcionSeleccionada = () => select.innerText;
+			if (select) {
+				select.classList.add("focus");
+				inventarioOpcionSeleccionada = () => select.innerText;
+			}
 		}
 	},
 	"inventario:menu",
@@ -704,6 +776,7 @@ escuchar(
 escuchar(
 	["arriba", "abajo", "izquierda", "derecha"],
 	(evento) => {
+		if (estado() !== "inventario") return;
 		const cols = +inventario.getAttribute("cols");
 		const rows = +inventario.getAttribute("rows");
 		let selected = inventario.querySelector("button.focus");
@@ -719,18 +792,33 @@ escuchar(
 
 		let row = +selected.getAttribute("row");
 		let col = +selected.getAttribute("col");
-		if (evento.evento == "arriba") {
-			if (row === 1) row = rows;
-			else row -= 1;
-		} else if (evento.evento == "abajo") {
-			row += 1;
-			if (row > rows) row = 1;
-		} else if (evento.evento == "izquierda") {
-			if (col === 1) col = cols;
-			else col -= 1;
-		} else if (evento.evento == "derecha") {
-			if (col > cols) col = 1;
-			else col += 1;
+		const calc = () => {
+			if (evento.evento == "arriba") {
+				if (row === 1) row = rows;
+				else row -= 1;
+			} else if (evento.evento == "abajo") {
+				row += 1;
+				if (row > rows) row = 1;
+			} else if (evento.evento == "izquierda") {
+				if (col === 1) {
+					col = cols;
+					if(row > 1) row -= 1;
+				}
+				else col -= 1;
+			} else if (evento.evento == "derecha") {
+				col += 1;
+				if (col > cols) {
+					col = 1;
+					if(row < rows) row += 1;
+				}
+			}
+		}
+		calc()
+		let count = 0
+		while(!inventario.querySelector(`[col="${col}"][row="${row}"]`)){
+			count++
+			if(count === 16) return;
+			calc()
 		}
 		inventario.seleccionar(col, row, selected);
 	},

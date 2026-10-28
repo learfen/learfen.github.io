@@ -9,6 +9,19 @@ class EventBus {
     this.estadoActual = "start";
   }
 
+  limpiarPorId(id) {
+    if (id === undefined || id === null) return;
+    const toDelete = [];
+    for (const canal of this.oyentes.keys()) {
+      if (canal === String(id) || canal.endsWith(':' + id)) {
+        toDelete.push(canal);
+      }
+    }
+    for (const c of toDelete) {
+      this.oyentes.delete(c);
+    }
+  }
+
   setEstado(nuevoEstado) {
     idsExistsStatePrevious.push(this.estadoActual)
     this.estadoActual = nuevoEstado;
@@ -85,6 +98,12 @@ window.eventBus = new EventBus();
 window.evento = (evento , callback ) => {
   window.eventBus.emitir(evento, callback);
 }
+
+window.limpiarEscuchas = (id) => {
+  if (window.eventBus && typeof window.eventBus.limpiarPorId === 'function') {
+    window.eventBus.limpiarPorId(id);
+  }
+};
 
 window.escuchar = (canal, callback, estadoRequerido = null) => {
   if(Array.isArray(canal)) return canal.forEach(c => window.eventBus.escuchar(c, (e)=>{
