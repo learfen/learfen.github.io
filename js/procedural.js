@@ -92,8 +92,14 @@ function importImagesDefaultProcedural() {
 }
 
 
-function generarMapaProcedural() {
+function generarMapaProcedural(configParams) {
 	importImagesDefaultProcedural();
+	let config = {}
+	if(configParams.hasOwnProperty("semilla")) {
+		semilla(configParams.semilla)
+	}
+	configParams.enemigos = configParams.hasOwnProperty("enemigos") ? configParams.enemigos : true
+	
 	const ANCHO = 19;
 	const ALTO = 19;
 	const seed = semilla();
@@ -191,7 +197,7 @@ function generarMapaProcedural() {
 	}
 
 	let formaCuerpoAgua = {
-		lineal(semilla, ancho = 18, alto = 18) {
+		lineal(semilla, ancho = 20, alto = 20) {
 			// respondera una serie de coordenadas x,y para dibujar distintos tipos de rio que cruzan la escena de lado a lado
 			// el rio debe tener una forma diferente cada vez, guardando relacion con la semilla, el rio debe serpentear
 
@@ -451,7 +457,7 @@ function generarMapaProcedural() {
 		if (item.x == 0 || item.y == 0) continue;
 		if (puedeUbicar(item.x, item.y, 1, 1)) {
 			marcarOcupado(item.x, item.y, 1, 1);
-			const el = escenaActiva().agregar(item.x, item.y, "agua", { tipo:"agua" }).plano().solido();
+			const el = escenaActiva().agregar(item.x, item.y, "agua", { tipo:"agua" }).plano().escala(1.2).solido();
 			tilesAgua.push({ x: item.x, y: item.y, nodo: el.nodo });
 		}
 	}
@@ -488,9 +494,10 @@ function generarMapaProcedural() {
 				pausado:false,
 				solido: false,
 				tipo: tipo
-			}).margenY(-25);
+			}).margenY(-40).margenX(5);
 			marcarOcupado(x, y, newW, newY);
-			if(tipo == arbusto) elemento.imagen("2d")
+			if(tipo == arbusto) elemento.expandir(2,1)
+				//.imagen("2d")
 			if(tipo == flor) elemento.escala(.6).peso(1)
 			if(tipo == arbol) elemento.escala(1.3).margenY(5)
 			if(tipo == piedra) {
@@ -503,92 +510,94 @@ function generarMapaProcedural() {
 		}
 	}
 
-	const densidadEnemigos = 10; // Cantidad de intentos de vegetación
-	let enemigos = [];
-	for (let i = 1; i < densidadEnemigos; i++) {
-		let x = Math.floor(random() * ANCHO + 1);
-		let y = Math.floor(random() * ALTO + 1);
-		while (x == 0 || x == ANCHO) {
-			x = Math.floor(random() * (ANCHO - 1));
-		}
-		while (y == 0 || y == ALTO) {
-			y = Math.floor(random() * (ANCHO - 1));
-		}
-
-		if (puedeUbicar(x, y, 1, 1)) {
-			marcarOcupado(x, y, 1, 1);
-			const play = [cangrejo, fuego, trampa];
-			const tipo2 = random() > 0.4 ? trampa : mago;
-			const tipo1 = random() > 0.4 ? lobo : cangrejo;
-			const tipo = random() > 0.5 ? tipo1 : tipo2;
-			const usePlay = play.includes(tipo);
-
-			const orientacionPosibles = ["arriba","izquierda","abajo","derecha"];
-			
-			let orientacionNumber = random()
-			if(orientacionNumber < 0.26) orientacionNumber = 0
-			if(orientacionNumber > 0.26 && orientacionNumber < 0.52) orientacionNumber = 1
-			if(orientacionNumber > 0.52 && orientacionNumber < 0.78) orientacionNumber = 2
-			if(orientacionNumber > 0.78) orientacionNumber = 3
-			
-			const orientacion = orientacionPosibles[orientacionNumber]
-			let elemento = escenaActiva().agregar(x, y, tipo, {
-				pausado: !usePlay,
-				repetir: true,
-				cubo: false,
-				solido:true,
-				orientacion,
-				tipo: "Enemigo",
-				z:0
-			});
-			elemento.solido()
-			elemento.animar()
-			elemento.escala(1)
-			elemento.margenY(-40)
-			//elemento.margenY(0)
-			allItems.push(elemento);
-			if (tipo == mago) {
-				elemento.margenY(-60).escala(.8)
-				elemento
-					.lanzar({
-						imagen: "magia-1", 
-						distancia: 2,
-						impacto(obj){
-							if(obj.con.hasOwnProperty("perderVida")) obj.con.perderVida()
-						}
-					})
-					.vision("player", (info) => {
-						// aqui ponemos lo que hara luego de verlo
-						elemento.animacion.play(1.5);
-						elemento.disparar();
-					});
+	if(config.enemigos === true){
+		const densidadEnemigos = 10; // Cantidad de intentos de vegetación
+		let enemigos = [];
+		for (let i = 1; i < densidadEnemigos; i++) {
+			let x = Math.floor(random() * ANCHO + 1);
+			let y = Math.floor(random() * ALTO + 1);
+			while (x == 0 || x == ANCHO) {
+				x = Math.floor(random() * (ANCHO - 1));
 			}
-			if (tipo == trampa) {
-				elemento.tipo = 'trampa'
-				elemento.margenX(-45)
-				//elemento.nodo.querySelector('canvas').style.maxWidth = "100%";
-			};
-			if (tipo == cangrejo)
-				elemento.animar().aleatorio().margenY(0).margenX(-45).escala(.6).usarAnimacion("scale");
-			if (tipo == lobo) {
-				elemento.vision("player", (info) => {
-					elemento.animacion.play();
-					elemento
-					.seguir({
-						colision(a,b){
-							player().restarVida()
-						},
-					});
+			while (y == 0 || y == ALTO) {
+				y = Math.floor(random() * (ANCHO - 1));
+			}
+
+			if (puedeUbicar(x, y, 1, 1)) {
+				marcarOcupado(x, y, 1, 1);
+				const play = [cangrejo, fuego, trampa];
+				const tipo2 = random() > 0.4 ? trampa : mago;
+				const tipo1 = random() > 0.4 ? lobo : cangrejo;
+				const tipo = random() > 0.5 ? tipo1 : tipo2;
+				const usePlay = play.includes(tipo);
+
+				const orientacionPosibles = ["arriba","izquierda","abajo","derecha"];
+				
+				let orientacionNumber = random()
+				if(orientacionNumber < 0.26) orientacionNumber = 0
+				if(orientacionNumber > 0.26 && orientacionNumber < 0.52) orientacionNumber = 1
+				if(orientacionNumber > 0.52 && orientacionNumber < 0.78) orientacionNumber = 2
+				if(orientacionNumber > 0.78) orientacionNumber = 3
+				
+				const orientacion = orientacionPosibles[orientacionNumber]
+				let elemento = escenaActiva().agregar(x, y, tipo, {
+					pausado: !usePlay,
+					repetir: true,
+					cubo: false,
+					solido:true,
+					orientacion,
+					tipo: "Enemigo",
+					z:0
 				});
+				elemento.solido()
+				elemento.animar()
+				elemento.escala(1)
+				elemento.margenY(-40)
+				//elemento.margenY(0)
+				allItems.push(elemento);
+				if (tipo == mago) {
+					elemento.margenY(-60).escala(.8)
+					elemento
+						.lanzar({
+							imagen: "magia-1", 
+							distancia: 2,
+							impacto(obj){
+								if(obj.con.hasOwnProperty("perderVida")) obj.con.perderVida()
+							}
+						})
+						.vision("player", (info) => {
+							// aqui ponemos lo que hara luego de verlo
+							elemento.animacion.play(1.5);
+							elemento.disparar();
+						});
+				}
+				if (tipo == trampa) {
+					elemento.tipo = 'trampa'
+					elemento.margenX(-45)
+					//elemento.nodo.querySelector('canvas').style.maxWidth = "100%";
+				};
+				if (tipo == cangrejo)
+					elemento.animar().aleatorio().margenY(0).margenX(-45).escala(.6).usarAnimacion("scale");
+				if (tipo == lobo) {
+					elemento.vision("player", (info) => {
+						elemento.animacion.play();
+						elemento
+						.seguir({
+							colision(a,b){
+								player().restarVida()
+							},
+						});
+					});
+				}
+				
+				enemigos.push(elemento);
 			}
-			
-			enemigos.push(elemento);
+			escucharUnaVez("render:procedural", () => {
+				for (let item of enemigos) {
+					if (!item?.animacion?.pausado) item?.animacion?.play();
+				}
+			});
 		}
-		escucharUnaVez("render:procedural", () => {
-			for (let item of enemigos) {
-				if (!item?.animacion?.pausado) item?.animacion?.play();
-			}
-		});
 	}
 
 	const recoger = [piedra, flor];
