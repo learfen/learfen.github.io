@@ -130,6 +130,42 @@
 		.neto-dpad button[data-dir="derecha"] { grid-area: 2 / 3; }
 		.neto-dpad button[data-dir="abajo"] { grid-area: 3 / 2; }
 
+		.neto-acciones {
+			position: fixed;
+			right: max(16px, env(safe-area-inset-right));
+			bottom: max(16px, env(safe-area-inset-bottom));
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			pointer-events: auto;
+			z-index: 3000;
+			touch-action: none;
+			user-select: none;
+			-webkit-user-select: none;
+			-webkit-touch-callout: none;
+		}
+
+		.neto-acciones button {
+			width: 64px;
+			height: 64px;
+			border: 2px solid rgba(255, 255, 255, .35);
+			border-radius: 999px;
+			background: rgba(16, 185, 129, .85);
+			color: #fff;
+			font-size: 14px;
+			font-weight: 700;
+			touch-action: none;
+			user-select: none;
+			-webkit-user-select: none;
+			-webkit-touch-callout: none;
+		}
+
+		.neto-acciones button:active,
+		.neto-acciones button.activo {
+			background: rgba(5, 150, 105, .95);
+			transform: scale(.95);
+		}
+
 		/* el analogico queda en el DOM, solo oculto por ahora */
 		body.jugando #neto-controls .neto-joystick {
 			display: none;
@@ -228,7 +264,7 @@
 				<div class="prose p-10 max-w-none  prose-sm"></div>
 				<div class="flex justify-between p-4 gap-2 absolute bottom-0 w-full bg-slate-400">
 					<div><span name="cursor"></span>/<span name="total"></span></div>
-					<small>[S] para salir</small>
+					<small>[A/S] para salir</small>
 				</div>
 			</div>
 		</div>
@@ -261,6 +297,12 @@
 			<button type="button" class="btn game">Fausty-Felipe</button>
 			<button type="button" class="btn game">Luma</button>
 			<button type="button" class="btn game">Zombies</button>
+			<button type="button" class="btn game">Regi11</button>
+			<button type="button" class="btn game">Molino3000</button>
+			<button type="button" class="btn game">AdolFran</button>
+			<button type="button" class="btn game">MiaMartu</button>
+			<button type="button" class="btn game">FranKiller</button>
+			<button type="button" class="btn game">LosCarlitos</button>
 		</div>
 	</dialog>
 
@@ -355,39 +397,63 @@
 		}
 
 		function instalarDpad() {
-			const controles = document.getElementById("neto-controls");
-			if (!controles || controles.querySelector(".neto-dpad")) return;
-			const dpad = document.createElement("div");
-			dpad.className = "neto-dpad";
-			dpad.setAttribute("aria-label", "Mover personaje");
-			dpad.innerHTML = `
-				<button type="button" data-dir="arriba" aria-label="Arriba">▲</button>
-				<button type="button" data-dir="izquierda" aria-label="Izquierda">◀</button>
-				<button type="button" data-dir="derecha" aria-label="Derecha">▶</button>
-				<button type="button" data-dir="abajo" aria-label="Abajo">▼</button>`;
-			controles.appendChild(dpad);
-			const teclas = {
-				arriba: "ArrowUp",
-				abajo: "ArrowDown",
-				izquierda: "ArrowLeft",
-				derecha: "ArrowRight",
-			};
-			dpad.querySelectorAll("button[data-dir]").forEach((boton) => {
-				const key = teclas[boton.dataset.dir];
+			const controles = document.getElementById("neto-controls") || document.body;
+			if (!controles.querySelector(".neto-dpad")) {
+				const dpad = document.createElement("div");
+				dpad.className = "neto-dpad";
+				dpad.setAttribute("aria-label", "Mover personaje");
+				dpad.innerHTML = `
+					<button type="button" data-dir="arriba" aria-label="Arriba">▲</button>
+					<button type="button" data-dir="izquierda" aria-label="Izquierda">◀</button>
+					<button type="button" data-dir="derecha" aria-label="Derecha">▶</button>
+					<button type="button" data-dir="abajo" aria-label="Abajo">▼</button>`;
+				controles.appendChild(dpad);
+				const teclas = {
+					arriba: "ArrowUp",
+					abajo: "ArrowDown",
+					izquierda: "ArrowLeft",
+					derecha: "ArrowRight",
+				};
+				dpad.querySelectorAll("button[data-dir]").forEach((boton) => {
+					const key = teclas[boton.dataset.dir];
+					const presionar = (ev) => {
+						ev.preventDefault();
+						try {
+							boton.setPointerCapture?.(ev.pointerId);
+						} catch {}
+						document.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, repeat: false }));
+					};
+					const soltar = () =>
+						document.dispatchEvent(new KeyboardEvent("keyup", { key, bubbles: true }));
+					boton.addEventListener("pointerdown", presionar);
+					boton.addEventListener("pointerup", soltar);
+					boton.addEventListener("pointercancel", soltar);
+					boton.addEventListener("lostpointercapture", soltar);
+				});
+			}
+			if (!controles.querySelector(".neto-acciones")) {
+				const acciones = document.createElement("div");
+				acciones.className = "neto-acciones";
+				acciones.innerHTML = `<button style="margin-bottom:50px" type="button" data-accion="empujar" aria-label="Empujar/Tirar">AGARRAR</button>`;
+				controles.appendChild(acciones);
+				const btn = acciones.querySelector('[data-accion="empujar"]');
+				const key = "s";
 				const presionar = (ev) => {
 					ev.preventDefault();
-					try {
-						boton.setPointerCapture?.(ev.pointerId);
-					} catch {}
-					document.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+					try { btn.setPointerCapture?.(ev.pointerId); } catch {}
+					btn.classList.add("activo");
+					document.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, repeat: false }));
 				};
-				const soltar = () =>
+				const soltar = (ev) => {
+					ev.preventDefault();
+					btn.classList.remove("activo");
 					document.dispatchEvent(new KeyboardEvent("keyup", { key, bubbles: true }));
-				boton.addEventListener("pointerdown", presionar);
-				boton.addEventListener("pointerup", soltar);
-				boton.addEventListener("pointercancel", soltar);
-				boton.addEventListener("lostpointercapture", soltar);
-			});
+				};
+				btn.addEventListener("pointerdown", presionar);
+				btn.addEventListener("pointerup", soltar);
+				btn.addEventListener("pointercancel", soltar);
+				btn.addEventListener("lostpointercapture", soltar);
+			}
 		}
 
 		function importar(file) {
