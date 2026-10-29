@@ -1980,10 +1980,12 @@ class SceneManager {
 								try { faceDown.appendChild(img); } catch (e) {}
 							}
 						} else if (elemento.imagenAlias) {
-							insertarImagenEnNodo(img, elemento.imagenAlias);
-							img = elemento.media?.objeto || elemento.img;
-							if (img && img.parentNode !== faceDown) {
-								try { faceDown.appendChild(img); } catch (e) {}
+							if(img?.src){
+								img = elemento.media?.objeto || elemento.img;
+								insertarImagenEnNodo(img, elemento.imagenAlias);
+								if (img && img.parentNode !== faceDown) {
+									try { faceDown.appendChild(img); } catch (e) {}
+								}
 							}
 						}
 					}
@@ -3377,6 +3379,7 @@ document.addEventListener("click", (e) => {
 });
 
 escuchar("s", () => ocultarRelatar(), "relatando");
+escuchar("a", () => ocultarRelatar(), "relatando");
 
 escuchar(
 	"derecha",

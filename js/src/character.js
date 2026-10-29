@@ -307,7 +307,8 @@ function lanzar(obj) {
 							Math.max(Math.abs(b.x - obj.x), Math.abs(b.y - obj.y)),
 					)[0];
 			let ultimaOrient = obj.orientacion;
-			if(conf?.cada){
+			const cada = conf?.cada ?? opciones?.cada;
+			if (cada !== undefined && cada !== null) {
 				repetir((ciclo) => {
 					if (!vivo()) return ciclo.detener();
 					if (!puedo()) return;
@@ -344,7 +345,7 @@ function lanzar(obj) {
 						obj.disparar(objetivo.x, objetivo.y, objetivo.z);
 					}
 					//else obj.animacion.pause()
-				}).cada((conf?.cada || opciones?.cada) || .2);
+				}).cada(cada);
 			}
 			return obj;
 		};

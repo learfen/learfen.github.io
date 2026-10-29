@@ -242,7 +242,7 @@
 			<div class="neto-actions flex flex-wrap" style="max-width:200px">
 				<button type="button" style="height:50px;width:50px;top:-100px" class="text-2xl flex justify-center items-start rounded-full bg-indigo-400 absolute mt-5 ms-5" data-tecla="w">🎒</button>
 				<button type="button" data-tecla="a">Usar</button>
-				<button type="button" class="neto-hold" data-agarre>Empujar</button>
+				<button type="button" class="neto-hold" data-agarre>Atras</button>
 				<button type="button" data-tecla="e">Atacar</button>
 				<button type="button" data-tecla="d">Saltar</button>
 			</div>`;
